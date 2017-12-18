@@ -24,19 +24,38 @@ repetition_t = 'ReuseRepetition' or 'GridRepetition' or 'ArbitraryRepetition'
 property_value_t = int or bytes or 'AString' or 'NString' or' PropStringReference' or float or Fraction
 
 
-class EOFError(Exception):
+class FatamorganaError(Exception):
+    """
+    Base exception for all errors Fatamorgana raises
+    """
     pass
 
 
-class SignedError(Exception):
+class EOFError(FatamorganaError):
+    """
+    Premature end of file, or file continues past expected end.
+    """
     pass
 
 
-class InvalidDataError(Exception):
+class SignedError(FatamorganaError):
+    """
+    Signed number being written into an unsigned-only slot.
+    """
     pass
 
 
-class InvalidRecordError(Exception):
+class InvalidDataError(FatamorganaError):
+    """
+    Malformed data (either input or output).
+    """
+    pass
+
+
+class InvalidRecordError(FatamorganaError):
+    """
+    Invalid file structure (got an unexpected record type).
+    """
     pass
 
 
