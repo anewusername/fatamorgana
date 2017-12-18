@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(name='fatamorgana',
       version='0.1',
-      description='OASIS layout format parser and writer'
+      description='OASIS layout format parser and writer',
       author='Jan Petykiewicz',
       author_email='anewusername@gmail.com',
       url='https://mpxd.net/gogs/jan/fatamorgana',
