@@ -2,7 +2,7 @@
 
 **fatamorgana** is a Python package for reading and writing OASIS format layout files.
 
-**Homepage:** https://mpxd.net/gogs/jan/fatamorgana
+**Homepage:** https://mpxd.net/code/jan/fatamorgana
 
 **Capabilities:**
 * This package is a work-in-progress and is largely untested -- it works for
@@ -31,7 +31,7 @@ pip install fatamorgana
 
 Install directly from git repository:
 ```bash
-pip install git+https://mpxd.net/gogs/jan/fatamorgana.git@release
+pip install git+https://mpxd.net/code/jan/fatamorgana.git@release
 ```
 
 ## Documentation
