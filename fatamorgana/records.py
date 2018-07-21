@@ -16,6 +16,8 @@ import copy
 import math
 import zlib
 import io
+import logging
+import pprint
 
 from .basic import AString, NString, repetition_t, property_value_t, real_t, \
         ReuseRepetition, OffsetTable, Validation, read_point_list, read_property_value, \
@@ -23,6 +25,9 @@ from .basic import AString, NString, repetition_t, property_value_t, real_t, \
         write_bstring, write_uint, write_sint, write_real, write_interval, write_point_list, \
         write_property_value, read_bool_byte, write_bool_byte, read_byte, write_byte, \
         InvalidDataError, PathExtensionScheme
+
+
+logger = logging.getLogger(__name__)
 
 '''
     Type definitions
@@ -185,6 +190,9 @@ class Record(metaclass=ABCMeta):
         :return: A deep copy of this record.
         """
         return copy.deepcopy(self)
+
+    def __repr__(self) -> str:
+        return '{}: {}'.format(self.__class__, pprint.pformat(self.__dict__))
 
 
 def read_refname(stream: io.BufferedIOBase,
