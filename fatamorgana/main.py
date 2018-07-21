@@ -4,6 +4,7 @@ This module contains data structures and functions for reading from and
  abstractions for the data contained inside them.
 """
 import io
+import logging
 
 from . import records
 from .records import Modals
@@ -13,6 +14,9 @@ from .basic import OffsetEntry, OffsetTable, NString, AString, real_t, Validatio
 
 
 __author__ = 'Jan Petykiewicz'
+
+
+logger = logging.getLogger(__name__)
 
 
 class FileModals:
@@ -141,8 +145,7 @@ class OasisLayout:
             else:
                 raise e
 
-        # TODO logging
-        print(record_id, stream.tell())
+        logger.info('read_record of type {} at position 0x{:x}'.format(record_id, stream.tell()))
 
         # CBlock
         if record_id == 34:
