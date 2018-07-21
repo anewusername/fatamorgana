@@ -1324,7 +1324,7 @@ def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
     elif list_type == 2:
         points = [ManhattanDelta.read(stream).as_list() for _ in range(list_len)]
     elif list_type == 3:
-        points = [OctangluarDelta.read(stream).as_list() for _ in range(list_len)]
+        points = [OctangularDelta.read(stream).as_list() for _ in range(list_len)]
     elif list_type == 4:
         points = [Delta.read(stream).as_list() for _ in range(list_len)]
     elif list_type == 5:
