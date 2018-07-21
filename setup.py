@@ -6,7 +6,7 @@ with open('README.md', 'r') as f:
     long_description = f.read()
 
 setup(name='fatamorgana',
-      version='0.2',
+      version='0.3',
       description='OASIS layout format parser and writer',
       long_description=long_description,
       long_description_content_type='text/markdown',

@@ -25,4 +25,4 @@ from .basic import NString, AString, Validation, OffsetTable, OffsetEntry, \
 
 __author__ = 'Jan Petykiewicz'
 
-version = '0.2'
+version = '0.3'
