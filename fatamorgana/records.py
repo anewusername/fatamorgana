@@ -487,7 +487,9 @@ class CBlock(Record):
         compression_type = read_uint(stream)
         decompressed_count = read_uint(stream)
         compressed_bytes = read_bstring(stream)
-        return CBlock(compression_type, decompressed_count, compressed_bytes)
+        record = CBlock(compression_type, decompressed_count, compressed_bytes)
+        logger.debug('CBlock ending at 0x{:x} was read successfully'.format(stream.tell()))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         size = write_uint(stream, 34)

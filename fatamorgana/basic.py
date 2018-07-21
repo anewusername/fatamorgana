@@ -516,7 +516,7 @@ class NString:
         """
         return write_bstring(stream, self.bytes)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'NString') -> bool:
         return isinstance(other, type(self)) and self.string == other.string
 
     def __repr__(self) -> str:
@@ -608,7 +608,7 @@ class AString:
         """
         return write_bstring(stream, self.bytes)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: AString) -> bool:
         return isinstance(other, type(self)) and self.string == other.string
 
     def __repr__(self) -> str:
@@ -730,7 +730,7 @@ class ManhattanDelta:
         """
         return write_uint(stream, self.as_uint())
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'ManhattanDelta') -> bool:
         return hasattr(other, as_list) and self.as_list() == other.as_list()
 
     def __repr__(self) -> str:
@@ -855,7 +855,7 @@ class OctangularDelta:
         """
         return write_uint(stream, self.as_uint())
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'OctangularDelta') -> bool:
         return hasattr(other, as_list) and self.as_list() == other.as_list()
 
     def __repr__(self) -> str:
@@ -931,7 +931,7 @@ class Delta:
             size += write_uint(stream, encode_sint(self.y))
             return size
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'Delta') -> bool:
         return hasattr(other, as_list) and self.as_list() == other.as_list()
 
     def __repr__(self) -> str:
@@ -977,7 +977,7 @@ class ReuseRepetition:
     def write(self, stream: io.BufferedIOBase) -> int:
         return write_uint(stream, 0)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'ReuseRepetition') -> bool:
         return isinstance(other, ReuseRepetition)
 
     def __repr__(self) -> str:
@@ -1138,7 +1138,7 @@ class GridRepetition:
                 size += Delta(*self.b_vector).write(stream)
         return size
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'GridRepetition') -> bool:
         return isinstance(other, type(self)) and \
                 self.a_count == other.a_count and \
                 self.b_count == other.b_count and \
@@ -1286,7 +1286,7 @@ class ArbitraryRepetition:
         return size
 
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'ArbitraryRepetition') -> bool:
         return isinstance(other, type(self)) and self.x_displacements == other.x_displacements and self.y_displacements == other.y_displacements
 
     def __repr__(self) -> str:
@@ -1483,7 +1483,7 @@ class PropStringReference:
         self.ref = ref
         self.ref_type = ref_type
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'PropStringReference') -> bool:
         return isinstance(other, type(self)) and self.ref == other.ref and self.reference_type == other.reference_type
 
     def __repr__(self) -> str:
