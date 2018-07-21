@@ -253,6 +253,7 @@ class Pad(Record):
             raise InvalidDataError('Invalid record id for Pad '
                                    '{}'.format(record_id))
         record = Pad()
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -292,7 +293,9 @@ class XYMode(Record):
     def read(stream: io.BufferedIOBase, record_id: int) -> 'XYMode':
         if record_id not in (15, 16):
             raise InvalidDataError('Invalid record id for XYMode')
-        return XYMode(record_id == 16)
+        record = XYMode(record_id == 16)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         return write_uint(stream, 15 + self.relative)
@@ -361,7 +364,9 @@ class Start(Record):
             offset_table = OffsetTable.read(stream)
         else:
             offset_table = None
-        return Start(unit, version, offset_table)
+        record = Start(unit, version, offset_table)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         size = write_uint(stream, 1)
@@ -417,7 +422,9 @@ class End(Record):
             offset_table = None
         _padding_string = read_bstring(stream)
         validation = Validation.read(stream)
-        return End(validation, offset_table)
+        record = End(validation, offset_table)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         size = write_uint(stream, 2)
@@ -579,7 +586,9 @@ class CellName(Record):
             reference_number = read_uint(stream)
         else:
             reference_number = None
-        return CellName(nstring, reference_number)
+        record = CellName(nstring, reference_number)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         record_id = 3 + (self.reference_number is not None)
@@ -630,7 +639,9 @@ class PropName(Record):
             reference_number = read_uint(stream)
         else:
             reference_number = None
-        return PropName(nstring, reference_number)
+        record = PropName(nstring, reference_number)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         record_id = 7 + (self.reference_number is not None)
@@ -682,7 +693,9 @@ class TextString(Record):
             reference_number = read_uint(stream)
         else:
             reference_number = None
-        return TextString(astring, reference_number)
+        record = TextString(astring, reference_number)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         record_id = 5 + (self.reference_number is not None)
@@ -734,7 +747,9 @@ class PropString(Record):
             reference_number = read_uint(stream)
         else:
             reference_number = None
-        return PropString(astring, reference_number)
+        record = PropString(astring, reference_number)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         record_id = 9 + (self.reference_number is not None)
@@ -798,7 +813,9 @@ class LayerName(Record):
         nstring = AString.read(stream)
         layer_interval = read_interval(stream)
         type_interval = read_interval(stream)
-        return LayerName(nstring, layer_interval, type_interval, is_textlayer)
+        record = LayerName(nstring, layer_interval, type_interval, is_textlayer)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         record_id = 11 + self.is_textlayer
@@ -860,7 +877,7 @@ class Property(Record):
             raise InvalidDataError('Invalid record id for PropertyValue: '
                                    '{}'.format(record_id))
         if record_id == 29:
-            return Property()
+            record = Property()
         else:
             byte = read_byte(stream)      #UUUUVCNS
             u = 0x0f & (byte >> 4)
@@ -880,7 +897,9 @@ class Property(Record):
                 values = None
                 if u != 0:
                     raise InvalidDataError('Malformed property record header')
-            return Property(name, values, s)
+            record = Property(name, values, s)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         if self.is_standard is None and self.values is None and self.name is None:
@@ -962,7 +981,9 @@ class XName(Record):
             reference_number = read_uint(stream)
         else:
             reference_number = None
-        return XName(attribute, bstring, reference_number)
+        record = XName(attribute, bstring, reference_number)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         record_id = 30 + (self.reference_number is not None)
@@ -1006,7 +1027,9 @@ class XElement(Record):
                                    '{}'.format(record_id))
         attribute = read_uint(stream)
         bstring = read_bstring(stream)
-        return XElement(attribute, bstring)
+        record = XElement(attribute, bstring)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         size = write_uint(stream, 32)
@@ -1096,7 +1119,9 @@ class XGeometry(Record):
         if r:
             optional['repetition'] = read_repetition(stream)
 
-        return XGeometry(attribute, bstring, **optional)
+        record = XGeometry(attribute, bstring, **optional)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         x = self.x is not None
@@ -1152,7 +1177,9 @@ class Cell(Record):
         else:
             raise InvalidDataError('Invalid record id for Cell: '
                                    '{}'.format(record_id))
-        return Cell(name)
+        record = Cell(name)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         size = 0
@@ -1257,7 +1284,9 @@ class Placement(Record):
         if r:
             optional['repetition'] = read_repetition(stream)
 
-        return Placement(flip, name, **optional)
+        record = Placement(flip, name, **optional)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         c = self.name is not None
@@ -1382,7 +1411,9 @@ class Text(Record):
         if r:
             optional['repetition'] = read_repetition(stream)
 
-        return Text(string, **optional)
+        record = Text(string, **optional)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         c = self.string is not None
@@ -1514,7 +1545,9 @@ class Rectangle(Record):
             optional['y'] = read_sint(stream)
         if r:
             optional['repetition'] = read_repetition(stream)
-        return Rectangle(is_square, **optional)
+        record = Rectangle(is_square, **optional)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         s = self.is_square
@@ -1632,7 +1665,9 @@ class Polygon(Record):
             optional['y'] = read_sint(stream)
         if r:
             optional['repetition'] = read_repetition(stream)
-        return Polygon(**optional)
+        record = Polygon(**optional)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase, fast: bool = False) -> int:
         p = self.point_list is not None
@@ -1790,7 +1825,9 @@ class Path(Record):
             optional['y'] = read_sint(stream)
         if r:
             optional['repetition'] = read_repetition(stream)
-        return Polygon(**optional)
+        record = Path(**optional)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase, fast: bool = False) -> int:
         e = self.extension_start is not None or self.extension_end is not None
@@ -1962,7 +1999,9 @@ class Trapezoid(Record):
             optional['y'] = read_sint(stream)
         if r:
             optional['repetition'] = read_repetition(stream)
-        return Trapezoid(is_vertical, **optional)
+        record = Trapezoid(is_vertical, **optional)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         v = self.is_vertical
@@ -2147,7 +2186,9 @@ class CTrapezoid(Record):
             optional['y'] = read_sint(stream)
         if r:
             optional['repetition'] = read_repetition(stream)
-        return CTrapezoid(**optional)
+        record = CTrapezoid(**optional)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         t = self.ctrapezoid_type is not None
@@ -2259,7 +2300,9 @@ class Circle(Record):
             optional['y'] = read_sint(stream)
         if r:
             optional['repetition'] = read_repetition(stream)
-        return Circle(**optional)
+        record = Circle(**optional)
+        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
         s = self.radius is not None
