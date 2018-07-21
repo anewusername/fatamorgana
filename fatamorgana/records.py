@@ -524,7 +524,7 @@ class CBlock(Record):
 
         return CBlock(compression_type, count, compressed_bytes)
 
-    def decompress(self, decompression_args) -> bytes:
+    def decompress(self, decompression_args: Dict = None) -> bytes:
         """
         Decompress the contents of this CBlock.
 
@@ -533,6 +533,8 @@ class CBlock(Record):
         :raises: InvalidDataError if data is malformed or compression type is
                     unknonwn.
         """
+        if decompression_args is None:
+            decompression_args = {}
         if self.compression_type == 0:
             decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS, **decompression_args)
             decompressed_bytes = decompressor.decompress(self.compressed_bytes) + \
