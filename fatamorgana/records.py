@@ -727,10 +727,10 @@ class PropString(Record):
         :param reference_number: Reference id number for the string.
                             Default is to use an implicitly-assigned number.
         """
-        if isinstance(astring, AString):
-            self.astring = astring
+        if isinstance(string, AString):
+            self.astring = string
         else:
-            self.astring = AString(astring)
+            self.astring = AString(string)
         self.reference_number = reference_number
 
     def merge_with_modals(self, modals: Modals):
