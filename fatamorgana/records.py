@@ -1951,13 +1951,13 @@ class Trapezoid(Record):
         self.repetition = repetition
 
         if self.is_vertical:
-            if height is not None and delta_a + delta_b > height:
-                raise InvalidDataError('Trapezoid: h < delta_a + delta_b'
-                                 ' ({} < {} + {})'.format(height, delta_a, delta_b))
+            if height is not None and delta_b - delta_a > height:
+                raise InvalidDataError('Trapezoid: h < delta_b - delta_a'
+                                 ' ({} < {} - {})'.format(height, delta_b, delta_a))
         else:
-            if width is not None and delta_a + delta_b > width:
-                raise InvalidDataError('Trapezoid: w < delta_a + delta_b'
-                                 ' ({} < {} + {})'.format(width, delta_a, delta_b))
+            if width is not None and delta_b - delta_a > width:
+                raise InvalidDataError('Trapezoid: w < delta_b - delta_a'
+                                 ' ({} < {} - {})'.format(width, delta_b, delta_a))
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
