@@ -1220,7 +1220,7 @@ class ArbitraryRepetition:
                 x_displacements.append(x * mult)
                 y_displacements.append(y * mult)
         else:
-            raise InvalidDataError('Invalid ArbitraryRepetition repetition_type')
+            raise InvalidDataError('Invalid ArbitraryRepetition repetition_type: {}'.format(repetition_type))
         return ArbitraryRepetition(x_displacements, y_displacements)
 
     def write(self, stream: io.BufferedIOBase) -> int:
