@@ -280,7 +280,7 @@ class XYMode(Record):
         """
         :param relative: True if the mode is 'relative', False if 'absolute'.
         """
-        self.relative = value
+        self.relative = relative
 
     def merge_with_modals(self, modals: Modals):
         modals.xy_relative = self.relative
