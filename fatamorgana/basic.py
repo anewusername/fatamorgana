@@ -1174,7 +1174,7 @@ class ArbitraryRepetition:
         self.y_displacements = y_displacements
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, repetition_type) -> 'ArbitraryRepetition':
+    def read(stream: io.BufferedIOBase, repetition_type: int) -> 'ArbitraryRepetition':
         """
         Read an ArbitraryRepetition from a stream.
 
