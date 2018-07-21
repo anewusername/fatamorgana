@@ -1193,7 +1193,7 @@ class ArbitraryRepetition:
             mult = read_uint(stream)
             x_displacements = [mult * read_uint(stream) for _ in range(n)]
             y_displacements = [0] * len(x_displacements)
-        if repetition_type == 6:
+        elif repetition_type == 6:
             n = read_uint(stream) + 1
             y_displacements = [read_uint(stream) for _ in range(n)]
             x_displacements = [0] * len(y_displacements)
