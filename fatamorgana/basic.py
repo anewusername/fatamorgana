@@ -333,7 +333,7 @@ def read_float32(stream: io.BufferedIOBase) -> float:
     :return: The value read.
     """
     b = _read(stream, 4)
-    return struct.unpack("<f", b)
+    return struct.unpack("<f", b)[0]
 
 
 def write_float32(stream: io.BufferedIOBase, f: float) -> int:
@@ -356,7 +356,7 @@ def read_float64(stream: io.BufferedIOBase) -> float:
     :return: The value read.
     """
     b = _read(stream, 8)
-    return struct.unpack("<d", b)
+    return struct.unpack("<d", b)[0]
 
 
 def write_float64(stream: io.BufferedIOBase, f: float) -> int:
