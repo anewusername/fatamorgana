@@ -179,7 +179,7 @@ class OasisLayout:
         elif record_id in range(15, 29) or record_id in (32, 33):
             if not file_state.within_cell:
                 raise Exception('Geometry outside Cell')
-        elif record_id == 13:
+        elif record_id in (13, 14):
             file_state.within_cell = True
         else:
             raise InvalidRecordError('Unknown record id: {}'.format(record_id))
