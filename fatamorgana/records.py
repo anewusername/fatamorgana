@@ -2281,7 +2281,7 @@ class Circle(Record):
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Circle':
-        if record_id == 27:
+        if record_id != 27:
             raise InvalidDataError('Invalid record id for Circle: '
                                    '{}'.format(record_id))
 
