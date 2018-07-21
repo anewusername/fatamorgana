@@ -2116,7 +2116,7 @@ class CTrapezoid(Record):
         if ctrapezoid_type in range(12, 16) and 2 * width > height:
             raise InvalidDataError('CTrapezoid has 2*width > height'
                                    ' ({} > 2 * {})'.format(width, height))
-        if ctrapezoid_type not in range(0, 26):
+        if ctrapezoid_type is not None and ctrapezoid_type not in range(0, 26):
             raise InvalidDataError('CTrapezoid has invalid type: '
                                    '{}'.format(ctrapezoid_type))
 
