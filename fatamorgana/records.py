@@ -812,7 +812,7 @@ class LayerName(Record):
             raise InvalidDataError('Invalid record id for LayerName: '
                                    '{}'.format(record_id))
         is_textlayer = (record_id == 12)
-        nstring = AString.read(stream)
+        nstring = NString.read(stream)
         layer_interval = read_interval(stream)
         type_interval = read_interval(stream)
         record = LayerName(nstring, layer_interval, type_interval, is_textlayer)
