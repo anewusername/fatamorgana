@@ -608,7 +608,7 @@ class AString:
         """
         return write_bstring(stream, self.bytes)
 
-    def __eq__(self, other: AString) -> bool:
+    def __eq__(self, other: 'AString') -> bool:
         return isinstance(other, type(self)) and self.string == other.string
 
     def __repr__(self) -> str:
