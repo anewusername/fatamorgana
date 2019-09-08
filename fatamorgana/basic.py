@@ -1302,25 +1302,38 @@ def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
     """
     list_type = read_uint(stream)
     list_len = read_uint(stream)
-    #TODO: Implicit close point for 1del
     if list_type == 0:
         points = []
+        dx, dy = 0, 0
         for i in range(list_len):
             point = [0, 0]
-            n = read_uint(stream)
+            n = read_sint(stream)
             if n == 0:
                 raise InvalidDataError('Zero-sized 1-delta')
             point[i % 2] = n
             points.append(point)
+            if i % 2:
+                dy += n
+            else:
+                dx += n
+        points.append([-dx, 0])
+        points.append([0, -dy])
     elif list_type == 1:
         points = []
+        dx, dy = 0, 0
         for i in range(list_len):
             point = [0, 0]
-            n = read_uint(stream)
+            n = read_sint(stream)
             if n == 0:
                 raise Exception('Zero-sized 1-delta')
             point[(i + 1) % 2] = n
             points.append(point)
+            if i % 2:
+                dx += n
+            else:
+                dy += n
+        points.append([0, -dy])
+        points.append([-dx, 0])
     elif list_type == 2:
         points = [ManhattanDelta.read(stream).as_list() for _ in range(list_len)]
     elif list_type == 3:
