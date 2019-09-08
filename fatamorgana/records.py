@@ -18,7 +18,7 @@ import zlib
 import io
 import logging
 import pprint
-
+from warnings import warn
 from .basic import AString, NString, repetition_t, property_value_t, real_t, \
         ReuseRepetition, OffsetTable, Validation, read_point_list, read_property_value, \
         read_bstring, read_uint, read_sint, read_real, read_repetition, read_interval, \
@@ -1630,7 +1630,7 @@ class Polygon(Record):
 
         if point_list is not None:
             if len(point_list) < 3:
-                raise InvalidDataError('Polygon with < 3 points')
+                warn('Polygon with < 3 points')
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
