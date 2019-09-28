@@ -18,6 +18,8 @@
     - Python 3.5 or later
     - numpy (optional, no additional functionality)
 """
+import pathlib
+
 from .main import OasisLayout, Cell, XName
 from .basic import NString, AString, Validation, OffsetTable, OffsetEntry, \
         EOFError, SignedError, InvalidDataError, InvalidRecordError
@@ -25,4 +27,7 @@ from .basic import NString, AString, Validation, OffsetTable, OffsetEntry, \
 
 __author__ = 'Jan Petykiewicz'
 
-version = '0.4'
+with open(pathlib.Path(__file__).parent / 'VERSION', 'r') as f:
+    __version__ = f.read().strip()
+version = __version__
+

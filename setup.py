@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 from setuptools import setup, find_packages
-import fatamorgana
 
 with open('README.md', 'r') as f:
     long_description = f.read()
 
+with open('fatamorgana/VERSION', 'r') as f:
+    version = f.read().strip()
+
 setup(name='fatamorgana',
-      version=fatamorgana.version,
+      version=version,
       description='OASIS layout format parser and writer',
       long_description=long_description,
       long_description_content_type='text/markdown',
@@ -51,6 +53,9 @@ setup(name='fatamorgana',
             'Topic :: Software Development :: Libraries :: Python Modules',
       ],
       packages=find_packages(),
+      package_data={
+          'fatamorgana': ['VERSION']
+      },
       install_requires=[
             'typing',
       ],
