@@ -147,7 +147,7 @@ else:
         :param stream: Stream to read from.
         :return: A list of 8 booleans corresponding to the bits (MSB first).
         """
-        byte = _read(1)[0]
+        byte = _read(stream, 1)[0]
         bits = [(byte >> i) & 0x01 for i in reversed(range(8))]
         return bits
 
