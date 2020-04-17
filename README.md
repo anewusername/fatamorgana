@@ -1,4 +1,4 @@
-# fatamorgana 
+# fatamorgana
 
 **fatamorgana** is a Python package for reading and writing OASIS format layout files.
 
@@ -6,7 +6,7 @@
 
 **Capabilities:**
 * This package is a work-in-progress and is largely untested -- it works for
-    the tasks I usually use it for, but I can't guarantee I've even 
+    the tasks I usually use it for, but I can't guarantee I've even
     tried the features you happen to use! Use at your own risk!
 * Interfaces and datastructures are subject to change!
 * That said the following work for me:
@@ -26,12 +26,12 @@
 
 Install with pip from PyPi (preferred):
 ```bash
-pip install fatamorgana
+pip3 install fatamorgana
 ```
 
 Install directly from git repository:
 ```bash
-pip install git+https://mpxd.net/code/jan/fatamorgana.git@release
+pip3 install git+https://mpxd.net/code/jan/fatamorgana.git@release
 ```
 
 ## Documentation
@@ -53,7 +53,7 @@ Read an OASIS file and write it back out:
 
     with open('test.oas', 'rb') as f:
         layout = fatamorgana.OasisLayout.read(f)
-    
+
     with open('test_write.oas', 'wb') as f:
         layout.write(f)
 ```

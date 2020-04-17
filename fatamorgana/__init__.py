@@ -16,7 +16,13 @@
 
  Dependencies:
     - Python 3.5 or later
-    - numpy (optional, no additional functionality)
+    - numpy (optional, faster but no additional functionality)
+
+ To get started, try:
+ ```python3
+    import fatamorgana
+    help(fatamorgana.OasisLayout)
+ ```
 """
 import pathlib
 
