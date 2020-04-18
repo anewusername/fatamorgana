@@ -340,7 +340,7 @@ class OasisLayout:
                     for refnum, name in self.propnames.items())
 
         xnames_offset = OffsetEntry(False, size)
-        size += sum(records.XName(x.attribute, x.string, refnum).dedup_write(stream, modals)
+        size += sum(records.XName(x.attribute, x.bstring, refnum).dedup_write(stream, modals)
                     for refnum, x in self.xnames.items())
 
         textstrings_offset = OffsetEntry(False, size)
