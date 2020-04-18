@@ -24,7 +24,10 @@ from .basic import AString, NString, repetition_t, property_value_t, real_t, \
         read_bstring, read_uint, read_sint, read_real, read_repetition, read_interval, \
         write_bstring, write_uint, write_sint, write_real, write_interval, write_point_list, \
         write_property_value, read_bool_byte, write_bool_byte, read_byte, write_byte, \
-        InvalidDataError, PathExtensionScheme
+        InvalidDataError, PathExtensionScheme, _USE_NUMPY
+
+if _USE_NUMPY:
+    import numpy
 
 
 logger = logging.getLogger(__name__)
@@ -2444,7 +2447,12 @@ def dedup_field(record: Record, r_field: str, modals: Modals, m_field: str):
     r = getattr(record, r_field)
     m = getattr(modals, m_field)
     if r is not None:
-        if m is not None and m == r:
+        if _USE_NUMPY and m_field in ('polygon_point_list', 'path_point_list'):
+            equal = numpy.array_equal(m, r)
+        else:
+            equal = m is not None and m == r
+
+        if equal:
             setattr(record, r_field, None)
         else:
             setattr(modals, m_field, r)

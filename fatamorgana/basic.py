@@ -1345,10 +1345,7 @@ def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
     elif list_type == 5:
         deltas = [Delta.read(stream).as_list() for _ in range(list_len)]
         if _USE_NUMPY:
-            delta_x, delta_y = zip(*deltas)
-            x = numpy.cumsum(delta_x)
-            y = numpy.cumsum(delta_y)
-            points = list(zip(x, y))
+            points = numpy.cumsum(deltas, axis=0)
         else:
             points = []
             x = 0
