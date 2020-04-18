@@ -218,8 +218,8 @@ class Record(metaclass=ABCMeta):
 
 
 def read_refname(stream: io.BufferedIOBase,
-                 is_present: bool,
-                 is_reference: bool
+                 is_present: Union[bool, int],
+                 is_reference: Union[bool, int]
                  ) -> Union[None, int, NString]:
     """
     Helper function for reading a possibly-absent, possibly-referenced NString.
@@ -242,8 +242,8 @@ def read_refname(stream: io.BufferedIOBase,
 
 
 def read_refstring(stream: io.BufferedIOBase,
-                   is_present: bool,
-                   is_reference: bool
+                   is_present: Union[bool, int],
+                   is_reference: Union[bool, int],
                    ) -> Union[None, int, AString]:
     """
     Helper function for reading a possibly-absent, possibly-referenced `AString`.
@@ -937,18 +937,18 @@ class Property(Record):
             s = 0x01 & (byte >> 0)
 
             name = read_refname(stream, c, n)
-            values: Optional[List[property_value_t]]
             if v == 0:
                 if u < 0x0f:
                     value_count = u
                 else:
                     value_count = read_uint(stream)
-                values = [read_property_value(stream) for _ in range(value_count)]
+                values: Optional[List[property_value_t]] = [read_property_value(stream)
+                                                            for _ in range(value_count)]
             else:
                 values = None
                 if u != 0:
                     raise InvalidDataError('Malformed property record header')
-            record = Property(name, values, s)
+            record = Property(name, values, bool(s))
         logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
         return record
 
