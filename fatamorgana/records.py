@@ -299,7 +299,7 @@ class XYMode(Record):
 
     @property
     def absolute(self) -> bool:
-        return not relative
+        return not self.relative
 
     @absolute.setter
     def absolute(self, b: bool):
