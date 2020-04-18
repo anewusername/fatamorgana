@@ -3,6 +3,7 @@ This module contains data structures and functions for reading from and
  writing to whole OASIS layout files, and provides a few additional
  abstractions for the data contained inside them.
 """
+from typing import List, Dict, Union, Optional
 import io
 import logging
 
@@ -23,17 +24,17 @@ class FileModals:
     """
     File-scoped modal variables
     """
-    cellname_implicit = None        # type: bool or None
-    propname_implicit = None        # type: bool or None
-    xname_implicit = None           # type: bool or None
-    textstring_implicit = None      # type: bool or None
-    propstring_implicit = None      # type: bool or None
-    cellname_implicit = None        # type: bool or None
+    cellname_implicit: Optional[bool] = None
+    propname_implicit: Optional[bool] = None
+    xname_implicit: Optional[bool] = None
+    textstring_implicit: Optional[bool] = None
+    propstring_implicit: Optional[bool] = None
+    cellname_implicit: Optional[bool] = None
 
-    within_cell = False             # type: bool
-    within_cblock = False           # type: bool
-    end_has_offset_table = None     # type: bool
-    started = False                 # type: bool
+    within_cell: bool = False
+    within_cblock: bool = False
+    end_has_offset_table: bool
+    started: bool = False
 
 
 class OasisLayout:
@@ -43,49 +44,51 @@ class OasisLayout:
     Names and strings are stored in dicts, indexed by reference number.
     Layer names and properties are stored directly using their associated
         record objects.
-    Cells are stored using Cell objects (different from Cell record objects).
+    Cells are stored using `Cell` objects (different from `records.Cell`
+        record objects).
 
-    Properties:
-        File properties:
-            .version            AString: Version string ('1.0')
-            .unit               real number: grid steps per micron
-            .validation         Validation: checksum data
+    Attributes:
+        (File properties)
+        version (AString): Version string ('1.0')
+        unit (real_t): grid steps per micron
+        validation (Validation): checksum data
 
-        Names:
-            .cellnames          Dict[int, NString]
-            .propnames          Dict[int, NString]
-            .xnames             Dict[int, XName]
+        (Names)
+        cellnames (Dict[int, NString]): Cell names
+        propnames (Dict[int, NString]): Property names
+        xnames (Dict[int, XName]): Custom names
 
-        Strings:
-            .textstrings        Dict[int, AString]
-            .propstrings        Dict[int, AString]
+        (Strings)
+        textstrings (Dict[int, AString]): Text strings
+        propstrings (Dict[int, AString]): Property strings
 
-        Data:
-            .layers             List[records.LayerName]
-            .properties         List[records.Property]
-            .cells              List[Cell]
+        (Data)
+        layers (List[records.LayerName]): Layer definitions
+        properties (List[records.Property]): Property values
+        cells (List[Cell]): Layout cells
     """
-    version = None                  # type: AString
-    unit = None                     # type: real_t
-    validation = None               # type: Validation
+    version: AString
+    unit: real_t
+    validation: Validation
 
-    properties = None               # type: List[records.Property]
-    cells = None                    # type: List[Cell]
+    properties: List[records.Property]
+    cells: List['Cell']
 
-    cellnames = None                # type: Dict[int, NString]
-    propnames = None                # type: Dict[int, NString]
-    xnames = None                   # type: Dict[int, XName]
+    cellnames: Dict[int, NString]
+    propnames: Dict[int, NString]
+    xnames: Dict[int, 'XName']
 
-    textstrings = None              # type: Dict[int, AString]
-    propstrings = None              # type: Dict[int, AString]
-    layers = None                   # type: List[records.LayerName]
+    textstrings: Dict[int, AString]
+    propstrings: Dict[int, AString]
+    layers: List[records.LayerName]
 
 
     def __init__(self, unit: real_t, validation: Validation = None):
         """
-        :param unit: Real number (i.e. int, float, or Fraction), grid steps per micron.
-        :param validation: Validation object containing checksum data.
-                    Default creates a Validation object of the "no checksum" type.
+        Args:
+            unit: Real number (i.e. int, float, or `Fraction`), grid steps per micron.
+            validation: `Validation` object containing checksum data.
+                 Default creates a `Validation` object of the "no checksum" type.
         """
         if validation is None:
             validation = Validation(0)
@@ -105,10 +108,13 @@ class OasisLayout:
     @staticmethod
     def read(stream: io.BufferedIOBase) -> 'OasisLayout':
         """
-        Read an entire .oas file into an OasisLayout object.
+        Read an entire .oas file into an `OasisLayout` object.
 
-        :param stream: Stream to read from.
-        :return: New OasisLayout object.
+        Args:
+            stream: Stream to read from.
+
+        Returns:
+            New `OasisLayout` object.
         """
         file_state = FileModals()
         modals = Modals()
@@ -127,15 +133,20 @@ class OasisLayout:
                     ) -> bool:
         """
         Read a single record of unspecified type from a stream, adding its
-         contents into this OasisLayout object.
+         contents into this `OasisLayout` object.
 
-        :param stream: Stream to read from.
-        :param modals: Modal variable data, used to fill unfilled record
-            fields and updated using filled record fields.
-        :param file_state: File status data.
-        :return: True if EOF was reached without error, False otherwise.
-        :raises: InvalidRecordError from unexpected records;
-            InvalidDataError from within record parsers.
+        Args:
+            stream: Stream to read from.
+            modals: Modal variable data, used to fill unfilled record
+                fields and updated using filled record fields.
+            file_state: File status data.
+
+        Returns:
+            `True` if EOF was reached without error, `False` otherwise.
+
+        Raises:
+            InvalidRecordError: from unexpected records
+            InvalidDataError: from within record parsers
         """
         try:
             record_id = read_uint(stream)
@@ -304,9 +315,14 @@ class OasisLayout:
         """
         Write this object in OASIS fromat to a stream.
 
-        :param stream: Stream to write to.
-        :return: Number of bytes written.
-        :raises: InvalidDataError if contained records are invalid.
+        Args:
+            stream: Stream to write to.
+
+        Returns:
+            Number of bytes written.
+
+        Raises:
+            InvalidDataError: if contained records are invalid.
         """
         modals = Modals()
 
@@ -357,21 +373,22 @@ class Cell:
     """
     Representation of an OASIS cell.
 
-    Properties:
-        .name           NString or int (CellName reference number)
+    Attributes:
+        name (Union[NString, int]): name or "CellName reference" number
 
-        .properties     List of records.Property
-        .placements     List of records.Placement
-        .geometry       List of geometry record objectes
+        properties (List[records.Property]): Properties of this cell
+        placements (List[records.Placement]): Placement record objects
+        geometry: (List[records.geometry_t]): Geometry record objectes
     """
-    name = None                 # type: NString or int
-    properties = None           # type: List[records.Property]
-    placements = None           # type: List[records.Placement]
-    geometry = None             # type: List[records.geometry_t]
+    name: Union[NString, int]
+    properties: List[records.Property]
+    placements: List[records.Placement]
+    geometry: List[records.geometry_t]
 
-    def __init__(self, name: NString or int):
+    def __init__(self, name: Union[NString, int]):
         """
-        :param name: NString or int (CellName reference number)
+        Args:
+            name: `NString` or "CellName reference" number
         """
         self.name = name
         self.properties = []
@@ -383,10 +400,15 @@ class Cell:
         Write this cell to a stream, using the provided modal variables to
          deduplicate any repeated data.
 
-        :param stream: Stream to write to.
-        :param modals: Modal variables to use for deduplication.
-        :return: Number of bytes written.
-        :raises: InvalidDataError if contained records are invalid.
+        Args:
+            stream: Stream to write to.
+            modals: Modal variables to use for deduplication.
+
+        Returns:
+            Number of bytes written.
+
+        Raises:
+            InvalidDataError: if contained records are invalid.
         """
         size = records.Cell(self.name).dedup_write(stream, modals)
         size += sum(p.dedup_write(stream, modals) for p in self.properties)
@@ -399,16 +421,17 @@ class XName:
     """
     Representation of an XName.
 
-    This class is effectively a simplified form of a records.XName,
+    This class is effectively a simplified form of a `records.XName`,
      with the reference data stripped out.
     """
-    attribute = None        # type: int
-    bstring = None          # type: bytes
+    attribute: int
+    bstring: bytes
 
     def __init__(self, attribute: int, bstring: bytes):
         """
-        :param attribute: Attribute number.
-        :param bstring: Binary data.
+        Args:
+            attribute: Attribute number.
+            bstring: Binary data.
         """
         self.attribute = attribute
         self.bstring = bstring
@@ -416,10 +439,13 @@ class XName:
     @staticmethod
     def from_record(record: records.XName) -> 'XName':
         """
-        Create an XName object from a records.XName record.
+        Create an `XName` object from a `records.XName` record.
 
-        :param record: XName record to use.
-        :return: XName object.
+        Args:
+            record: XName record to use.
+
+        Returns:
+            `XName` object.
         """
         return XName(record.attribute, record.bstring)
 

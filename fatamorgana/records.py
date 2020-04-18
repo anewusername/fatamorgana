@@ -11,7 +11,7 @@ Higher-level code (e.g. monitoring for combinations of records with
  in main.py instead.
 """
 from abc import ABCMeta, abstractmethod
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union, Optional, Sequence
 import copy
 import math
 import zlib
@@ -35,42 +35,43 @@ logger = logging.getLogger(__name__)
 '''
     Type definitions
 '''
-geometry_t = 'Text' or 'Rectangle' or 'Polygon' or 'Path' or 'Trapezoid' or \
-             'CTrapezoid' or 'Circle' or 'XElement' or 'XGeometry'
-pathextension_t = Tuple['PathExtensionScheme' or int]
+geometry_t = Union['Text', 'Rectangle', 'Polygon', 'Path', 'Trapezoid',
+                  'CTrapezoid', 'Circle', 'XElement', 'XGeometry']
+pathextension_t = Tuple['PathExtensionScheme', Optional[int]]
+point_list_t = Sequence[Sequence[int]]
 
 
 class Modals:
     """
-    Modal variables, used to store data about previously-written ori
+    Modal variables, used to store data about previously-written or
      -read records.
     """
-    repetition = None               # type: repetition_t or None
-    placement_x = 0                 # type: int
-    placement_y = 0                 # type: int
-    placement_cell = None           # type: int or NString or None
-    layer = None                    # type: int or None
-    datatype = None                 # type: int or None
-    text_layer = None               # type: int or None
-    text_datatype = None            # type: int or None
-    text_x = 0                      # type: int
-    text_y = 0                      # type: int
-    text_string = None              # type: AString or int or None
-    geometry_x = 0                  # type: int
-    geometry_y = 0                  # type: int
-    xy_relative = False             # type: bool
-    geometry_w = None               # type: int or None
-    geometry_h = None               # type: int or None
-    polygon_point_list = None       # type: List[List[int]] or None
-    path_halfwidth = None           # type: int or None
-    path_point_list = None          # type: List[List[int]] or None
-    path_extension_start = None     # type: pathextension_t or None
-    path_extension_end = None       # type: pathextension_t or None
-    ctrapezoid_type = None          # type: int or None
-    circle_radius = None            # type: int or None
-    property_value_list = None      # type: List[property_value_t] or None
-    property_name = None            # type: int or NString or None
-    property_is_standard = None     # type: bool or None
+    repetition: Optional[repetition_t] = None
+    placement_x: int = 0
+    placement_y: int = 0
+    placement_cell: Optional[NString] = None
+    layer: Optional[int] = None
+    datatype: Optional[int] = None
+    text_layer: Optional[int] = None
+    text_datatype: Optional[int] = None
+    text_x: int = 0
+    text_y: int = 0
+    text_string: Union[AString, int, None] = None
+    geometry_x: int = 0
+    geometry_y: int = 0
+    xy_relative: bool = False
+    geometry_w: Optional[int] = None
+    geometry_h: Optional[int] = None
+    polygon_point_list: Optional[point_list_t] = None
+    path_half_width: Optional[int] = None
+    path_point_list: Optional[point_list_t] = None
+    path_extension_start: Optional[pathextension_t] = None
+    path_extension_end: Optional[pathextension_t] = None
+    ctrapezoid_type: Optional[int] = None
+    circle_radius: Optional[int] = None
+    property_value_list: Optional[Sequence[property_value_t]] = None
+    property_name: Union[int, NString, None] = None
+    property_is_standard: Optional[bool] = None
 
     def __init__(self):
         self.reset()
@@ -79,9 +80,9 @@ class Modals:
         """
         Resets all modal variables to their default values.
         Default values are:
-            0 for placement_{x,y}, text_{x,y}, geometry_{x,y}
-            False for xy_relative
-            Undefined (None) for all others
+            `0` for placement_{x,y}, text_{x,y}, geometry_{x,y}
+            `False` for xy_relative
+            Undefined (`None`) for all others
         """
         self.repetition = None
         self.placement_x = 0
@@ -100,7 +101,7 @@ class Modals:
         self.geometry_w = None
         self.geometry_h = None
         self.polygon_point_list = None
-        self.path_halfwidth = None
+        self.path_half_width = None
         self.path_point_list = None
         self.path_extension_start = None
         self.path_extension_end = None
@@ -127,7 +128,8 @@ class Record(metaclass=ABCMeta):
         Copy all defined values from this record into the modal variables.
         Fill all undefined values in this record from the modal variables.
 
-        :param modals: Modal variables to merge with.
+        Args:
+            modals: Modal variables to merge with.
         """
         pass
 
@@ -140,7 +142,8 @@ class Record(metaclass=ABCMeta):
          used instead. Update the modal variables using the remaining
          (unequal) values.
 
-        :param modals: Modal variables to deduplicate with.
+        Args:
+            modals: Modal variables to deduplicate with.
         """
         pass
 
@@ -151,12 +154,17 @@ class Record(metaclass=ABCMeta):
         Read a record of this type from a stream.
         This function does not merge with modal variables.
 
-        :param stream: Stream to read from.
-        :param record_id: Record id of the record to read. The
+        Args:
+            stream: Stream to read from.
+            record_id: Record id of the record to read. The
                 record id is often used to specify which variant
                 of the record is stored.
-        :return: The record that was read.
-        :raises: InvalidDataError if the record is malformed.
+
+        Returns:
+            The record that was read.
+
+        Raises:
+            InvalidDataError: if the record is malformed.
         """
         pass
 
@@ -166,20 +174,30 @@ class Record(metaclass=ABCMeta):
         Write this record to a stream as-is.
         This function does not merge or deduplicate with modal variables.
 
-        :param stream: Stream to write to.
-        :return: Number of bytes written.
-        :raises: InvalidDataError if the record contains invalid data.
+        Args:
+            stream: Stream to write to.
+
+        Returns:
+            Number of bytes written.
+
+        Raises:
+            InvalidDataError: if the record contains invalid data.
         """
         pass
 
     def dedup_write(self, stream: io.BufferedIOBase, modals: Modals) -> int:
         """
-        Run .deduplicate_with_modals() and then .write() to the stream.
+        Run `.deduplicate_with_modals()` and then `.write()` to the stream.
 
-        :param stream: Stream to write to.
-        :param modals: Modal variables to merge with.
-        :return: Number of bytes written
-        :raises: InvalidDataError if the record contains invalid data.
+        Args:
+            stream: Stream to write to.
+            modals: Modal variables to merge with.
+
+        Returns:
+            Number of bytes written.
+
+        Raises:
+            InvalidDataError: if the record contains invalid data.
         """
         # TODO logging
         #print(type(self), stream.tell())
@@ -190,7 +208,8 @@ class Record(metaclass=ABCMeta):
         """
         Perform a deep copy of this record.
 
-        :return: A deep copy of this record.
+        Returns:
+            A deep copy of this record.
         """
         return copy.deepcopy(self)
 
@@ -201,15 +220,18 @@ class Record(metaclass=ABCMeta):
 def read_refname(stream: io.BufferedIOBase,
                  is_present: bool,
                  is_reference: bool
-                 ) -> None or int or NString:
+                 ) -> Union[None, int, NString]:
     """
     Helper function for reading a possibly-absent, possibly-referenced NString.
 
-    :param stream: Stream to read from.
-    :param is_present: If False, read nothing and return None
-    :param is_reference: If True, read a uint (reference id),
-                          otherwise read an NString.
-    :return: None, reference id, or NString
+    Args:
+        stream: Stream to read from.
+        is_present: If `False`, read nothing and return `None`
+        is_reference: If `True`, read a uint (reference id),
+                          otherwise read an `NString`.
+
+    Returns:
+        `None`, reference id, or `NString`
     """
     if not is_present:
         return None
@@ -222,15 +244,18 @@ def read_refname(stream: io.BufferedIOBase,
 def read_refstring(stream: io.BufferedIOBase,
                    is_present: bool,
                    is_reference: bool
-                   ) -> None or int or AString:
+                   ) -> Union[None, int, AString]:
     """
-    Helper function for reading a possibly-absent, possibly-referenced AString.
+    Helper function for reading a possibly-absent, possibly-referenced `AString`.
 
-    :param stream: Stream to read from.
-    :param is_present: If False, read nothing and return None
-    :param is_reference: If True, read a uint (reference id),
-                          otherwise read an AString.
-    :return: None, reference id, or AString
+    Args:
+        stream: Stream to read from.
+        is_present: If `False`, read nothing and return `None`
+        is_reference: If `True`, read a uint (reference id),
+                          otherwise read an `AString`.
+
+    Returns:
+        `None`, reference id, or `AString`
     """
     if not is_present:
         return None
@@ -267,10 +292,10 @@ class XYMode(Record):
     """
     XYMode record (ID 15, 16)
 
-    Properties:
-        .relative       (bool, default False)
+    Attributes:
+        relative (bool): default `False`
     """
-    relative = False     # type: bool
+    relative: bool = False
 
     @property
     def absolute(self) -> bool:
@@ -282,7 +307,8 @@ class XYMode(Record):
 
     def __init__(self, relative: bool):
         """
-        :param relative: True if the mode is 'relative', False if 'absolute'.
+        Args:
+            relative: `True` if the mode is 'relative', `False` if 'absolute'.
         """
         self.relative = relative
 
@@ -308,25 +334,26 @@ class Start(Record):
     """
     Start Record (ID 1)
 
-    Properties:
-        .version        (AString, "1.0")
-        .unit           (positive real number, grid steps per micron)
-        .offset_table   (OffsetTable or None, if None then table must be
-                         placed in the End record)
+    Attributes:
+        version (AString): "1.0"
+        unit (real_t): positive real number, grid steps per micron
+        offset_table (OffsetTable or None): If `None` then table must be
+                                            placed in the `End` record)
     """
-    version = None              # type: AString
-    unit = None                 # type: real_t
-    offset_table = None         # type: OffsetTable
+    version: AString
+    unit: real_t
+    offset_table: OffsetTable = None
 
     def __init__(self,
                  unit: real_t,
-                 version: AString or str = None,
+                 version: Union[AString, str] = None,
                  offset_table: OffsetTable = None):
         """
-        :param unit: Grid steps per micron (positive real number)
-        :param version: Version string, default "1.0"
-        :param offset_table: OffsetTable for the file, or None to place
-                    it in the End record instead.
+        Args
+            unit: Grid steps per micron (positive real number)
+            version: Version string, default "1.0"
+            offset_table: `OffsetTable` for the file, or `None` to place
+                    it in the `End` record instead.
         """
         if unit <= 0:
             raise InvalidDataError('Non-positive unit: {}'.format(unit))
@@ -387,21 +414,22 @@ class End(Record):
 
     The end record is always padded to a total length of 256 bytes.
 
-    Properties:
-        .offset_table       (OffsetTable or None, None if offset table was
-                                written into the Start record instead)
-        .validation         (Validation object)
+    Attributes:
+        offset_table (Optional[OffsetTable]): `None` if offset table was
+                                  written into the `Start` record instead
+        validation (Validation): object containing checksum
     """
-    offset_table = None         # type: OffsetTable or None
-    validation = None           # type: Validation
+    offset_table: Optional[OffsetTable] = None
+    validation: Validation
 
     def __init__(self,
                  validation: Validation,
-                 offset_table: OffsetTable = None):
+                 offset_table: Optional[OffsetTable] = None):
         """
-        :param validation: Validation object for this file.
-        :param offset_table: OffsetTable, or None if the Start record
-                    contained an OffsetTable. Default None.
+        Args:
+            validation: `Validation` object for this file.
+            offset_table: `OffsetTable`, or `None` if the `Start` record
+                    contained an `OffsetTable`. Default `None`.
         """
         self.validation = validation
         self.offset_table = offset_table
@@ -450,23 +478,24 @@ class CBlock(Record):
     """
     CBlock (Compressed Block) record (ID 34)
 
-    Properties:
-        .compression_type           (int, 0 for zlib)
-        .decompressed_byte_count    (int)
-        .compressed_bytes           (bytes)
+    Attributes:
+        compression_type (int): `0` for zlib
+        decompressed_byte_count (int): size after decompressing
+        compressed_bytes (bytes): compressed data
     """
-    compression_type = None         # type: int
-    decompressed_byte_count = None  # type: int
-    compressed_bytes = None         # type: bytes
+    compression_type: int
+    decompressed_byte_count: int
+    compressed_bytes: bytes
 
     def __init__(self,
                  compression_type: int,
                  decompressed_byte_count: int,
                  compressed_bytes: bytes):
         """
-        :param compression_type: 0 (zlib)
-        :param decompressed_byte_count: Number of bytes in the decompressed data.
-        :param compressed_bytes: The compressed data.
+        Args:
+            compression_type: `0` (zlib)
+            decompressed_byte_count: Number of bytes in the decompressed data.
+            compressed_bytes: The compressed data.
         """
         if compression_type != 0:
             raise InvalidDataError('CBlock: Invalid compression scheme '
@@ -509,11 +538,16 @@ class CBlock(Record):
         """
         Create a CBlock record from uncompressed data.
 
-        :param decompressed_bytes: Uncompressed data (one or more non-CBlock records)
-        :param compression_type: Compression type (0: zlib). Default 0
-        :param compression_args Passed as kwargs to zlib.compressobj(). Default {}.
-        :return: CBlock object constructed from the data.
-        :raises: InvalidDataError if invalid compression_type.
+        Args:
+            decompressed_bytes: Uncompressed data (one or more non-CBlock records)
+            compression_type: Compression type (0: zlib). Default `0`
+            compression_args: Passed as kwargs to `zlib.compressobj()`. Default `{}`.
+
+        Returns:
+            CBlock object constructed from the data.
+
+        Raises:
+            InvalidDataError: if invalid `compression_type`.
         """
         if compression_args is None:
             compression_args = {}
@@ -533,9 +567,14 @@ class CBlock(Record):
         """
         Decompress the contents of this CBlock.
 
-        :param decompression_args: Passed as kwargs to zlib.decompressobj().
-        :return: Decompressed bytes object.
-        :raises: InvalidDataError if data is malformed or compression type is
+        Args:
+            decompression_args: Passed as kwargs to `zlib.decompressobj()`.
+
+        Returns:
+            Decompressed `bytes` object.
+
+        Raises:
+            InvalidDataError: if data is malformed or compression type is
                     unknonwn.
         """
         if decompression_args is None:
@@ -556,20 +595,21 @@ class CellName(Record):
     """
     CellName record (ID 3, 4)
 
-    Properties:
-        .nstring            (NString)
-        .reference_number   (int or None)
+    Attributes:
+        nstring (NString): name
+        reference_number (Optional[int]): `None` results in implicit assignment
     """
-    nstring = None                  # type: NString
-    reference_number = None         # type: int or None
+    nstring: NString
+    reference_number: Optional[int] = None
 
     def __init__(self,
-                 nstring: NString or str,
+                 nstring: Union[NString, str],
                  reference_number: int = None):
         """
-        :param nstring: The contained string.
-        :param reference_number: Reference id number for the string.
-                            Default is to use an implicitly-assigned number.
+        Args:
+            nstring: The contained string.
+            reference_number: Reference id number for the string.
+                     Default is to use an implicitly-assigned number.
         """
         if isinstance(nstring, NString):
             self.nstring = nstring
@@ -609,20 +649,21 @@ class PropName(Record):
     """
     PropName record (ID 7, 8)
 
-    Properties:
-        .nstring            (NString)
-        .reference_number   (int or None)
+    Attributes:
+        nstring (NString): name
+        reference_number (Optional[int]): `None` results in implicit assignment
     """
-    nstring = None                  # type: NString
-    reference_number = None         # type: int or None
+    nstring: NString
+    reference_number: Optional[int] = None
 
     def __init__(self,
-                 nstring: NString or str,
+                 nstring: Union[NString, str],
                  reference_number: int = None):
         """
-        :param nstring: The contained string.
-        :param reference_number: Reference id number for the string.
-                            Default is to use an implicitly-assigned number.
+        Args:
+            nstring: The contained string.
+            reference_number: Reference id number for the string.
+                         Default is to use an implicitly-assigned number.
         """
         if isinstance(nstring, NString):
             self.nstring = nstring
@@ -663,20 +704,21 @@ class TextString(Record):
     """
     TextString record (ID 5, 6)
 
-    Properties:
-        .astring            (AString)
-        .reference_number   (int or None)
+    Attributes:
+        astring (AString): string data
+        reference_number (Optional[int]): `None` results in implicit assignment
     """
-    astring = None                  # type: AString
-    reference_number = None         # type: int or None
+    astring: AString
+    reference_number: Optional[int] = None
 
     def __init__(self,
-                 string: AString or str,
+                 string: Union[AString, str],
                  reference_number: int = None):
         """
-        :param string: The contained string.
-        :param reference_number: Reference id number for the string.
-                            Default is to use an implicitly-assigned number.
+        Args:
+            string: The contained string.
+            reference_number: Reference id number for the string.
+                         Default is to use an implicitly-assigned number.
         """
         if isinstance(string, AString):
             self.astring = string
@@ -717,20 +759,21 @@ class PropString(Record):
     """
     PropString record (ID 9, 10)
 
-    Properties:
-        .astring            (AString)
-        .reference_number   (int or None)
+    Attributes:
+        astring (AString): string data
+        reference_number (Optional[int]): `None` results in implicit assignment
     """
-    astring = None                  # type: AString
-    reference_number = None         # type: int or None
+    astring: AString
+    reference_number: Optional[int] = None
 
     def __init__(self,
-                 string: AString or str,
+                 string: Union[AString, str],
                  reference_number: int = None):
         """
-        :param string: The contained string.
-        :param reference_number: Reference id number for the string.
-                            Default is to use an implicitly-assigned number.
+        Args:
+            string: The contained string.
+            reference_number: Reference id number for the string.
+                         Default is to use an implicitly-assigned number.
         """
         if isinstance(string, AString):
             self.astring = string
@@ -771,31 +814,30 @@ class LayerName(Record):
     """
     LayerName record (ID 11, 12)
 
-    Properties:
-        .nstring            (NString)
-        .layer_interval     (Tuple, (int or None, int or None),
-                                                    bounds on the interval)
-        .type_interval      (Tuple, (int or None, int or None),
-                                                    bounds on the interval)
-        .is_textlayer       (bool)
+    Attributes:
+        nstring (NString): name
+        layer_interval (Tuple[Optional[int], Optional[int]]): bounds on the interval
+        type_interval (Tuple[Optional[int], Optional[int]]): bounds on the interval
+        is_textlayer (bool): Is this a text layer?
     """
-    nstring = None              # type: NString,
-    layer_interval = None       # type: Tuple
-    type_interval = None        # type: Tuple
-    is_textlayer = None         # type: bool
+    nstring: NString
+    layer_interval: Tuple
+    type_interval: Tuple
+    is_textlayer: bool
 
     def __init__(self,
-                 nstring: NString or str,
+                 nstring: Union[NString, str],
                  layer_interval: Tuple,
                  type_interval: Tuple,
                  is_textlayer: bool):
         """
-        :param nstring: The layer name.
-        :param layer_interval: Tuple (int or None, int or None) giving bounds
-                            (or lack of thereof) on the layer number.
-        :param type_interval: Tuple (int or None, int or None) giving bounds
-                            (or lack of thereof) on the type number.
-        :param is_textlayer: True if the layer is a text layer.
+        Args:
+            nstring: The layer name.
+            layer_interval: Tuple (int or None, int or None) giving bounds
+                     (or lack of thereof) on the layer number.
+            type_interval: Tuple (int or None, int or None) giving bounds
+                     (or lack of thereof) on the type number.
+            is_textlayer: `True` if the layer is a text layer.
         """
         if isinstance(nstring, NString):
             self.nstring = nstring
@@ -837,28 +879,28 @@ class Property(Record):
     """
     LayerName record (ID 28, 29)
 
-    Properties:
-        .name           (NString or int or None,
-                         int is an explicit reference,
-                         None is a flag to use Modal)
-        .values         (List of property values or None)
-        .is_standard    (bool, whether this is a standard property)
+    Attributes:
+        name (Union[NString, int, None]): `int` is an explicit reference,
+                                       `None` is a flag to use Modal)
+        values (Optional[List[property_value_t]]): List of property values.
+        is_standard (bool): Whether this is a standard property.
     """
-    name = None             # type: NString or int or None,
-    values = None           # type: List[property_value_t] or None
-    is_standard = None      # type: bool or None
+    name: Union[NString, int, None] = None
+    values: Optional[List[property_value_t]] = None
+    is_standard: Optional[bool] = None
 
     def __init__(self,
-                 name: NString or str or int = None,
-                 values: List[property_value_t] = None,
-                 is_standard: bool = None):
+                 name: Union[NString, str, int] = None,
+                 values: Optional[List[property_value_t]] = None,
+                 is_standard: Optional[bool] = None):
         """
-        :param name: Property name, reference number, or None (i.e. use modal)
-                Default None.
-        :param values: List of property values, or None (i.e. use modal)
-                Default None.
-        :param is_standard: True if this is a standard property. None to use modal.
-                Default None.
+        Args:
+            name: Property name, reference number, or `None` (i.e. use modal)
+                Default `None.
+            values: List of property values, or `None` (i.e. use modal)
+                Default `None`.
+            is_standard: `True` if this is a standard property. `None` to use modal.
+                Default `None`.
         """
         if isinstance(name, str):
             self.name = NString(name)
@@ -948,24 +990,25 @@ class XName(Record):
     """
     XName record (ID 30, 31)
 
-    Properties:
-        .attribute           (int)
-        .bstring             (bytes)
-        .reference_number    (int or None, None means to use implicity numbering)
+    Attributes:
+        attribute (int): Attribute number
+        bstring (bytes): XName data
+        reference_number (Optional[int]): None means to use implicit numbering
     """
-    attribute = None            # type: int
-    bstring = None              # type: bytes
-    reference_number = None     # type: int or None
+    attribute: int
+    bstring: bytes
+    reference_number: Optional[int] = None
 
     def __init__(self,
                  attribute: int,
                  bstring: bytes,
                  reference_number: int = None):
         """
-        :param attribute: Attribute number.
-        :param bstring: Binary XName data.
-        :param reference_number: Reference number for this XName.
-                Default None (implicit).
+        Args:
+            attribute: Attribute number.
+            bstring: Binary XName data.
+            reference_number: Reference number for this `XName`.
+                Default `None` (implicit).
         """
         self.attribute = attribute
         self.bstring = bstring
@@ -1006,17 +1049,18 @@ class XElement(Record):
     """
     XElement record (ID 32)
 
-    Properties:
-        .attribute           (int)
-        .bstring             (bytes)
+    Attributes:
+        attribute (int): Attribute number.
+        bstring (bytes): XElement data.
     """
-    attribute = None        # type: int
-    bstring = None          # type: bytes
+    attribute: int
+    bstring: bytes
 
     def __init__(self, attribute: int, bstring: bytes):
         """
-        :param attribute: Attribute number.
-        :param bstring: Binary data for this XElement.
+        Args:
+            attribute: Attribute number.
+            bstring: Binary data for this XElement.
         """
         self.attribute = attribute
         self.bstring = bstring
@@ -1049,22 +1093,22 @@ class XGeometry(Record):
     """
     XGeometry record (ID 33)
 
-    Properties:
-        .attribute           (int)
-        .bstring             (bytes)
-        .layer               (int or None, None means reuse modal)
-        .datatype            (int or None, None means reuse modal)
-        .x                   (int or None, None means reuse modal)
-        .y                   (int or None, None means reuse modal)
-        .repetition          (reptetition or None)
+    Attributes:
+        attribute (int): Attribute number.
+        bstring (bytes): XGeometry data.
+        layer (Optional[int]): None means reuse modal
+        datatype (Optional[int]): None means reuse modal
+        x (Optional[int]): None means reuse modal
+        y (Optional[int]): None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any
     """
-    attribute = None    # type: int
-    bstring = None      # type: bytes
-    layer = None        # type: int or None
-    datatype = None     # type: int or None
-    x = None            # type: int or None
-    y = None            # type: int or None
-    repetition = None   # type: repetition_t or None
+    attribute: int
+    bstring: bytes
+    layer: Optional[int] = None
+    datatype: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+    repetition: Optional[repetition_t] = None
 
     def __init__(self,
                  attribute: int,
@@ -1075,13 +1119,14 @@ class XGeometry(Record):
                  y: int = None,
                  repetition: repetition_t = None):
         """
-        :param attribute: Attribute number for this XGeometry.
-        :param bstring: Binary data for this XGeometry.
-        :param layer: Layer number. Default None (reuse modal).
-        :param datatype: Datatype number. Default None (reuse modal).
-        :param x: X-offset. Default None (use modal).
-        :param y: Y-offset. Default None (use modal).
-        :param repetition: Repetition. Default None (no repetition).
+        Args:
+            attribute: Attribute number for this XGeometry.
+            bstring: Binary data for this XGeometry.
+            layer: Layer number. Default `None` (reuse modal).
+            datatype: Datatype number. Default `None` (reuse modal).
+            x: X-offset. Default `None` (use modal).
+            y: Y-offset. Default `None` (use modal).
+            repetition: Repetition. Default `None` (no repetition).
         """
         self.attribute = attribute
         self.bstring = bstring
@@ -1158,14 +1203,15 @@ class Cell(Record):
     """
     Cell record (ID 13, 14)
 
-    Properties:
-        .name           (NString or int specifying CellName reference number)
+    Attributes:
+        name (Union[int, NString]): int specifies "CellName reference" number
     """
-    name = None         # type: int or NString
+    name: Union[int, NString]
 
-    def __init__(self, name: int or NString):
+    def __init__(self, name: Union[int, NString]):
         """
-        :param name: NString, or an int specifying a CellName reference number.
+        Args:
+            name: `NString`, or an int specifying a `CellName` reference number.
         """
         self.name = name
 
@@ -1203,44 +1249,43 @@ class Placement(Record):
     """
     Placement record (ID 17, 18)
 
-    Properties:
-        .attribute           (int)
-        .name                (NString, name or
-                                int, CellName reference number or
-                                None, reuse modal)
-        .magnification       (real)
-        .angle               (real, degrees counterclockwise)
-        .x                   (int or None, None means reuse modal)
-        .y                   (int or None, None means reuse modal)
-        .repetition          (reptetition or None)
-        .flip                (bool)
+    Attributes:
+        name (Union[NString, int, None]): name, "CellName reference"
+                    number, or reuse modal
+        magnification (real_t): Magnification factor
+        angle (real_t): Rotation, degrees counterclockwise
+        x (Optional[int]): x-offset, None means reuse modal
+        y (Optional[int]): y-offset, None means reuse modal
+        repetition (repetition_t or None): Repetition, if any
+        flip (bool): Whether to perform reflection about the x-axis.
     """
-    name = None             # type: NString or int or None
-    magnification = None    # type: real_t or None
-    angle = None            # type: real_t or None
-    x = None                # type: int or None
-    y = None                # type: int or None
-    repetition = None       # type: repetition_t or None
-    flip = None             # type: bool
+    name: Union[NString, int, None] = None
+    magnification: Optional[real_t] = None
+    angle: Optional[real_t] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+    repetition: Optional[repetition_t] = None
+    flip: bool
 
     def __init__(self,
                  flip: bool,
-                 name: NString or str or int = None,
-                 magnification: real_t  = None,
-                 angle: real_t = None,
-                 x: int = None,
-                 y: int = None,
-                 repetition: repetition_t = None):
+                 name: Union[NString, str, int] = None,
+                 magnification: Optional[real_t] = None,
+                 angle: Optional[real_t] = None,
+                 x: Optional[int] = None,
+                 y: Optional[int] = None,
+                 repetition: Optional[repetition_t] = None):
         """
-        :param flip: Whether to perform reflection about the x-axis.
-        :param name: NString, an int specifying a CellName reference number,
-                or None (reuse modal).
-        :param magnification: Magnification factor. Default None (use modal).
-        :param angle: Rotation angle in degrees, counterclockwise.
-                Default None (reuse modal).
-        :param x: X-offset. Default None (use modal).
-        :param y: Y-offset. Default None (use modal).
-        :param repetition: Repetition. Default None (no repetition).
+        Args:
+            flip: Whether to perform reflection about the x-axis.
+            name: `NString`, an int specifying a `CellName` reference number,
+                or `None` (reuse modal).
+            magnification: Magnification factor. Default `None` (use modal).
+            angle: Rotation angle in degrees, counterclockwise.
+                Default `None` (reuse modal).
+            x: X-offset. Default `None` (use modal).
+            y: Y-offset. Default `None` (use modal).
+            repetition: Repetition. Default `None` (no repetition).
         """
         self.x = x
         self.y = y
@@ -1340,36 +1385,37 @@ class Text(Record):
     """
     Text record (ID 19)
 
-    Properties:
-        .string              (AString or int or None, None means reuse modal)
-        .layer               (int or None, None means reuse modal)
-        .datatype            (int or None, None means reuse modal)
-        .x                   (int or None, None means reuse modal)
-        .y                   (int or None, None means reuse modal)
-        .repetition          (reptetition or None)
+    Attributes:
+        string (Union[AString, int, None]): None means reuse modal
+        layer (Optiona[int]): None means reuse modal
+        datatype (Optional[int]): None means reuse modal
+        x (Optional[int]): x-offset, None means reuse modal
+        y (Optional[int]): y-offset, None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any
     """
-    string = None           # type: AString or int or None
-    layer = None            # type: int or None
-    datatype = None         # type: int or None
-    x = None                # type: int or None
-    y = None                # type: int or None
-    repetition = None       # type: repetition_t or None
+    string: Union[AString, int, None] = None
+    layer: Optional[int] = None
+    datatype: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+    repetition: Optional[repetition_t] = None
 
     def __init__(self,
-                 string: AString or str or int = None,
-                 layer: int = None,
-                 datatype: int = None,
-                 x: int = None,
-                 y: int = None,
-                 repetition: repetition_t = None):
+                 string: Union[AString, str, int] = None,
+                 layer: Optional[int] = None,
+                 datatype: Optional[int] = None,
+                 x: Optional[int] = None,
+                 y: Optional[int] = None,
+                 repetition: Optional[repetition_t] = None):
         """
-        :param string: Text content, or TextString reference number.
-                Default None (use modal).
-        :param layer: Layer number. Default None (reuse modal).
-        :param datatype: Datatype number. Default None (reuse modal).
-        :param x: X-offset. Default None (use modal).
-        :param y: Y-offset. Default None (use modal).
-        :param repetition: Repetition. Default None (no repetition).
+        Args:
+            string: Text content, or `TextString` reference number.
+                Default `None` (use modal).
+            layer: Layer number. Default `None` (reuse modal).
+            datatype: Datatype number. Default `None` (reuse modal).
+            x: X-offset. Default `None` (use modal).
+            y: Y-offset. Default `None` (use modal).
+            repetition: Repetition. Default `None` (no repetition).
         """
         self.layer = layer
         self.datatype = datatype
@@ -1455,47 +1501,48 @@ class Rectangle(Record):
     """
     Rectangle record (ID 20)
 
-    Properties:
-        .is_square           (bool, True if this is a square.
-                                    If True, height must be None.)
-        .width               (int or None, None means reuse modal)
-        .height              (int or None, Must be None if .is_square is True.
-                                    If .is_square is False, None means reuse modal)
-        .layer               (int or None, None means reuse modal)
-        .datatype            (int or None, None means reuse modal)
-        .x                   (int or None, None means use modal)
-        .y                   (int or None, None means use modal)
-        .repetition          (reptetition or None)
+    Attributes:
+        is_square (bool): `True` if this is a square.
+                        If `True`, `height` must be `None`.
+        width (Optional[int]): `None` means reuse modal.
+        height (Optional[int]): Must be `None` if `is_square` is `True`.
+                        If `is_square` is `False`, `None` means reuse modal.
+        layer (Optional[int]): None means reuse modal
+        datatype (Optional[int]): None means reuse modal
+        x (Optional[int]): x-offset, None means reuse modal
+        y (Optional[int]): y-offset, None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any
     """
-    layer = None            # type: int or None
-    datatype = None         # type: int or None
-    width = None            # type: int or None
-    height = None           # type: int or None
-    x = None                # type: int or None
-    y = None                # type: int or None
-    repetition = None       # type: repetition_t or None
-    is_square = None        # type: bool
+    layer: Optional[int] = None
+    datatype: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+    repetition: Optional[repetition_t] = None
+    is_square: bool = False
 
     def __init__(self,
                  is_square: bool = False,
-                 layer: int = None,
-                 datatype: int = None,
-                 width: int = None,
-                 height: int = None,
-                 x: int = None,
-                 y: int = None,
-                 repetition: repetition_t = None):
+                 layer: Optional[int] = None,
+                 datatype: Optional[int] = None,
+                 width: Optional[int] = None,
+                 height: Optional[int] = None,
+                 x: Optional[int] = None,
+                 y: Optional[int] = None,
+                 repetition: Optional[repetition_t] = None):
         """
-        :param is_square: True if this is a square. If True, height must
-                be None. Default False.
-        :param layer: Layer number. Default None (reuse modal).
-        :param datatype: Datatype number. Default None (reuse modal).
-        :param width: X-width. Default None (reuse modal).
-        :param height: Y-height. Default None (reuse modal, or use width if
-                square). Must be None if is_square is True.
-        :param x: X-offset. Default None (use modal).
-        :param y: Y-offset. Default None (use modal).
-        :param repetition: Repetition. Default None (no repetition).
+        Args:
+            is_square: `True` if this is a square. If `True`, `height` must
+                be `None`. Default `False`.
+            layer: Layer number. Default `None` (reuse modal).
+            datatype: Datatype number. Default `None` (reuse modal).
+            width: X-width. Default `None` (reuse modal).
+            height: Y-height. Default `None` (reuse modal, or use `width` if
+                square). Must be `None` if `is_square` is `True`.
+            x: X-offset. Default `None` (use modal).
+            y: Y-offset. Default `None` (use modal).
+            repetition: Repetition. Default `None` (no repetition).
         """
         self.is_square = is_square
         self.layer = layer
@@ -1589,40 +1636,40 @@ class Polygon(Record):
     """
     Polygon record (ID 21)
 
-    Properties:
-        .point_list     ([[x0, y0], [x1, y1], ...] or None,
-                                list is an implicitly closed path,
-                                vertices are [int, int],
-                                None means reuse modal)
-        .layer          (int or None, None means reuse modal)
-        .datatype       (int or None, None means reuse modal)
-        .x              (int or None, None means reuse modal)
-        .y              (int or None, None means reuse modal)
-        .repetition     (reptetition or None)
+    Attributes:
+        point_list (Optional[point_list_t]): `[[x0, y0], [x1, y1], ...]`
+            The list is an implicitly closed path, vertices are [int, int],
+            `None` means reuse modal.
+        layer (Optional[int]): None means reuse modal
+        datatype (Optional[int]): None means reuse modal
+        x (Optional[int]): x-offset, None means reuse modal
+        y (Optional[int]): y-offset, None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any
     """
-    layer = None            # type: int or None
-    datatype = None         # type: int or None
-    x = None                # type: int or None
-    y = None                # type: int or None
-    repetition = None       # type: repetition_t or None
-    point_list = None       # type: List[List[int]] or None
+    layer: Optional[int] = None
+    datatype: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+    repetition: Optional[repetition_t] = None
+    point_list: Optional[point_list_t] = None
 
     def __init__(self,
-                 point_list: List[List[int]] = None,
-                 layer: int = None,
-                 datatype: int = None,
-                 x: int = None,
-                 y: int = None,
-                 repetition: repetition_t = None):
+                 point_list: Optional[point_list_t] = None,
+                 layer: Optional[int] = None,
+                 datatype: Optional[int] = None,
+                 x: Optional[int] = None,
+                 y: Optional[int] = None,
+                 repetition: Optional[repetition_t] = None):
         """
-        :param point_list: List of vertices [[x0, y0], [x1, y1], ...].
-                List forms an implicitly closed path
-                Default None (reuse modal).
-        :param layer: Layer number. Default None (reuse modal).
-        :param datatype: Datatype number. Default None (reuse modal).
-        :param x: X-offset. Default None (use modal).
-        :param y: Y-offset. Default None (use modal).
-        :param repetition: Repetition. Default None (no repetition).
+        Args:
+            point_list: List of vertices `[[x0, y0], [x1, y1], ...]`.
+                List forms an implicitly closed path.
+                Default `None` (reuse modal).
+            layer: Layer number. Default `None` (reuse modal).
+            datatype: Datatype number. Default `None` (reuse modal).
+            x: X-offset. Default `None` (use modal).
+            y: Y-offset. Default `None` (use modal).
+            repetition: Repetition. Default `None` (no repetition).
         """
         self.layer = layer
         self.datatype = datatype
@@ -1705,63 +1752,60 @@ class Path(Record):
     """
     Polygon record (ID 22)
 
-    Properties:
-        .point_list         ([[x0, y0], [x1, y1], ...] or None,
-                                vertices are [int, int],
-                                None means reuse modal)
-        .half_width         (int or None, None means reuse modal)
-        .extension_start    (Tuple or None,
-                                None means reuse modal,
-                                Tuple is of the form
-                                    (PathExtensionScheme, int or None)
-                                    second value is None unless using
-                                    PathExtensionScheme.Arbitrary
-                                Value determines extension past start point.
-        .extension_end      Same form as extension_end. Value determines
-                                extension past end point.
-        .layer              (int or None, None means reuse modal)
-        .datatype           (int or None, None means reuse modal)
-        .x                  (int or None, None means use modal)
-        .y                  (int or None, None means use modal)
-        .repetition         (reptetition or None)
+    Attributes:
+        point_list (Optional[point_list_t]): `[[x0, y0], [x1, y1], ...]`
+            Vertices are [int, int]; `None` means reuse modal.
+        half_width (Optional[int]): None means reuse modal
+        extension_start (Optional[Tuple]): None means reuse modal.
+            Tuple is of the form (`PathExtensionScheme`, Optional[int])
+            Second value is None unless using `PathExtensionScheme.Arbitrary`
+            Value determines extension past start point.
+        extension_end (Optional[Tuple]): Same form as `extension_end`.
+            Value determines extension past end point.
+        layer (Optional[int]): None means reuse modal
+        datatype (Optional[int]): None means reuse modal
+        x (Optional[int]): x-offset, None means reuse modal
+        y (Optional[int]): y-offset, None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any
     """
-    layer = None            # type: int or None
-    datatype = None         # type: int or None
-    x = None                # type: int or None
-    y = None                # type: int or None
-    repetition = None       # type: repetition_t or None
-    point_list = None       # type: List[List[int]] or None
-    half_width = None       # type: int or None
-    extension_start = None  # type: pathextension_t or None
-    extension_end = None    # type: pathextension_t or None
+    layer: Optional[int] = None
+    datatype: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+    repetition: Optional[repetition_t] = None
+    point_list: Optional[point_list_t] = None
+    half_width: Optional[int] = None
+    extension_start: Optional[pathextension_t] = None
+    extension_end: Optional[pathextension_t] = None
 
     def __init__(self,
-                 point_list: List[List[int]] = None,
-                 half_width: int = None,
-                 extension_start: pathextension_t = None,
-                 extension_end: pathextension_t = None,
-                 layer: int = None,
-                 datatype: int = None,
-                 x: int = None,
-                 y: int = None,
-                 repetition: repetition_t = None):
+                 point_list: Optional[point_list_t] = None,
+                 half_width: Optional[int] = None,
+                 extension_start: Optional[pathextension_t] = None,
+                 extension_end: Optional[pathextension_t] = None,
+                 layer: Optional[int] = None,
+                 datatype: Optional[int] = None,
+                 x: Optional[int] = None,
+                 y: Optional[int] = None,
+                 repetition: Optional[repetition_t] = None):
         """
-        :param point_list: List of vertices [[x0, y0], [x1, y1], ...].
-                Default None (reuse modal).
-        :param half_width: Half-width of the path. Default None (reuse modal).
-        :param extension_start: Specification for path extension at start of path.
-                None or Tuple: (PathExtensionScheme, int or None).
-                int is used only for PathExtensionScheme.Arbitrary.
-                Default None (reuse modal).
-        :param extension_end: Specification for path extension at end of path.
-                None or Tuple: (PathExtensionScheme, int or None).
-                int is used only for PathExtensionScheme.Arbitrary.
-                Default None (reuse modal).
-        :param layer: Layer number. Default None (reuse modal).
-        :param datatype: Datatype number. Default None (reuse modal).
-        :param x: X-offset. Default None (use modal).
-        :param y: Y-offset. Default None (use modal).
-        :param repetition: Repetition. Default None (no repetition).
+        Args:
+            point_list: List of vertices `[[x0, y0], [x1, y1], ...]`.
+                Default `None` (reuse modal).
+            half_width: Half-width of the path. Default `None` (reuse modal).
+            extension_start: Specification for path extension at start of path.
+                `None` or `Tuple`: `(PathExtensionScheme, int or None)`.
+                int is used only for `PathExtensionScheme.Arbitrary`.
+                Default `None` (reuse modal).
+            extension_end: Specification for path extension at end of path.
+                `None` or `Tuple`: `(PathExtensionScheme, int or None)`.
+                int is used only for `PathExtensionScheme.Arbitrary`.
+                Default `None` (reuse modal).
+            layer: Layer number. Default `None` (reuse modal).
+            datatype: Datatype number. Default `None` (reuse modal).
+            x: X-offset. Default `None` (use modal).
+            y: Y-offset. Default `None` (use modal).
+            repetition: Repetition. Default `None` (no repetition).
         """
         self.layer = layer
         self.datatype = datatype
@@ -1880,39 +1924,36 @@ class Trapezoid(Record):
     """
     Trapezoid record (ID 23, 24, 25)
 
-    Properties:
-        .delta_a        (int or None,
-                            If horizontal, signed x-distance from top left
-                            vertex to bottom left vertex. If vertical, signed
-                            y-distance from bottom left vertex to bottom right
-                            vertex.
-                            None means reuse modal.)
-        .delta_b        (int or None,
-                            If horizontal, signed x-distance from bottom right
-                            vertex to top right vertex. If vertical, signed
-                            y-distance from top right vertex to top left vertex.
-                            None means reuse modal.)
-        .is_vertical    (bool, True if the left and right sides are aligned to
-                            the y-axis. If the trapezoid is a rectangle, either
-                            True or False can be used.)
-        .width          (int or None, Bounding box x-width, None means reuse modal)
-        .height         (int or None, Bounding box y-height, None means reuse modal)
-        .layer          (int or None, None means reuse modal)
-        .datatype       (int or None, None means reuse modal)
-        .x              (int or None, None means se modal)
-        .y              (int or None, None means se modal)
-        .repetition     (reptetition or None)
+    Attributes:
+        delta_a (Optional[int]): If horizontal, signed x-distance from top left
+            vertex to bottom left vertex. If vertical, signed y-distance from
+            bottom left vertex to bottom right vertex.
+            None means reuse modal.
+        delta_b (Optional[int]): If horizontal, signed x-distance from bottom right
+            vertex to top right vertex. If vertical, signed y-distance from top
+            right vertex to top left vertex.
+            None means reuse modal.
+        is_vertical (bool): `True` if the left and right sides are aligned to
+            the y-axis. If the trapezoid is a rectangle, either `True` or `False`
+            can be used.
+        width (Optional[int]): Bounding box x-width, None means reuse modal.
+        height (Optional[int]): Bounding box y-height, None means reuse modal.
+        layer (Optional[int]): None means reuse modal
+        datatype (Optional[int]): None means reuse modal
+        x (Optional[int]): x-offset, None means reuse modal
+        y (Optional[int]): y-offset, None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any
     """
-    layer = None            # type: int or None
-    datatype = None         # type: int or None
-    width = None            # type: int or None
-    height = None           # type: int or None
-    x = None                # type: int or None
-    y = None                # type: int or None
-    repetition = None       # type: repetition_t or None
-    delta_a = None          # type: int
-    delta_b = None          # type: int
-    is_vertical = None      # type: bool
+    layer: Optional[int] = None
+    datatype: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+    repetition: Optional[repetition_t] = None
+    delta_a: int = 0
+    delta_b: int = 0
+    is_vertical: bool
 
     def __init__(self,
                  is_vertical: bool,
@@ -1926,23 +1967,28 @@ class Trapezoid(Record):
                  y: int = None,
                  repetition: repetition_t = None):
         """
-        :param is_vertical: True if both the left and right sides are aligned
-                to the y-axis. If the trapezoid is a rectangle, either value
-                is permitted.
-        :param delta_a: If horizontal, signed x-distance from top-left vertex
-                to bottom-left vertex. If vertical, signed y-distance from bottom-
-                left vertex to bottom-right vertex. Default None (reuse modal).
-        :param delta_b: If horizontal, signed x-distance from bottom-right vertex
-                to top right vertex. If vertical, signed y-distance from top-right
-                vertex to top-left vertex. Default None (reuse modal).
-        :param layer: Layer number. Default None (reuse modal).
-        :param datatype: Datatype number. Default None (reuse modal).
-        :param width: X-width of bounding box. Default None (reuse modal).
-        :param height: Y-height of bounding box. Default None (reuse modal)
-        :param x: X-offset. Default None (use modal).
-        :param y: Y-offset. Default None (use modal).
-        :param repetition: Repetition. Default None (no repetition).
-        :raises: InvalidDataError if dimensions are impossible.
+        Args:
+            is_vertical: `True` if both the left and right sides are aligned
+               to the y-axis. If the trapezoid is a rectangle, either value
+               is permitted.
+            delta_a: If horizontal, signed x-distance from top-left vertex
+               to bottom-left vertex. If vertical, signed y-distance from bottom-
+               left vertex to bottom-right vertex.
+               Default `None` (reuse modal).
+            delta_b: If horizontal, signed x-distance from bottom-right vertex
+               to top right vertex. If vertical, signed y-distance from top-right
+               vertex to top-left vertex.
+               Default `None` (reuse modal).
+            layer: Layer number. Default `None` (reuse modal).
+            datatype: Datatype number. Default `None` (reuse modal).
+            width: X-width of bounding box. Default `None` (reuse modal).
+            height: Y-height of bounding box. Default `None` (reuse modal)
+            x: X-offset. Default `None` (use modal).
+            y: Y-offset. Default `None` (use modal).
+            repetition: Repetition. Default `None` (no repetition).
+
+        Raises:
+            InvalidDataError: if dimensions are impossible.
         """
         self.is_vertical = is_vertical
         self.delta_a = delta_a
@@ -2054,24 +2100,24 @@ class CTrapezoid(Record):
     """
     CTrapezoid record (ID 26)
 
-    Properties:
-        .ctrapezoid_type    (int or None, see OASIS spec for details, None means reuse modal)
-        .width              (int or None, Bounding box x-width, None means reuse modal)
-        .height             (int or None, Bounding box y-height, None means reuse modal)
-        .layer              (int or None, None means reuse modal)
-        .datatype           (int or None, None means reuse modal)
-        .x                  (int or None, None means se modal)
-        .y                  (int or None, None means se modal)
-        .repetition         (reptetition or None)
+    Attributes:
+        ctrapezoid_type (Optional[int]): see OASIS spec for details, None means reuse modal.
+        width (Optional[int]): Bounding box x-width, None means reuse modal.
+        height (Optional[int]): Bounding box y-height, None means reuse modal.
+        layer (Optional[int]): None means reuse modal
+        datatype (Optional[int]): None means reuse modal
+        x (Optional[int]): x-offset, None means reuse modal
+        y (Optional[int]): y-offset, None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any
     """
-    ctrapezoid_type = None  # type: int or None
-    layer = None            # type: int or None
-    datatype = None         # type: int or None
-    width = None            # type: int or None
-    height = None           # type: int or None
-    x = None                # type: int or None
-    y = None                # type: int or None
-    repetition = None       # type: repetition_t or None
+    ctrapezoid_type: Optional[int] = None
+    layer: Optional[int] = None
+    datatype: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+    repetition: Optional[repetition_t] = None
 
     def __init__(self,
                  ctrapezoid_type: int = None,
@@ -2083,16 +2129,19 @@ class CTrapezoid(Record):
                  y: int = None,
                  repetition: repetition_t = None):
         """
-        :param ctrapezoid_type: CTrapezoid type; see OASIS format
-                documentation. Default None (reuse modal).
-        :param layer: Layer number. Default None (reuse modal).
-        :param datatype: Datatype number. Default None (reuse modal).
-        :param width: X-width of bounding box. Default None (reuse modal).
-        :param height: Y-height of bounding box. Default None (reuse modal)
-        :param x: X-offset. Default None (use modal).
-        :param y: Y-offset. Default None (use modal).
-        :param repetition: Repetition. Default None (no repetition).
-        :raises: InvalidDataError if dimensions are invalid.
+        Args:
+            ctrapezoid_type: CTrapezoid type; see OASIS format
+                documentation. Default `None` (reuse modal).
+            layer: Layer number. Default `None` (reuse modal).
+            datatype: Datatype number. Default `None` (reuse modal).
+            width: X-width of bounding box. Default `None` (reuse modal).
+            height: Y-height of bounding box. Default `None` (reuse modal)
+            x: X-offset. Default `None` (use modal).
+            y: Y-offset. Default `None` (use modal).
+            repetition: Repetition. Default `None` (no repetition).
+
+        Raises:
+            InvalidDataError: if dimensions are invalid.
         """
         self.ctrapezoid_type = ctrapezoid_type
         self.layer = layer
@@ -2232,20 +2281,20 @@ class Circle(Record):
     """
     Circle record (ID 27)
 
-    Properties:
-        .radius             (int or None, None means reuse modal)
-        .layer              (int or None, None means reuse modal)
-        .datatype           (int or None, None means reuse modal)
-        .x                  (int or None, None means se modal)
-        .y                  (int or None, None means se modal)
-        .repetition         (reptetition or None)
+    Attributes:
+        radius (Optional[int]): None means reuse modal
+        layer (Optional[int]): None means reuse modal
+        datatype (Optional[int]): None means reuse modal
+        x (Optional[int]): x-offset, None means reuse modal
+        y (Optional[int]): y-offset, None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any
     """
-    layer = None            # type: int or None
-    datatype = None         # type: int or None
-    x = None                # type: int or None
-    y = None                # type: int or None
-    repetition = None       # type: repetition_t or None
-    radius = None           # type: int or None
+    layer: Optional[int] = None
+    datatype: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+    repetition: Optional[repetition_t] = None
+    radius: Optional[int] = None
 
     def __init__(self,
                  radius: int = None,
@@ -2255,13 +2304,16 @@ class Circle(Record):
                  y: int = None,
                  repetition: repetition_t = None):
         """
-        :param radius: Radius. Default None (reuse modal).
-        :param layer: Layer number. Default None (reuse modal).
-        :param datatype: Datatype number. Default None (reuse modal).
-        :param x: X-offset. Default None (use modal).
-        :param y: Y-offset. Default None (use modal).
-        :param repetition: Repetition. Default None (no repetition).
-        :raises: InvalidDataError if dimensions are invalid.
+        Args:
+            radius: Radius. Default `None` (reuse modal).
+            layer: Layer number. Default `None` (reuse modal).
+            datatype: Datatype number. Default `None` (reuse modal).
+            x: X-offset. Default `None` (use modal).
+            y: Y-offset. Default `None` (use modal).
+            repetition: Repetition. Default `None` (no repetition).
+
+        Raises:
+            InvalidDataError: if dimensions are invalid.
         """
         self.radius = radius
         self.layer = layer
@@ -2340,10 +2392,13 @@ def adjust_repetition(record: Record, modals: Modals):
     """
     Merge the record's repetition entry with the one in the modals
 
-    :param record: Record to read or modify.
-    :param modals: Modals to read or modify.
-    :raises: InvalidDataError if a ReuseRepetition can't be filled
-        from the modals.
+    Args:
+        record: Record to read or modify.
+        modals: Modals to read or modify.
+
+    Raises:
+        InvalidDataError: if a `ReuseRepetition` can't be filled
+            from the modals.
     """
     if record.repetition is not None:
         if isinstance(record.repetition, ReuseRepetition):
@@ -2357,13 +2412,16 @@ def adjust_repetition(record: Record, modals: Modals):
 
 def adjust_field(record: Record, r_field: str, modals: Modals, m_field: str):
     """
-    Merge record.r_field with modals.m_field
+    Merge `record.r_field` with `modals.m_field`
 
-    :param record: Record to read or modify.
-    :param r_field: Attr of record to access.
-    :param modals: Modals to read or modify.
-    :param m_field: Attr of modals to access.
-    :raises: InvalidDataError if a both fields are None
+    Args:
+        record: `Record` to read or modify.
+        r_field: Attr of record to access.
+        modals: `Modals` to read or modify.
+        m_field: Attr of modals to access.
+
+    Raises:
+        InvalidDataError: if both fields are `None`
     """
     r = getattr(record, r_field)
     if r is not None:
@@ -2378,18 +2436,21 @@ def adjust_field(record: Record, r_field: str, modals: Modals, m_field: str):
 
 def adjust_coordinates(record: Record, modals: Modals, mx_field: str, my_field: str):
     """
-    Merge record.x and record.y with modals.mx_field and modals.my_field,
-     taking into account the value of modals.xy_relative.
+    Merge `record.x` and `record.y` with `modals.mx_field` and `modals.my_field`,
+     taking into account the value of `modals.xy_relative`.
 
-    If modals.xy_relative is True and the record has non-None coordinates,
-     the modal values are added to the record's coordinates. If modals.xy_relative
-     is False, the coordinates are treated the same way as other fields.
+    If `modals.xy_relative` is `True` and the record has non-`None` coordinates,
+     the modal values are added to the record's coordinates. If `modals.xy_relative`
+     is `False`, the coordinates are treated the same way as other fields.
 
-    :param record: Record to read or modify.
-    :param modals: Modals to read or modify.
-    :param mx_field: Attr of modals corresponding to record.x
-    :param my_field: Attr of modals corresponding to record.y
-    :raises: InvalidDataError if a both fields are None
+    Args:
+        record: `Record` to read or modify.
+        modals: `Modals` to read or modify.
+        mx_field: Attr of modals corresponding to `record.x`
+        my_field: Attr of modals corresponding to `record.y`
+
+    Raises:
+        InvalidDataError: if both fields are `None`
     """
     if record.x is not None:
         if modals.xy_relative:
@@ -2414,10 +2475,13 @@ def dedup_repetition(record: Record, modals: Modals):
     Deduplicate the record's repetition entry with the one in the modals.
     Update the one in the modals if they are different.
 
-    :param record: Record to read or modify.
-    :param modals: Modals to read or modify.
-    :raises: InvalidDataError if a ReuseRepetition can't be filled
-        from the modals.
+    Args:
+        record: `Record` to read or modify.
+        modals: `Modals` to read or modify.
+
+    Raises:
+        InvalidDataError: if a `ReuseRepetition` can't be filled
+            from the modals.
     """
     if record.repetition is None:
         return
@@ -2435,14 +2499,17 @@ def dedup_repetition(record: Record, modals: Modals):
 
 def dedup_field(record: Record, r_field: str, modals: Modals, m_field: str):
     """
-    Deduplicate record.r_field using modals.m_field
-    Update the modals.m_field if they are different.
+    Deduplicate `record.r_field` using `modals.m_field`
+    Update the `modals.m_field` if they are different.
 
-    :param record: Record to read or modify.
-    :param r_field: Attr of record to access.
-    :param modals: Modals to read or modify.
-    :param m_field: Attr of modals to access.
-    :raises: InvalidDataError if a both fields are None
+    Args:
+        record: `Record` to read or modify.
+        r_field: Attr of record to access.
+        modals: `Modals` to read or modify.
+        m_field: Attr of modals to access.
+
+    Args:
+        InvalidDataError: if both fields are `None`
     """
     r = getattr(record, r_field)
     m = getattr(modals, m_field)
@@ -2462,18 +2529,21 @@ def dedup_field(record: Record, r_field: str, modals: Modals, m_field: str):
 
 def dedup_coordinates(record: Record, modals: Modals, mx_field: str, my_field: str):
     """
-    Deduplicate record.x and record.y using modals.mx_field and modals.my_field,
-     taking into account the value of modals.xy_relative.
+    Deduplicate `record.x` and `record.y` using `modals.mx_field` and `modals.my_field`,
+     taking into account the value of `modals.xy_relative`.
 
-    If modals.xy_relative is True and the record has non-None coordinates,
-     the modal values are subtracted from the record's coordinates. If modals.xy_relative
-     is False, the coordinates are treated the same way as other fields.
+    If `modals.xy_relative` is `True` and the record has non-`None` coordinates,
+     the modal values are subtracted from the record's coordinates. If `modals.xy_relative`
+     is `False`, the coordinates are treated the same way as other fields.
 
-    :param record: Record to read or modify.
-    :param modals: Modals to read or modify.
-    :param mx_field: Attr of modals corresponding to record.x
-    :param my_field: Attr of modals corresponding to record.y
-    :raises: InvalidDataError if a both fields are None
+    Args:
+        record: `Record` to read or modify.
+        modals: `Modals` to read or modify.
+        mx_field: Attr of modals corresponding to `record.x`
+        my_field: Attr of modals corresponding to `record.y`
+
+    Raises:
+        InvalidDataError: if both fields are `None`
     """
     if record.x is not None:
         mx = getattr(modals, mx_field)

@@ -3,7 +3,7 @@ This module contains all datatypes and parsing/writing functions for
  all abstractions below the 'record' or 'block' level.
 """
 from fractions import Fraction
-from typing import List, Tuple, Type
+from typing import List, Tuple, Type, Union, Optional, Any, Sequence
 from enum import Enum
 import math
 import struct
@@ -20,9 +20,9 @@ except:
 '''
     Type definitions
 '''
-real_t = int or float or Fraction
-repetition_t = 'ReuseRepetition' or 'GridRepetition' or 'ArbitraryRepetition'
-property_value_t = int or bytes or 'AString' or 'NString' or' PropStringReference' or float or Fraction
+real_t = Union[int, float, Fraction]
+repetition_t = Union['ReuseRepetition', 'GridRepetition', 'ArbitraryRepetition']
+property_value_t = Union[int, bytes, 'AString', 'NString', 'PropStringReference', float, Fraction]
 
 
 class FatamorganaError(Exception):
@@ -69,11 +69,10 @@ class PathExtensionScheme(Enum):
     Arbitrary = 3
 
 
-
 '''
     Constants
 '''
-MAGIC_BYTES = b'%SEMI-OASIS\r\n'         # type: bytes
+MAGIC_BYTES: bytes = b'%SEMI-OASIS\r\n'
 
 
 '''
@@ -84,10 +83,15 @@ def _read(stream: io.BufferedIOBase, n: int) -> bytes:
     Read n bytes from the stream.
     Raise an EOFError if there were not enough bytes in the stream.
 
-    :param stream: Stream to read from.
-    :param n: Number of bytes to read.
-    :return: The bytes that were read.
-    :raises: EOFError if not enough bytes could be read.
+    Args:
+        stream: Stream to read from.
+        n: Number of bytes to read.
+
+    Returns:
+        The bytes that were read.
+
+    Raises:
+        EOFError if not enough bytes could be read.
     """
     b = stream.read(n)
     if len(b) != n:
@@ -99,8 +103,11 @@ def read_byte(stream: io.BufferedIOBase) -> int:
     """
     Read a single byte and return it.
 
-    :param stream: Stream to read from.
-    :return: The byte that was read.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        The byte that was read.
     """
     return _read(stream, 1)[0]
 
@@ -109,8 +116,11 @@ def write_byte(stream: io.BufferedIOBase, n: int) -> int:
     """
     Write a single byte to the stream.
 
-    :param stream: Stream to read from.
-    :return: The number of bytes writen (1).
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        The number of bytes writen (1).
     """
     return stream.write(bytes((n,)))
 
@@ -121,8 +131,11 @@ if _USE_NUMPY:
         Read a single byte from the stream, and interpret its bits as
           a list of 8 booleans.
 
-        :param stream: Stream to read from.
-        :return: A list of 8 booleans corresponding to the bits (MSB first).
+        Args:
+            stream: Stream to read from.
+
+        Returns:
+            A list of 8 booleans corresponding to the bits (MSB first).
         """
         byte_arr = _read(stream, 1)
         return numpy.unpackbits(numpy.frombuffer(byte_arr, dtype=numpy.uint8))
@@ -131,10 +144,15 @@ if _USE_NUMPY:
         """
         Pack 8 booleans into a byte, and write it to the stream.
 
-        :param stream: Stream to write to.
-        :param bits: A list of 8 booleans corresponding to the bits (MSB first).
-        :return: Number of bytes written (1).
-        :raises: InvalidDataError if didn't receive 8 bits.
+        Args:
+            stream: Stream to write to.
+            bits: A list of 8 booleans corresponding to the bits (MSB first).
+
+        Returns:
+            Number of bytes written (1).
+
+        Raises:
+            InvalidDataError if didn't receive 8 bits.
         """
         if len(bits) != 8:
             raise InvalidDataError('write_bool_byte received {} bits, requires 8'.format(len(bits)))
@@ -145,21 +163,29 @@ else:
         Read a single byte from the stream, and interpret its bits as
           a list of 8 booleans.
 
-        :param stream: Stream to read from.
-        :return: A list of 8 booleans corresponding to the bits (MSB first).
+        Args:
+            stream: Stream to read from.
+
+        Returns:
+            A list of 8 booleans corresponding to the bits (MSB first).
         """
         byte = _read(stream, 1)[0]
-        bits = [(byte >> i) & 0x01 for i in reversed(range(8))]
+        bits = [bool((byte >> i) & 0x01) for i in reversed(range(8))]
         return bits
 
     def write_bool_byte(stream: io.BufferedIOBase, bits: Tuple[bool]) -> int:
         """
         Pack 8 booleans into a byte, and write it to the stream.
 
-        :param stream: Stream to write to.
-        :param bits: A list of 8 booleans corresponding to the bits (MSB first).
-        :return: Number of bytes written (1).
-        :raises: InvalidDataError if didn't receive 8 bits.
+        Args:
+            stream: Stream to write to.
+            bits: A list of 8 booleans corresponding to the bits (MSB first).
+
+        Returns:
+            Number of bytes written (1).
+
+        Raises:
+            InvalidDataError if didn't receive 8 bits.
         """
         if len(bits) != 8:
             raise InvalidDataError('write_bool_byte received {} bits, requires 8'.format(len(bits)))
@@ -178,8 +204,11 @@ def read_uint(stream: io.BufferedIOBase) -> int:
         - Remaining bits of each byte form the binary representation
             of the integer, but are stored _least significant group first_.
 
-    :param stream: Stream to read from.
-    :return: The integer's value.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        The integer's value.
     """
     result = 0
     i = 0
@@ -195,12 +224,17 @@ def read_uint(stream: io.BufferedIOBase) -> int:
 def write_uint(stream: io.BufferedIOBase, n: int) -> int:
     """
     Write an unsigned integer to the stream.
-    See format details in read_uint(...).
+    See format details in `read_uint()`.
 
-    :param stream: Stream to write to.
-    :param n: Value to write.
-    :return: The number of bytes written.
-    :raises: SignedError if n is negative.
+    Args:
+        stream: Stream to write to.
+        n: Value to write.
+
+    Returns:
+        The number of bytes written.
+
+    Raises:
+        SignedError: if `n` is negative.
     """
     if n < 0:
         raise SignedError('uint must be positive: {}'.format(n))
@@ -227,8 +261,11 @@ def decode_sint(uint: int) -> int:
         - The LSB is treated as the sign bit
         - The remainder of the bits encodes the absolute value
 
-    :param uint: Unsigned integer to decode from.
-    :return: The decoded signed integer.
+    Args:
+        uint: Unsigned integer to decode from.
+
+    Returns:
+        The decoded signed integer.
     """
     return (uint >> 1) * (1 - 2 * (0x01 & uint))
 
@@ -236,10 +273,13 @@ def decode_sint(uint: int) -> int:
 def encode_sint(sint: int) -> int:
     """
     Encode a signed integer into its corresponding unsigned integer form.
-    See decode_sint() for format details.
+    See `decode_sint()` for format details.
 
-    :param int: The signed integer to encode.
-    :return: Unsigned integer encoding for the input.
+    Args:
+        int: The signed integer to encode.
+
+    Returns:
+        Unsigned integer encoding for the input.
     """
     return (abs(sint) << 1) | (sint < 0)
 
@@ -247,10 +287,13 @@ def encode_sint(sint: int) -> int:
 def read_sint(stream: io.BufferedIOBase) -> int:
     """
     Read a signed integer from the stream.
-    See decode_sint() for format details.
+    See `decode_sint()` for format details.
 
-    :param stream: Stream to read from.
-    :return: The integer's value.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        The integer's value.
     """
     return decode_sint(read_uint(stream))
 
@@ -258,11 +301,14 @@ def read_sint(stream: io.BufferedIOBase) -> int:
 def write_sint(stream: io.BufferedIOBase, n: int) -> int:
     """
     Write a signed integer to the stream.
-    See decode_sint() for format details.
+    See `decode_sint()` for format details.
 
-    :param stream: Stream to write to.
-    :param n: Value to write.
-    :return: The number of bytes written.
+    Args:
+        stream: Stream to write to.
+        n: Value to write.
+
+    Returns:
+        The number of bytes written.
     """
     return write_uint(stream, encode_sint(n))
 
@@ -274,8 +320,11 @@ def read_bstring(stream: io.BufferedIOBase) -> bytes:
     - length: uint
     - data: bytes
 
-    :param stream: Stream to read from.
-    :return: Bytes containing the binary string.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        Bytes containing the binary string.
     """
     length = read_uint(stream)
     return _read(stream, length)
@@ -284,11 +333,14 @@ def read_bstring(stream: io.BufferedIOBase) -> bytes:
 def write_bstring(stream: io.BufferedIOBase, bstring: bytes):
     """
     Write a binary string to the stream.
-    See read_bstring() for format details.
+    See `read_bstring()` for format details.
 
-    :param stream: Stream to write to.
-    :param bstring: Binary string to write.
-    :return: The number of bytes written.
+    Args:
+       stream: Stream to write to.
+       bstring: Binary string to write.
+
+    Returns:
+        The number of bytes written.
     """
     write_uint(stream, len(bstring))
     return stream.write(bstring)
@@ -301,8 +353,11 @@ def read_ratio(stream: io.BufferedIOBase) -> Fraction:
     - numerator: uint
     - denominator: uint
 
-    :param stream: Stream to read from.
-    :return: Fraction object containing the read value.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        Fraction object containing the read value.
     """
     numer = read_uint(stream)
     denom = read_uint(stream)
@@ -312,12 +367,17 @@ def read_ratio(stream: io.BufferedIOBase) -> Fraction:
 def write_ratio(stream: io.BufferedIOBase, r: Fraction) -> int:
     """
     Write an unsigned ratio to the stream.
-    See read_ratio() for format details.
+    See `read_ratio()` for format details.
 
-    :param stream: Stream to write to.
-    :param r: Ratio to write (Fraction object).
-    :return: The number of bytes written.
-    :raises: SignedError if r is negative.
+    Args:
+        stream: Stream to write to.
+        r: Ratio to write (`Fraction` object).
+
+    Returns:
+        The number of bytes written.
+
+    Raises:
+        SignedError: if r is negative.
     """
     if r < 0:
         raise SignedError('Ratio must be unsigned: {}'.format(r))
@@ -330,8 +390,11 @@ def read_float32(stream: io.BufferedIOBase) -> float:
     """
     Read a 32-bit float from the stream.
 
-    :param stream: Stream to read from.
-    :return: The value read.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        The value read.
     """
     b = _read(stream, 4)
     return struct.unpack("<f", b)[0]
@@ -341,9 +404,12 @@ def write_float32(stream: io.BufferedIOBase, f: float) -> int:
     """
     Write a 32-bit float to the stream.
 
-    :param stream: Stream to write to.
-    :param f: Value to write.
-    :return: The number of bytes written (4).
+    Arsg:
+        stream: Stream to write to.
+        f: Value to write.
+
+    Returns:
+        The number of bytes written (4).
     """
     b = struct.pack("<f", f)
     return stream.write(b)
@@ -353,8 +419,11 @@ def read_float64(stream: io.BufferedIOBase) -> float:
     """
     Read a 64-bit float from the stream.
 
-    :param stream: Stream to read from.
-    :return: The value read.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        The value read.
     """
     b = _read(stream, 8)
     return struct.unpack("<d", b)[0]
@@ -364,9 +433,12 @@ def write_float64(stream: io.BufferedIOBase, f: float) -> int:
     """
     Write a 64-bit float to the stream.
 
-    :param stream: Stream to write to.
-    :param f: Value to write.
-    :return: The number of bytes written (8).
+    Args:
+        stream: Stream to write to.
+        f: Value to write.
+
+    Returns:
+        The number of bytes written (8).
     """
     b = struct.pack("<d", f)
     return stream.write(b)
@@ -389,11 +461,16 @@ def read_real(stream: io.BufferedIOBase, real_type: int = None) -> real_t:
     6: 32-bit float
     7: 64-bit float
 
-    :param stream: Stream to read from.
-    :param real_type: Type of real number to read. If None (default),
-        the type is read from the stream.
-    :return: The value read.
-    :raises: InvalidDataError if real_type is invalid.
+    Args:
+        stream: Stream to read from.
+        real_type: Type of real number to read. If `None` (default),
+            the type is read from the stream.
+
+    Returns:
+        The value read.
+
+    Raises:
+        InvalidDataError: if real_type is invalid.
     """
 
     if real_type is None:
@@ -431,10 +508,14 @@ def write_real(stream: io.BufferedIOBase,
     Since python has no 32-bit floats, the force_float32 parameter
       will perform the cast at write-time if set to True (default False).
 
-    :param stream: Stream to write to.
-    :param r: Value to write.
-    :param float32:
-    :return: The number of bytes written.
+    Args:
+        stream: Stream to write to.
+        r: Value to write.
+        force_float32: If `True`, casts r to float32 when writing.
+            Default `False`.
+
+    Returns:
+        The number of bytes written.
     """
     size = 0
     if isinstance(r, int):
@@ -462,15 +543,16 @@ class NString:
     Class for handling "name strings", which hold one or more
       printable ASCII characters (0x21 to 0x7e, inclusive).
 
-    __init__ can be called with either a string or bytes object;
-      subsequent reading/writing should use the .string and
-      .bytes properties.
+    `__init__` can be called with either a string or bytes object;
+      subsequent reading/writing should use the `string` and
+      `bytes` properties.
     """
-    _string = None   # type: str
+    _string: str
 
-    def __init__(self, string_or_bytes: bytes or str):
+    def __init__(self, string_or_bytes: Union[bytes, str]):
         """
-        :param string_or_bytes: Content of the Nstring.
+        Args:
+            string_or_bytes: Content of the `NString`.
         """
         if isinstance(string_or_bytes, str):
             self.string = string_or_bytes
@@ -494,7 +576,7 @@ class NString:
     @bytes.setter
     def bytes(self, bstring: bytes):
         if len(bstring) == 0 or  not all(0x21 <= c <= 0x7e for c in bstring):
-            raise InvalidDataError('Invalid n-string {}'.format(bstring))
+            raise InvalidDataError('Invalid n-string {!r}'.format(bstring))
         self._string = bstring.decode('ascii')
 
     @staticmethod
@@ -502,9 +584,14 @@ class NString:
         """
         Create an NString object by reading a bstring from the provided stream.
 
-        :param stream: Stream to read from.
-        :return: Resulting NString.
-        :raises: InvalidDataError
+        Args:
+            stream: Stream to read from.
+
+        Returns:
+            Resulting NString.
+
+        Raises:
+            InvalidDataError
         """
         return NString(read_bstring(stream))
 
@@ -512,12 +599,15 @@ class NString:
         """
         Write this NString to a stream.
 
-        :param stream: Stream to write to.
-        :return: Number of bytes written.
+        Args:
+            stream: Stream to write to.
+
+        Returns:
+            Number of bytes written.
         """
         return write_bstring(stream, self.bytes)
 
-    def __eq__(self, other: 'NString') -> bool:
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, type(self)) and self.string == other.string
 
     def __repr__(self) -> str:
@@ -527,11 +617,16 @@ class NString:
 def read_nstring(stream: io.BufferedIOBase) -> str:
     """
     Read a name string from the provided stream.
-    See NString for constraints on name strings.
+    See `NString` for constraints on name strings.
 
-    :param stream: Stream to read from.
-    :return: Resulting string.
-    :raises: InvalidDataError
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        Resulting string.
+
+    Raises:
+        InvalidDataError
     """
     return NString.read(stream).string
 
@@ -539,12 +634,17 @@ def read_nstring(stream: io.BufferedIOBase) -> str:
 def write_nstring(stream: io.BufferedIOBase, string: str) -> int:
     """
     Write a name string to a stream.
-    See NString for constraints on name strings.
+    See `NString` for constraints on name strings.
 
-    :param stream: Stream to write to.
-    :param string: String to write.
-    :return: Number of bytes written.
-    :raises: InvalidDataError
+    Args:
+        stream: Stream to write to.
+        string: String to write.
+
+    Returns:
+        Number of bytes written.
+
+    Raises:
+        InvalidDataError
     """
     return NString(string).write(stream)
 
@@ -554,15 +654,16 @@ class AString:
     Class for handling "ascii strings", which hold zero or more
       ASCII characters (0x20 to 0x7e, inclusive).
 
-    __init__ can be called with either a string or bytes object;
-      subsequent reading/writing should use the .string and
-      .bytes properties.
+    `__init__` can be called with either a string or bytes object;
+      subsequent reading/writing should use the `string` and
+      `bytes` properties.
     """
-    _string = None          # type: str
+    _string: str
 
-    def __init__(self, string_or_bytes: bytes or str):
+    def __init__(self, string_or_bytes: Union[bytes, str]):
         """
-        :param string_or_bytes: Content of the AString.
+        Args:
+            string_or_bytes: Content of the AString.
         """
         if isinstance(string_or_bytes, str):
             self.string = string_or_bytes
@@ -586,30 +687,38 @@ class AString:
     @bytes.setter
     def bytes(self, bstring: bytes):
         if not all(0x20 <= c <= 0x7e for c in bstring):
-            raise InvalidDataError('Invalid a-string {}'.format(bstring))
+            raise InvalidDataError('Invalid a-string {!r}'.format(bstring))
         self._string = bstring.decode('ascii')
 
     @staticmethod
     def read(stream: io.BufferedIOBase) -> 'AString':
         """
-        Create an AString object by reading a bstring from the provided stream.
+        Create an `AString` object by reading a bstring from the provided stream.
 
-        :param stream: Stream to read from.
-        :return: Resulting AString.
-        :raises: InvalidDataError
+        Args:
+            stream: Stream to read from.
+
+        Returns:
+            Resulting `AString`.
+
+        Raises:
+            InvalidDataError
         """
         return AString(read_bstring(stream))
 
     def write(self, stream: io.BufferedIOBase) -> int:
         """
-        Write this AString to a stream.
+        Write this `AString` to a stream.
 
-        :param stream: Stream to write to.
-        :return: Number of bytes written.
+        Args:
+            stream: Stream to write to.
+
+        Returns:
+            Number of bytes written.
         """
         return write_bstring(stream, self.bytes)
 
-    def __eq__(self, other: 'AString') -> bool:
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, type(self)) and self.string == other.string
 
     def __repr__(self) -> str:
@@ -619,11 +728,16 @@ class AString:
 def read_astring(stream: io.BufferedIOBase) -> str:
     """
     Read an ASCII string from the provided stream.
-    See AString for constraints on ASCII strings.
+    See `AString` for constraints on ASCII strings.
 
-    :param stream: Stream to read from.
-    :return: Resulting string.
-    :raises: InvalidDataError
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        Resulting string.
+
+    Raises:
+        InvalidDataError
     """
     return AString.read(stream).string
 
@@ -633,10 +747,15 @@ def write_astring(stream: io.BufferedIOBase, string: str) -> int:
     Write an ASCII string to a stream.
     See AString for constraints on ASCII strings.
 
-    :param stream: Stream to write to.
-    :param string: String to write.
-    :return: Number of bytes written.
-    :raises: InvalidDataError
+    Args:
+        stream: Stream to write to.
+        string: String to write.
+
+    Returns:
+        Number of bytes written.
+
+    Raises:
+        InvalidDataError
     """
     return AString(string).write(stream)
 
@@ -645,19 +764,20 @@ class ManhattanDelta:
     """
     Class representing an axis-aligned ("Manhattan") vector.
 
-    Has properties
-        .vertical (boolean, true if aligned along y-axis)
-        .value    (int, signed length of the vector)
+    Attributes:
+        vertical (bool): `True` if aligned along y-axis
+        value (int): signed length of the vector
     """
     vertical = None         # type: bool
     value = None            # type: int
 
     def __init__(self, x: int, y: int):
         """
-        One of x or y _must_ be zero!
+        One of `x` or `y` _must_ be zero!
 
-        :param x: x-displacement
-        :param y: y-displacement
+        Args:
+            x: x-displacement
+            y: y-displacement
         """
         x = int(x)
         y = int(y)
@@ -674,7 +794,8 @@ class ManhattanDelta:
         """
         Return a list representation of this vector.
 
-        :return: [x, y]
+        Returns:
+            `[x, y]`
         """
         xy = [0, 0]
         xy[self.vertical] = self.value
@@ -683,9 +804,10 @@ class ManhattanDelta:
     def as_uint(self) -> int:
         """
         Return this vector encoded as an unsigned integer.
-        See ManhattanDelta.from_uint() for format details.
+        See `ManhattanDelta.from_uint()` for format details.
 
-        :return: uint encoding of this vector.
+        Returns:
+            uint encoding of this vector.
         """
         return (encode_sint(self.value) << 1) | self.vertical
 
@@ -697,42 +819,51 @@ class ManhattanDelta:
         The LSB of the encoded object is 1 if the vector is aligned to the
          y-axis, or 0 if aligned to the x-axis.
         The remaining bits are used to encode a signed integer containing
-         the signed length of the vector (see encode_sint() for format details).
+         the signed length of the vector (see `encode_sint()` for format details).
 
-        :param n: Unsigned integer representation of a ManhattanDelta vector.
-        :return: The ManhattanDelta object that was encoded by n.
+        Args:
+            n: Unsigned integer representation of a `ManhattanDelta` vector.
+
+        Returns:
+            The `ManhattanDelta` object that was encoded by `n`.
         """
         d = ManhattanDelta(0, 0)
         d.value = decode_sint(n >> 1)
-        d.vertical = n & 0x01
+        d.vertical = bool(n & 0x01)
         return d
 
     @staticmethod
     def read(stream: io.BufferedIOBase) -> 'ManhattanDelta':
         """
-        Read a ManhattanDelta object from the provided stream.
+        Read a `ManhattanDelta` object from the provided stream.
 
-        See .from_uint() for format details.
+        See `ManhattanDelta.from_uint()` for format details.
 
-        :param stream: The stream to read from.
-        :return: The ManhattanDelta object that was read from the stream.
+        Args:
+            stream: The stream to read from.
+
+        Returns:
+            The `ManhattanDelta` object that was read from the stream.
         """
         n = read_uint(stream)
         return ManhattanDelta.from_uint(n)
 
     def write(self, stream: io.BufferedIOBase) -> int:
         """
-        Write a ManhattanDelta object to the provided stream.
+        Write a `ManhattanDelta` object to the provided stream.
 
-        See .from_uint() for format details.
+        See `ManhattanDelta.from_uint()` for format details.
 
-        :param stream: The stream to write to.
-        :return: The number of bytes written.
+        Args:
+            stream: The stream to write to.
+
+        Returns:
+            The number of bytes written.
         """
         return write_uint(stream, self.as_uint())
 
-    def __eq__(self, other: 'ManhattanDelta') -> bool:
-        return hasattr(other, as_list) and self.as_list() == other.as_list()
+    def __eq__(self, other: Any) -> bool:
+        return hasattr(other, 'as_list') and self.as_list() == other.as_list()
 
     def __repr__(self) -> str:
         return '{}'.format(self.as_list())
@@ -742,9 +873,9 @@ class OctangularDelta:
     """
     Class representing an axis-aligned or 45-degree ("Octangular") vector.
 
-    Has properties
-        .proj_mag (int, projection of the vector onto the x or y axis (non-zero))
-        .octangle (int, bitfield:
+    Attributes:
+        proj_mag (int): projection of the vector onto the x or y axis (non-zero)
+        octangle (int): bitfield:
             bit 2: 1 if non-axis-aligned (non-Manhattan)
             if Manhattan:
                 bit 1: 1 if direction is negative
@@ -757,17 +888,17 @@ class OctangularDelta:
                 0: +x, 1: +y, 2: -x, 3: -y,
                 4: +x+y, 5: -x+y,
                 6: +x-y, 7: -x-y
-            )
     """
-    proj_mag = None	    # type: int
-    octangle = None	    # type: int
+    proj_mag: int
+    octangle: int
 
     def __init__(self, x: int, y: int):
         """
-        Either abs(x)==abs(y), x==0, or y==0 _must_ be true!
+        Either `abs(x)==abs(y)`, `x==0`, or `y==0` _must_ be true!
 
-        :param x: x-displacement
-        :param y: y-displacement
+        Args:
+            x: x-displacement
+            y: y-displacement
         """
         x = int(x)
         y = int(y)
@@ -789,7 +920,8 @@ class OctangularDelta:
         """
         Return a list representation of this vector.
 
-        :return: [x, y]
+        Returns:
+            `[x, y]`
         """
         if self.octangle < 4:
             xy = [0, 0]
@@ -808,24 +940,28 @@ class OctangularDelta:
     def as_uint(self) -> int:
         """
         Return this vector encoded as an unsigned integer.
-        See OctangularDelta.from_uint() for format details.
+        See `OctangularDelta.from_uint()` for format details.
 
-        :return: uint encoding of this vector.
+        Returns:
+            uint encoding of this vector.
         """
         return (self.proj_mag << 3) | self.octangle
 
     @staticmethod
     def from_uint(n: int) -> 'OctangularDelta':
         """
-        Construct an OctangularDelta object from its unsigned integer encoding.
+        Construct an `OctangularDelta` object from its unsigned integer encoding.
 
-        The low 3 bits are equal to .proj_mag, as specified in the class
+        The low 3 bits are equal to `proj_mag`, as specified in the class
          docstring.
         The remaining bits are used to encode an unsigned integer containing
          the length of the vector.
 
-        :param n: Unsigned integer representation of an OctangularDelta vector.
-        :return: The OctangularDelta object that was encoded by n.
+        Args:
+            n: Unsigned integer representation of an `OctangularDelta` vector.
+
+        Returns:
+            The `OctangularDelta` object that was encoded by `n`.
         """
         d = OctangularDelta(0, 0)
         d.proj_mag = n >> 3
@@ -835,29 +971,35 @@ class OctangularDelta:
     @staticmethod
     def read(stream: io.BufferedIOBase) -> 'OctangularDelta':
         """
-        Read an OctangularDelta object from the provided stream.
+        Read an `OctangularDelta` object from the provided stream.
 
-        See .from_uint() for format details.
+        See `OctangularDelta.from_uint()` for format details.
 
-        :param stream: The stream to read from.
-        :return: The OctangularDelta object that was read from the stream.
+        Args:
+            stream: The stream to read from.
+
+        Returns:
+            The `OctangularDelta` object that was read from the stream.
         """
         n = read_uint(stream)
         return OctangularDelta.from_uint(n)
 
     def write(self, stream: io.BufferedIOBase) -> int:
         """
-        Write an OctangularDelta object to the provided stream.
+        Write an `OctangularDelta` object to the provided stream.
 
-        See .from_uint() for format details.
+        See `OctangularDelta.from_uint()` for format details.
 
-        :param stream: The stream to write to.
-        :return: The number of bytes written.
+        Args:
+            stream: The stream to write to.
+
+        Returns:
+            The number of bytes written.
         """
         return write_uint(stream, self.as_uint())
 
-    def __eq__(self, other: 'OctangularDelta') -> bool:
-        return hasattr(other, as_list) and self.as_list() == other.as_list()
+    def __eq__(self, other: Any) -> bool:
+        return hasattr(other, 'as_list') and self.as_list() == other.as_list()
 
     def __repr__(self) -> str:
         return '{}'.format(self.as_list())
@@ -867,17 +1009,18 @@ class Delta:
     """
     Class representing an arbitrary vector
 
-    Has properties
-        .x  (int)
-        .y  (int)
+    Attributes
+        x (int): x-displacement
+        y (int): y-displacement
     """
-    x = None	    # type: int
-    y = None	    # type: int
+    x: int
+    y: int
 
     def __init__(self, x: int, y: int):
         """
-        :param x: x-displacement
-        :param y: y-displacement
+        Args:
+            x: x-displacement
+            y: y-displacement
         """
         x = int(x)
         y = int(y)
@@ -888,25 +1031,29 @@ class Delta:
         """
         Return a list representation of this vector.
 
-        :return: [x, y]
+        Returns:
+            `[x, y]`
         """
         return [self.x, self.y]
 
     @staticmethod
     def read(stream: io.BufferedIOBase) -> 'Delta':
         """
-        Read a Delta object from the provided stream.
+        Read a `Delta` object from the provided stream.
 
         The format consists of one or two unsigned integers.
         The LSB of the first integer is 1 if a second integer is present.
         If two integers are present, the remaining bits of the first
-         integer are an encoded signed integer (see encode_sint()), and
+         integer are an encoded signed integer (see `encode_sint()`), and
          the second integer is an encoded signed_integer.
         Otherwise, the remaining bits of the first integer are an encoded
-         OctangularData (see OctangularData.from_uint()).
+         `OctangularData` (see `OctangularData.from_uint()`).
 
-        :param stream: The stream to read from.
-        :return: The Delta object that was read from the stream.
+        Args:
+            stream: The stream to read from.
+
+        Returns:
+            The `Delta` object that was read from the stream.
         """
         n = read_uint(stream)
         if (n & 0x01) == 0:
@@ -918,12 +1065,15 @@ class Delta:
 
     def write(self, stream: io.BufferedIOBase) -> int:
         """
-        Write a Delta object to the provided stream.
+        Write a `Delta` object to the provided stream.
 
-        See .from_uint() for format details.
+        See `Delta.from_uint()` for format details.
 
-        :param stream: The stream to write to.
-        :return: The number of bytes written.
+        Args:
+            stream: The stream to write to.
+
+        Returns:
+            The number of bytes written.
         """
         if self.x == 0 or self.y == 0 or abs(self.x) == abs(self.y):
             return write_uint(stream, OctangularDelta(self.x, self.y).as_uint() << 1)
@@ -932,8 +1082,8 @@ class Delta:
             size += write_uint(stream, encode_sint(self.y))
             return size
 
-    def __eq__(self, other: 'Delta') -> bool:
-        return hasattr(other, as_list) and self.as_list() == other.as_list()
+    def __eq__(self, other: Any) -> bool:
+        return hasattr(other, 'as_list') and self.as_list() == other.as_list()
 
     def __repr__(self) -> str:
         return '{}'.format(self.as_list())
@@ -943,8 +1093,14 @@ def read_repetition(stream: io.BufferedIOBase) -> repetition_t:
     """
     Read a repetition entry from the given stream.
 
-    :param stream: Stream to read from.
-    :return: The repetition entry.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        The repetition entry.
+
+    Raises:
+        InvalidDataError: if an unexpected repetition type is read
     """
     rtype = read_uint(stream)
     if rtype == 0:
@@ -961,9 +1117,12 @@ def write_repetition(stream: io.BufferedIOBase, repetition: repetition_t) -> int
     """
     Write a repetition entry to the given stream.
 
-    :param stream: Stream to write to.
-    :param repetition: The repetition entry to write.
-    :return: The number of bytes written.
+    Args:
+        stream: Stream to write to.
+        repetition: The repetition entry to write.
+
+    Returns:
+        The number of bytes written.
     """
     return repetition.write(stream)
 
@@ -980,7 +1139,7 @@ class ReuseRepetition:
     def write(self, stream: io.BufferedIOBase) -> int:
         return write_uint(stream, 0)
 
-    def __eq__(self, other: 'ReuseRepetition') -> bool:
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, ReuseRepetition)
 
     def __repr__(self) -> str:
@@ -994,37 +1153,40 @@ class GridRepetition:
      two lattice vectors, and the extent of the grid is stored as the
      number of elements along each lattice vector.
 
-    This class has properties
-        .a_vector   ([xa: int, ya: int], vector specifying a center-to-center
-                        displacement between adjacent elements in the grid.)
-        .b_vector   ([xb: int, yb: int] or None, a second displacement, present if
-                        a 2D grid is being specified.)
-        .a_count    (int >= 1, number of elements along the grid axis specified by
-                        .a_vector)
-        .b_count    (int >= 1 or None, number of elements along the grid axis
-                        specified by .b_vector)
+    Attributes:
+        a_vector (Tuple[int, int]): `(xa, ya)` vector specifying a center-to-center
+                        displacement between adjacent elements in the grid.
+        b_vector (Optional[Tuple[int, int]]): `(xb, yb)`, a second displacement,
+                        present if a 2D grid is being specified.
+        a_count (int): number of elements (>=1) along the grid axis specified by
+                        `a_vector`.
+        b_count (Optional[int]): Number of elements (>=1) along the grid axis
+                        specified by `b_vector`, if `b_vector` is not `None`.
     """
-    a_vector = None         # type: List[int]
-    b_vector = None         # type: List[int] or None
-    a_count = None          # type: int
-    b_count = None          # type: int or None
+    a_vector: List[int]
+    b_vector: Optional[List[int]] = None
+    a_count: int
+    b_count: Optional[int] = None
 
     def __init__(self,
                  a_vector: List[int],
                  a_count: int,
-                 b_vector: List[int] = None,
-                 b_count: int = None):
+                 b_vector: Optional[List[int]] = None,
+                 b_count: Optional[int] = None):
         """
-        :param a_vector: First lattice vector, of the form [x, y].
-            Specifies center-to-center spacing between adjacent elements.
-        :param a_count: Number of elements in the a_vector direction.
-        :param b_vector: Second lattice vector, of the form [x, y].
-            Specifies center-to-center spacing between adjacent elements.
-            Can be omitted when specifying a 1D array.
-        :param b_count: Number of elements in the b_vector direction.
-            Should be omitted if b_vector was omitted.
-        :raises: InvalidDataError if b_* inputs conflict with each other
-            or a_count < 1.
+        Args:
+            a_vector: First lattice vector, of the form `[x, y]`.
+                Specifies center-to-center spacing between adjacent elements.
+            a_count: Number of elements in the a_vector direction.
+            b_vector: Second lattice vector, of the form `[x, y]`.
+                Specifies center-to-center spacing between adjacent elements.
+                Can be omitted when specifying a 1D array.
+            b_count: Number of elements in the `b_vector` direction.
+                Should be omitted if `b_vector` was omitted.
+
+        Raises:
+            InvalidDataError: if `b_count` and `b_vector` inputs conflict
+                with each other or if `a_count < 1`.
         """
         self.a_vector = a_vector
         self.b_vector = b_vector
@@ -1054,14 +1216,21 @@ class GridRepetition:
     @staticmethod
     def read(stream: io.BufferedIOBase, repetition_type: int) -> 'GridRepetition':
         """
-        Read a GridRepetition from a stream.
+        Read a `GridRepetition` from a stream.
 
-        :param stream: Stream to read from.
-        :param repetition_type: Repetition type as defined in OASIS repetition spec.
-            Valid types are 1, 2, 3, 8, 9.
-        :return: GridRepetition object read from stream.
-        :raises InvalidDataError if repetition_type is invalid.
+        Args:
+            stream: Stream to read from.
+            repetition_type: Repetition type as defined in OASIS repetition spec.
+                Valid types are 1, 2, 3, 8, 9.
+
+        Returns:
+            `GridRepetition` object read from stream.
+
+        Raises:
+            InvalidDataError: if `repetition_type` is invalid.
         """
+        nb: Optional[int]
+        b_vector: Optional[List[int]]
         if repetition_type == 1:
             na = read_uint(stream) + 2
             nb = read_uint(stream) + 2
@@ -1094,14 +1263,19 @@ class GridRepetition:
 
     def write(self, stream: io.BufferedIOBase) -> int:
         """
-        Write the GridRepetition to a stream.
+        Write the `GridRepetition` to a stream.
 
-        A minimal representation is written (e.g., if b_count==1,
+        A minimal representation is written (e.g., if `b_count==1`,
          a 1D grid is written)
 
-        :param stream: Stream to write to.
-        :return: Number of bytes written.
-        :raises: InvalidDataError if repetition is malformed.
+        Args:
+            stream: Stream to write to.
+
+        Returns:
+            Number of bytes written.
+
+        Raises:
+            InvalidDataError: if repetition is malformed.
         """
         if self.b_vector is None or self.b_count is None:
             if self.b_vector is not None or self.b_count is not None:
@@ -1140,7 +1314,7 @@ class GridRepetition:
                 size += Delta(*self.b_vector).write(stream)
         return size
 
-    def __eq__(self, other: 'GridRepetition') -> bool:
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, type(self)) and \
                 self.a_count == other.a_count and \
                 self.b_count == other.b_count and \
@@ -1157,20 +1331,21 @@ class ArbitraryRepetition:
     Class representing a repetition entry denoting a 1D or 2D array
      of arbitrarily-spaced elements.
 
-    Properties:
-     .x_displacements   (List[int], x-displacements between elements)
-     .y_displacements   (List[int], y-displacements between elements)
+    Attributes:
+        x_displacements (List[int]): x-displacements between consecutive elements
+        y_displacements (List[int]): y-displacements between consecutive elements
     """
 
-    x_displacements = None          # type: List[int]
-    y_displacements = None          # type: List[int]
+    x_displacements: List[int]
+    y_displacements: List[int]
 
     def __init__(self,
                  x_displacements: List[int],
                  y_displacements: List[int]):
         """
-        :param x_displacements: x-displacements between consecutive elements
-        :param y_displacements: y-displacements between consecutive elements
+        Args:
+            x_displacements: x-displacements between consecutive elements
+            y_displacements: y-displacements between consecutive elements
         """
         self.x_displacements = x_displacements
         self.y_displacements = y_displacements
@@ -1178,13 +1353,18 @@ class ArbitraryRepetition:
     @staticmethod
     def read(stream: io.BufferedIOBase, repetition_type: int) -> 'ArbitraryRepetition':
         """
-        Read an ArbitraryRepetition from a stream.
+        Read an `ArbitraryRepetition` from a stream.
 
-        :param stream: Stream to read from.
-        :param repetition_type: Repetition type as defined in OASIS repetition spec.
-            Valid types are 4, 5, 6, 7, 10, 11.
-        :return: ArbitraryRepetition object read from stream.
-        :raises InvalidDataError if repetition_type is invalid.
+        Args:
+            stream: Stream to read from.
+            repetition_type: Repetition type as defined in OASIS repetition spec.
+                Valid types are 4, 5, 6, 7, 10, 11.
+
+        Returns:
+            `ArbitraryRepetition` object read from stream.
+
+        Raises:
+            InvalidDataError: if `repetition_type` is invalid.
         """
         if repetition_type == 4:
             n = read_uint(stream) + 1
@@ -1227,14 +1407,17 @@ class ArbitraryRepetition:
 
     def write(self, stream: io.BufferedIOBase) -> int:
         """
-        Write the ArbitraryRepetition to a stream.
+        Write the `ArbitraryRepetition` to a stream.
 
         A minimal representation is attempted; common factors in the
          displacements will be factored out, and lists of zeroes will
          be omitted.
 
-        :param stream: Stream to write to.
-        :return: Number of bytes written.
+        Args:
+            stream: Stream to write to.
+
+        Returns:
+            Number of bytes written.
         """
         def get_gcd(vals: List[int]) -> int:
             """
@@ -1288,7 +1471,7 @@ class ArbitraryRepetition:
         return size
 
 
-    def __eq__(self, other: 'ArbitraryRepetition') -> bool:
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, type(self)) and self.x_displacements == other.x_displacements and self.y_displacements == other.y_displacements
 
     def __repr__(self) -> str:
@@ -1299,8 +1482,14 @@ def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
     """
     Read a point list from a stream.
 
-    :param stream: Stream to read from.
-    :return: Point list of the form [[x0, y0], [x1, y1], ...]
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        Point list of the form `[[x0, y0], [x1, y1], ...]`
+
+    Raises:
+        InvalidDataError: if an invalid list type is read.
     """
     list_type = read_uint(stream)
     list_len = read_uint(stream)
@@ -1361,24 +1550,27 @@ def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
 
 
 def write_point_list(stream: io.BufferedIOBase,
-                     points: List[List[int]],
+                     points: List[Sequence[int]],
                      fast: bool = False,
                      implicit_closed: bool = True
                      ) -> int:
     """
     Write a point list to a stream.
 
-    :param stream: Stream to write to.
-    :param points: List of points, of the form [[x0, y0], [x1, y1], ...]
-    :param fast: If True, avoid searching for a compact representation for
-        the point list.
-    :param implicit_closed: Set to True if the list represents an implicitly
-        closed polygon, i.e. there is an implied line segment from points[-1]
-        to points[0]. If False, such segments are ignored, which can result in a
-        more compact representation for non-closed paths (e.g. a Manhattan
-        path with non-colinear endpoints). If unsure, use the default.
-        Default True.
-    :return: Number of bytes written.
+    Args:
+        stream: Stream to write to.
+        points: List of points, of the form `[[x0, y0], [x1, y1], ...]`
+        fast: If `True`, avoid searching for a compact representation for
+            the point list.
+        implicit_closed: Set to True if the list represents an implicitly
+            closed polygon, i.e. there is an implied line segment from `points[-1]`
+            to `points[0]`. If False, such segments are ignored, which can result in
+            a more compact representation for non-closed paths (e.g. a Manhattan
+            path with non-colinear endpoints). If unsure, use the default.
+            Default `True`.
+
+    Returns:
+        Number of bytes written.
     """
     # If we're in a hurry, just write the points as arbitrary Deltas
     if fast:
@@ -1480,12 +1672,12 @@ class PropStringReference:
     """
     Reference to a property string.
 
-    Properties:
-        .ref        (int, ID of the target)
-        .ref_type   (Type, Type of the target: bytes, NString, or AString)
+    Attributes:
+        ref (int): ID of the target
+        ref_type (Type): Type of the target: `bytes`, `NString`, or `AString`
     """
-    ref = None                      # type: int
-    reference_type = None           # type: Type
+    ref: int
+    reference_type: Type
 
     def __init__(self, ref: int, ref_type: Type):
         """
@@ -1495,7 +1687,7 @@ class PropStringReference:
         self.ref = ref
         self.ref_type = ref_type
 
-    def __eq__(self, other: 'PropStringReference') -> bool:
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, type(self)) and self.ref == other.ref and self.reference_type == other.reference_type
 
     def __repr__(self) -> str:
@@ -1513,16 +1705,21 @@ def read_property_value(stream: io.BufferedIOBase) -> property_value_t:
     0...7:  real number; property value type is reused for real number type
     8: unsigned integer
     9: signed integer
-    10: ASCII string (AString)
-    11: binary string (bytes)
-    12: name string (NString)
-    13: PropstringReference to AString
-    14: PropstringReference to bstring (i.e., to bytes)
-    15: PropstringReference to NString
+    10: ASCII string (`AString`)
+    11: binary string (`bytes`)
+    12: name string (`NString`)
+    13: `PropstringReference` to `AString`
+    14: `PropstringReference` to `bstring` (i.e., to `bytes`)
+    15: `PropstringReference` to `NString`
 
-    :param stream: Stream to read from.
-    :return: Value of the property, depending on type.
-    :raises: InvalidDataError if an invalid type is read.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        Value of the property, depending on type.
+
+    Raises:
+        InvalidDataError: if an invalid type is read.
     """
     prop_type = read_uint(stream)
     if 0 <= prop_type <= 7:
@@ -1562,18 +1759,21 @@ def write_property_value(stream: io.BufferedIOBase,
     """
     Write a property value to a stream.
 
-    See read_property_value() for format details.
+    See `read_property_value()` for format details.
 
-    :param stream: Stream to write to.
-    :param value: Property value to write. Can be an integer, a real number,
-        bytes (bstring), NString, AString, or a PropstringReference.
-    :param force_real: If True and value is an integer, writes an integer-
-        valued real number instead of a plain integer. Default False.
-    :param force_signed_int: If True and value is a positive integer,
-        writes a signed integer. Default false.
-    :param force_float32: If True and value is a float, writes a 32-bit
-        float (real number) instead of a 64-bit float.
-    :return: Number of bytes written.
+    Args:
+        stream: Stream to write to.
+        value: Property value to write. Can be an integer, a real number,
+            `bytes` (`bstring`), `NString`, `AString`, or a `PropstringReference`.
+        force_real: If `True` and value is an integer, writes an integer-
+            valued real number instead of a plain integer. Default `False`.
+        force_signed_int: If `True` and value is a positive integer,
+            writes a signed integer. Default `False`.
+        force_float32: If `True` and value is a float, writes a 32-bit
+            float (real number) instead of a 64-bit float.
+
+    Returns:
+        Number of bytes written.
     """
     if isinstance(value, int) and not force_real:
         if force_signed_int or value < 0:
@@ -1606,7 +1806,7 @@ def write_property_value(stream: io.BufferedIOBase,
     return size
 
 
-def read_interval(stream: io.BufferedIOBase) -> Tuple[int or None]:
+def read_interval(stream: io.BufferedIOBase) -> Tuple[Optional[int], Optional[int]]:
     """
     Read an interval from a stream.
     These are used for storing layer info.
@@ -1619,10 +1819,13 @@ def read_interval(stream: io.BufferedIOBase) -> Tuple[int or None]:
     type 3: a, a   (unsigned integer a)
     type 4: a, b   (unsigned integers a, b)
 
-    :param stream: Stream to read from.
-    :return: (lower, upper), where
-        lower can be None if there is an implicit lower bound of 0
-        upper can be None if there is no upper bound (inf)
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        `(lower, upper)`, where
+        `lower` can be `None` if there is an implicit lower bound of `0`
+        `upper` can be `None` if there is no upper bound (`inf`)
     """
     interval_type = read_uint(stream)
     if interval_type == 0:
@@ -1639,17 +1842,20 @@ def read_interval(stream: io.BufferedIOBase) -> Tuple[int or None]:
 
 
 def write_interval(stream: io.BufferedIOBase,
-                   min_bound: int or None = None,
-                   max_bound: int or None = None
+                   min_bound: Optional[int] = None,
+                   max_bound: Optional[int] = None
                    ) -> int:
     """
     Write an interval to a stream.
-    Used for layer data; see read_interval for format details.
+    Used for layer data; see `read_interval()` for format details.
 
-    :param stream: Stream to write to.
-    :param min_bound: Lower bound on the interval, can be None (implicit 0, default)
-    :param max_bound: Upper bound on the interval, can be None (unbounded, default)
-    :return: Number of bytes written.
+    Args:
+        stream: Stream to write to.
+        min_bound: Lower bound on the interval, can be None (implicit 0, default)
+        max_bound: Upper bound on the interval, can be None (unbounded, default)
+
+    Returns:
+        Number of bytes written.
     """
     if min_bound is None:
         if max_bound is None:
@@ -1670,33 +1876,31 @@ class OffsetEntry:
     """
     Entry for the file's offset table.
 
-    Properties:
-        .strict     (bool, If False, the records pointed to by this
-                        offset entry may also appear elsewhere in the file.
-                        If True, all records of the type pointed to by this
-                        offset entry must be present in a contiuous block at
-                        the specified offset [pad records also allowed].
-                        Additionally:
-                            All references to strict-mode records must be
-                             explicit (using reference_number).
-                            The offset may point to an encapsulating CBlock
-                             record, if the first record in that CBlock is
-                             of the target record type. A strict mode table
-                             cannot begin in the middle of a CBlock.
-                    )
-        .offset     (int, offset from the start of the file; may be 0
-                        for records that are not present.)
+    Attributes:
+        strict (bool): If `False`, the records pointed to by this
+            offset entry may also appear elsewhere in the file. If `True`, all
+            records of the type pointed to by this offset entry must be present
+            in a contiuous block at the specified offset [pad records also allowed].
+            Additionally:
+            - All references to strict-mode records must be
+                explicit (using reference_number).
+            - The offset may point to an encapsulating CBlock record, if the first
+                record in that CBlock is of the target record type. A strict modei
+                table cannot begin in the middle of a CBlock.
+        offset (int): offset from the start of the file; may be 0
+                for records that are not present.
     """
-    strict = False          # type: bool
-    offset = 0              # type: int
+    strict: bool = False
+    offset: int = 0
 
     def __init__(self, strict: bool = False, offset: int = 0):
         """
-        :param strict: True if the records referenced are written in
-                strict mode (see class docstring). Default False.
-        :param offset: Offset from the start of the file for the
-                referenced records; may be 0 if records are absent.
-                Default 0.
+        Args:
+            strict: `True` if the records referenced are written in
+                strict mode (see class docstring). Default `False`.
+            offset: Offset from the start of the file for the
+                referenced records; may be `0` if records are absent.
+                Default `0`.
         """
         self.strict = strict
         self.offset = offset
@@ -1706,8 +1910,11 @@ class OffsetEntry:
         """
         Read an offset entry from a stream.
 
-        :param stream: Stream to read from.
-        :return: Offset entry that was read.
+        Args:
+            stream: Stream to read from.
+
+        Returns:
+            Offset entry that was read.
         """
         entry = OffsetEntry()
         entry.strict = read_uint(stream) > 0
@@ -1718,8 +1925,11 @@ class OffsetEntry:
         """
         Write this offset entry to a stream.
 
-        :param stream: Stream to write to.
-        :return: Number of bytes written
+        Args:
+            stream: Stream to write to.
+
+        Returns:
+            Number of bytes written
         """
         return write_uint(stream, self.strict) + write_uint(stream, self.offset)
 
@@ -1741,20 +1951,20 @@ class OffsetTable:
 
     which are stored in the above order in the file's offset table.
 
-    Proerties:
-        .cellnames      (OffsetEntry)
-        .textstrings    (OffsetEntry)
-        .propnames      (OffsetEntry)
-        .propstrings    (OffsetEntry)
-        .layernames     (OffsetEntry)
-        .xnames         (OffsetEntry)
+    Attributes:
+        cellnames (OffsetEntry): Offset for CellNames
+        textstrings (OffsetEntry): Offset for TextStrings
+        propnames (OffsetEntry): Offset for PropNames
+        propstrings (OffsetEntry): Offset for PropStrings
+        layernames (OffsetEntry): Offset for LayerNames
+        xnames (OffsetEntry): Offset for XNames
     """
-    cellnames = None        # type: OffsetEntry
-    textstrings= None       # type: OffsetEntry
-    propnames = None        # type: OffsetEntry
-    propstrings = None      # type: OffsetEntry
-    layernames = None       # type: OffsetEntry
-    xnames = None           # type: OffsetEntry
+    cellnames:   OffsetEntry = None
+    textstrings: OffsetEntry = None
+    propnames:   OffsetEntry = None
+    propstrings: OffsetEntry = None
+    layernames:  OffsetEntry = None
+    xnames:      OffsetEntry = None
 
     def __init__(self,
                  cellnames: OffsetEntry = None,
@@ -1764,14 +1974,15 @@ class OffsetTable:
                  layernames: OffsetEntry = None,
                  xnames: OffsetEntry = None):
         """
-        All parameters default to a non-strict entry with offset 0.
+        All parameters default to a non-strict entry with offset `0`.
 
-        :param cellnames: OffsetEntry for CellName records.
-        :param textstrings: OffsetEntry for TextString records.
-        :param propnames: OffsetEntry for PropName records.
-        :param propstrings: OffsetEntry for PropString records.
-        :param layernames: OffsetEntry for LayerNamerecords.
-        :param xnames: OffsetEntry for XName records.
+        Args:
+            cellnames: `OffsetEntry` for `CellName` records.
+            textstrings: `OffsetEntry` for `TextString` records.
+            propnames: `OffsetEntry` for `PropName` records.
+            propstrings: `OffsetEntry` for `PropString` records.
+            layernames: `OffsetEntry` for `LayerName` records.
+            xnames: `OffsetEntry` for `XName` records.
         """
         if cellnames is None:
             cellnames = OffsetEntry()
@@ -1799,8 +2010,11 @@ class OffsetTable:
         Read an offset table from a stream.
         See class docstring for format details.
 
-        :param stream: Stream to read from.
-        :return: The offset table that was read.
+        Args:
+            stream: Stream to read from.
+
+        Returns:
+            The offset table that was read.
         """
         table = OffsetTable()
         table.cellnames = OffsetEntry.read(stream)
@@ -1816,8 +2030,11 @@ class OffsetTable:
         Write this offset table to a stream.
         See class docstring for format details.
 
-        :param stream: Stream to write to.
-        :return: Number of bytes written.
+        Args:
+            stream: Stream to write to.
+
+        Returns:
+            Number of bytes written.
         """
         size = self.cellnames.write(stream)
         size += self.textstrings.write(stream)
@@ -1836,8 +2053,11 @@ def read_u32(stream: io.BufferedIOBase) -> int:
     """
     Read a 32-bit unsigned integer (little endian) from a stream.
 
-    :param stream: Stream to read from.
-    :return: The integer that was read.
+    Args:
+        stream: Stream to read from.
+
+    Returns:
+        The integer that was read.
     """
     b = _read(stream, 4)
     return struct.unpack('<I', b)
@@ -1847,10 +2067,15 @@ def write_u32(stream: io.BufferedIOBase, n: int) -> int:
     """
     Write a 32-bit unsigned integer (little endian) to a stream.
 
-    :param stream: Stream to write to.
-    :param n: Integer to write.
-    :return: The number of bytes written (4).
-    :raises: SignedError if n is negative.
+    Args:
+        stream: Stream to write to.
+        n: Integer to write.
+
+    Returns:
+        The number of bytes written (4).
+
+    Raises:
+        SignedError: if `n` is negative.
     """
     if n < 0:
         raise SignedError('Negative u32: {}'.format(n))
@@ -1866,20 +2091,22 @@ class Validation:
     The checksum is calculated using the entire file, excluding the final 4 bytes
       (the value of the checksum itself).
 
-    Properties:
-        .checksum_type      (int, 0: No checksum, 1: crc32, 2: checksum32)
-        .checksum           (int or None, value of the checksum)
-
+    Attributes:
+        checksum_type (int): `0` for no checksum, `1` for crc32, `2` for checksum32
+        checksum (Optional[int]): value of the checksum
     """
-    checksum_type = None      # type: int
-    checksum = None           # type: int or None
+    checksum_type: int
+    checksum: Optional[int] = None
 
     def __init__(self, checksum_type: int, checksum: int = None):
         """
-        :param checksum_type: 0,1,2 (No checksum, crc32, checksum32)
-        :param checksum: Value of the checksum, or None.
-        :raises: InvalidDataError if checksum_type is invalid, or
-                unexpected checksum is present.
+        Args:
+            checksum_type: 0,1,2 (No checksum, crc32, checksum32)
+            checksum: Value of the checksum, or None.
+
+        Raises:
+            InvalidDataError: if `checksum_type` is invalid, or
+                unexpected `checksum` is present.
         """
         if checksum_type < 0 or checksum_type > 2:
             raise InvalidDataError('Invalid validation type')
@@ -1894,9 +2121,14 @@ class Validation:
         Read a validation entry from a stream.
         See class docstring for format details.
 
-        :param stream: Stream to read from.
-        :return: The validation entry that was read.
-        :raises: InvalidDataError if an invalid validation type was encountered.
+        Args:
+            stream: Stream to read from.
+
+        Returns:
+            The validation entry that was read.
+
+        Raises:
+            InvalidDataError: if an invalid validation type was encountered.
         """
         checksum_type = read_uint(stream)
         if checksum_type == 0:
@@ -1914,8 +2146,11 @@ class Validation:
         Write this validation entry to a stream.
         See class docstring for format details.
 
-        :param stream: Stream to write to.
-        :return: Number of bytes written.
+        Args:
+            stream: Stream to write to.
+
+        Returns:
+            Number of bytes written.
         """
         if self.checksum_type == 0:
             return write_uint(stream, 0)
@@ -1932,8 +2167,11 @@ def write_magic_bytes(stream: io.BufferedIOBase) -> int:
     """
     Write the magic byte sequence to a stream.
 
-    :param stream: Stream to write to.
-    :return: Number of bytes written.
+    Args:
+        stream: Stream to write to.
+
+    Returns:
+        Number of bytes written.
     """
     return stream.write(MAGIC_BYTES)
 
@@ -1941,10 +2179,13 @@ def write_magic_bytes(stream: io.BufferedIOBase) -> int:
 def read_magic_bytes(stream: io.BufferedIOBase):
     """
     Read the magic byte sequence from a stream.
-    Raise an InvalidDataError if it was not found.
+    Raise an `InvalidDataError` if it was not found.
 
-    :param stream: Stream to read from.
-    :raises: InvalidDataError if the sequence was not found.
+    Args:
+        stream: Stream to read from.
+
+    Raises:
+        InvalidDataError: if the sequence was not found.
     """
     magic = _read(stream, len(MAGIC_BYTES))
     if magic != MAGIC_BYTES:
