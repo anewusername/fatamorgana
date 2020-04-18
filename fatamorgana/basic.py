@@ -953,6 +953,8 @@ def read_repetition(stream: io.BufferedIOBase) -> repetition_t:
         return GridRepetition.read(stream, rtype)
     elif rtype in (4, 5, 6, 7, 10, 11):
         return ArbitraryRepetition.read(stream, rtype)
+    else:
+        raise InvalidDataError('Unexpected repetition type: {}'.format(rtype))
 
 
 def write_repetition(stream: io.BufferedIOBase, repetition: repetition_t) -> int:
@@ -1357,7 +1359,7 @@ def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
                 y += delta.y
                 points.append([x, y])
     else:
-        raise Exception('Invalid point list type')
+        raise InvalidDataError('Invalid point list type')
     return points
 
 
