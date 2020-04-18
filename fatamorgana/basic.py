@@ -2065,7 +2065,7 @@ def read_u32(stream: io.BufferedIOBase) -> int:
         The integer that was read.
     """
     b = _read(stream, 4)
-    return struct.unpack('<I', b)
+    return struct.unpack('<I', b)[0]
 
 
 def write_u32(stream: io.BufferedIOBase, n: int) -> int:
