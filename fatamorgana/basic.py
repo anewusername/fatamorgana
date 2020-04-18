@@ -1826,6 +1826,9 @@ def read_interval(stream: io.BufferedIOBase) -> Tuple[Optional[int], Optional[in
         `(lower, upper)`, where
         `lower` can be `None` if there is an implicit lower bound of `0`
         `upper` can be `None` if there is no upper bound (`inf`)
+
+    Raises:
+        InvalidDataError: On malformed data.
     """
     interval_type = read_uint(stream)
     if interval_type == 0:
@@ -1839,6 +1842,8 @@ def read_interval(stream: io.BufferedIOBase) -> Tuple[Optional[int], Optional[in
         return v, v
     elif interval_type == 4:
         return read_uint(stream), read_uint(stream)
+    else:
+        raise InvalidDataError('Unrecognized interval type: {}'.format(interval_type))
 
 
 def write_interval(stream: io.BufferedIOBase,
@@ -2151,13 +2156,22 @@ class Validation:
 
         Returns:
             Number of bytes written.
+
+        Raises:
+            InvalidDataError: if the checksum type can't be handled.
         """
         if self.checksum_type == 0:
             return write_uint(stream, 0)
+        elif self.checksum is None:
+            raise InvalidDataError('Checksum is empty but type is '
+                                   '{}'.format(self.checksum_type))
         elif self.checksum_type == 1:
             return write_uint(stream, 1) + write_u32(stream, self.checksum)
         elif self.checksum_type == 2:
             return write_uint(stream, 2) + write_u32(stream, self.checksum)
+        else:
+            raise InvalidDataError('Unrecognized checksum type: '
+                                   '{}'.format(self.checksum_type))
 
     def __repr__(self) -> str:
         return 'Validation(type: {} sum: {})'.format(self.checksum_type, self.checksum)

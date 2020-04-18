@@ -1865,6 +1865,8 @@ class Path(Record):
                     return PathExtensionScheme.HalfWidth, None
                 elif ext_scheme == 3:
                     return PathExtensionScheme.Arbitrary, read_sint(stream)
+                else:
+                    raise InvalidDataError('Invalid ext_scheme: {}'.format(ext_scheme))
 
             optional['extension_start'] = get_pathext(scheme_start)
             optional['extension_end'] = get_pathext(scheme_end)
