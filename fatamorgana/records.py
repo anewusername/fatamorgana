@@ -1859,7 +1859,7 @@ class Path(Record):
             scheme_end = scheme & 0b11
             scheme_start = (scheme >> 2) & 0b11
 
-            def get_pathext(ext_scheme: int) -> pathextension_t:
+            def get_pathext(ext_scheme: int) -> Optional[pathextension_t]:
                 if ext_scheme == 0:
                     return None
                 elif ext_scheme == 1:
