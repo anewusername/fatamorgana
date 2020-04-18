@@ -1583,7 +1583,7 @@ def write_property_value(stream: io.BufferedIOBase,
         else:
             size = write_uint(stream, 8)
             size += write_uint(stream, value)
-    elif isinstance(value, real_t):
+    elif isinstance(value, (Fraction, float, int)):
         size = write_real(stream, value, force_float32)
     elif isinstance(value, AString):
         size = write_uint(stream, 10)
