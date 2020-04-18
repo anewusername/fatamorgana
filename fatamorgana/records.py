@@ -2157,27 +2157,7 @@ class CTrapezoid(Record):
         self.y = y
         self.repetition = repetition
 
-        if ctrapezoid_type in (20, 21) and width is not None:
-            raise InvalidDataError('CTrapezoid has spurious width entry: '
-                                   '{}'.format(width))
-        if ctrapezoid_type in (16, 17, 18, 19, 22, 23, 25) and height is not None:
-            raise InvalidDataError('CTrapezoid has spurious height entry: '
-                                   '{}'.format(height))
-        if ctrapezoid_type in range(0, 4) and width < height:
-            raise InvalidDataError('CTrapezoid has width < height'
-                                   ' ({} < {})'.format(width, height))
-        if ctrapezoid_type in range(4, 8) and width < 2 * height:
-            raise InvalidDataError('CTrapezoid has width < 2*height'
-                                   ' ({} < 2 * {})'.format(width, height))
-        if ctrapezoid_type in range(8, 12) and width > height:
-            raise InvalidDataError('CTrapezoid has width > height'
-                                   ' ({} > {})'.format(width, height))
-        if ctrapezoid_type in range(12, 16) and 2 * width > height:
-            raise InvalidDataError('CTrapezoid has 2*width > height'
-                                   ' ({} > 2 * {})'.format(width, height))
-        if ctrapezoid_type is not None and ctrapezoid_type not in range(0, 26):
-            raise InvalidDataError('CTrapezoid has invalid type: '
-                                   '{}'.format(ctrapezoid_type))
+        self.check_valid()
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
@@ -2199,6 +2179,8 @@ class CTrapezoid(Record):
                                        '{}'.format(self.height))
         else:
             adjust_field(self, 'height', modals, 'geometry_h')
+
+        self.check_valid()
 
     def deduplicate_with_modals(self, modals: Modals):
         dedup_coordinates(self, modals, 'geometry_x', 'geometry_y')
@@ -2222,6 +2204,8 @@ class CTrapezoid(Record):
                                        '{}'.format(self.height))
         else:
             dedup_field(self, 'height', modals, 'geometry_h')
+
+        self.check_valid()
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'CTrapezoid':
@@ -2280,6 +2264,37 @@ class CTrapezoid(Record):
         if r:
             size += self.repetition.write(stream)
         return size
+
+
+    def check_valid(self):
+        ctrapezoid_type = self.ctrapezoid_type
+        width = self.width
+        height = self.height
+
+        if ctrapezoid_type in (20, 21) and width is not None:
+            raise InvalidDataError('CTrapezoid has spurious width entry: '
+                                   '{}'.format(width))
+        if ctrapezoid_type in (16, 17, 18, 19, 22, 23, 25) and height is not None:
+            raise InvalidDataError('CTrapezoid has spurious height entry: '
+                                   '{}'.format(height))
+
+        if width is not None and height is not None:
+            if ctrapezoid_type in range(0, 4) and width < height:
+                raise InvalidDataError('CTrapezoid has width < height'
+                                       ' ({} < {})'.format(width, height))
+            if ctrapezoid_type in range(4, 8) and width < 2 * height:
+                raise InvalidDataError('CTrapezoid has width < 2*height'
+                                       ' ({} < 2 * {})'.format(width, height))
+            if ctrapezoid_type in range(8, 12) and width > height:
+                raise InvalidDataError('CTrapezoid has width > height'
+                                       ' ({} > {})'.format(width, height))
+            if ctrapezoid_type in range(12, 16) and 2 * width > height:
+                raise InvalidDataError('CTrapezoid has 2*width > height'
+                                       ' ({} > 2 * {})'.format(width, height))
+
+        if ctrapezoid_type is not None and ctrapezoid_type not in range(0, 26):
+            raise InvalidDataError('CTrapezoid has invalid type: '
+                                   '{}'.format(ctrapezoid_type))
 
 
 class Circle(Record):
