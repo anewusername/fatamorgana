@@ -3,12 +3,12 @@ This module contains data structures and functions for reading from and
  writing to whole OASIS layout files, and provides a few additional
  abstractions for the data contained inside them.
 """
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Type
 import io
 import logging
 
 from . import records
-from .records import Modals
+from .records import Modals, Record
 from .basic import OffsetEntry, OffsetTable, NString, AString, real_t, Validation, \
         read_magic_bytes, write_magic_bytes, read_uint, EOFError, \
         InvalidDataError, InvalidRecordError
@@ -29,7 +29,6 @@ class FileModals:
     xname_implicit: Optional[bool] = None
     textstring_implicit: Optional[bool] = None
     propstring_implicit: Optional[bool] = None
-    cellname_implicit: Optional[bool] = None
 
     within_cell: bool = False
     within_cblock: bool = False
@@ -157,6 +156,8 @@ class OasisLayout:
                 raise e
 
         logger.info('read_record of type {} at position 0x{:x}'.format(record_id, stream.tell()))
+
+        record: Record
 
         # CBlock
         if record_id == 34:
@@ -451,7 +452,7 @@ class XName:
 
 
 # Mapping from record id to record class.
-_GEOMETRY = {
+_GEOMETRY: Dict[int, Type] = {
     19: records.Text,
     20: records.Rectangle,
     21: records.Polygon,

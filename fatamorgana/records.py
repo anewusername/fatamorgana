@@ -11,7 +11,7 @@ Higher-level code (e.g. monitoring for combinations of records with
  in main.py instead.
 """
 from abc import ABCMeta, abstractmethod
-from typing import List, Dict, Tuple, Union, Optional, Sequence
+from typing import List, Dict, Tuple, Union, Optional, Sequence, Any
 import copy
 import math
 import zlib
@@ -337,17 +337,17 @@ class Start(Record):
     Attributes:
         version (AString): "1.0"
         unit (real_t): positive real number, grid steps per micron
-        offset_table (OffsetTable or None): If `None` then table must be
+        offset_table (Optional[OffsetTable]): If `None` then table must be
                                             placed in the `End` record)
     """
     version: AString
     unit: real_t
-    offset_table: OffsetTable = None
+    offset_table: Optional[OffsetTable] = None
 
     def __init__(self,
                  unit: real_t,
                  version: Union[AString, str] = None,
-                 offset_table: OffsetTable = None):
+                 offset_table: Optional[OffsetTable] = None):
         """
         Args
             unit: Grid steps per micron (positive real number)
@@ -390,6 +390,7 @@ class Start(Record):
         version = AString.read(stream)
         unit = read_real(stream)
         has_offset_table = read_uint(stream) == 0
+        offset_table: Optional[OffsetTable]
         if has_offset_table:
             offset_table = OffsetTable.read(stream)
         else:
@@ -448,7 +449,7 @@ class End(Record):
         if record_id != 2:
             raise InvalidDataError('Invalid record id for End {}'.format(record_id))
         if has_offset_table:
-            offset_table = OffsetTable.read(stream)
+            offset_table: Optional[OffsetTable] = OffsetTable.read(stream)
         else:
             offset_table = None
         _padding_string = read_bstring(stream)
@@ -630,7 +631,7 @@ class CellName(Record):
                                    '{}'.format(record_id))
         nstring = NString.read(stream)
         if record_id == 4:
-            reference_number = read_uint(stream)
+            reference_number: Optional[int] = read_uint(stream)
         else:
             reference_number = None
         record = CellName(nstring, reference_number)
@@ -684,7 +685,7 @@ class PropName(Record):
                                    '{}'.format(record_id))
         nstring = NString.read(stream)
         if record_id == 8:
-            reference_number = read_uint(stream)
+            reference_number: Optional[int] = read_uint(stream)
         else:
             reference_number = None
         record = PropName(nstring, reference_number)
@@ -739,7 +740,7 @@ class TextString(Record):
                                    '{}'.format(record_id))
         astring = AString.read(stream)
         if record_id == 6:
-            reference_number = read_uint(stream)
+            reference_number: Optional[int] = read_uint(stream)
         else:
             reference_number = None
         record = TextString(astring, reference_number)
@@ -794,7 +795,7 @@ class PropString(Record):
                                    '{}'.format(record_id))
         astring = AString.read(stream)
         if record_id == 10:
-            reference_number = read_uint(stream)
+            reference_number: Optional[int] = read_uint(stream)
         else:
             reference_number = None
         record = PropString(astring, reference_number)
@@ -936,6 +937,7 @@ class Property(Record):
             s = 0x01 & (byte >> 0)
 
             name = read_refname(stream, c, n)
+            values: Optional[List[property_value_t]]
             if v == 0:
                 if u < 0x0f:
                     value_count = u
@@ -1028,7 +1030,7 @@ class XName(Record):
         attribute = read_uint(stream)
         bstring = read_bstring(stream)
         if record_id == 31:
-            reference_number = read_uint(stream)
+            reference_number: Optional[int] = read_uint(stream)
         else:
             reference_number = None
         record = XName(attribute, bstring, reference_number)
@@ -1113,11 +1115,11 @@ class XGeometry(Record):
     def __init__(self,
                  attribute: int,
                  bstring: bytes,
-                 layer: int = None,
-                 datatype: int = None,
-                 x: int = None,
-                 y: int = None,
-                 repetition: repetition_t = None):
+                 layer: Optional[int] = None,
+                 datatype: Optional[int] = None,
+                 x: Optional[int] = None,
+                 y: Optional[int] = None,
+                 repetition: Optional[repetition_t] = None):
         """
         Args:
             attribute: Attribute number for this XGeometry.
@@ -1158,7 +1160,7 @@ class XGeometry(Record):
         if z0 or z1 or z2:
             raise InvalidDataError('Malformed XGeometry header')
         attribute = read_uint(stream)
-        optional = {}
+        optional: Dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -1223,6 +1225,7 @@ class Cell(Record):
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Cell':
+        name: Union[int, NString]
         if record_id == 13:
             name = read_uint(stream)
         elif record_id == 14:
@@ -1317,7 +1320,7 @@ class Placement(Record):
         #CNXYRAAF (17) or CNXYRMAF (18)
         c, n, x, y, r, ma0, ma1, flip = read_bool_byte(stream)
 
-        optional = {}
+        optional: Dict[str, Any] = {}
         name = read_refname(stream, c, n)
         if record_id == 17:
             aa = (ma0 << 1) | ma1
@@ -1451,7 +1454,7 @@ class Text(Record):
         if z0:
             raise InvalidDataError('Malformed Text header')
 
-        optional = {}
+        optional: Dict[str, Any] = {}
         string = read_refstring(stream, c, n)
         if l:
             optional['layer'] = read_uint(stream)
@@ -1584,7 +1587,7 @@ class Rectangle(Record):
                                    '{}'.format(record_id))
 
         is_square, w, h, x, y, r, d, l = read_bool_byte(stream)
-        optional = {}
+        optional: Dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -1706,7 +1709,7 @@ class Polygon(Record):
         if z0 or z1:
             raise InvalidDataError('Invalid polygon header')
 
-        optional = {}
+        optional: Dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -1844,7 +1847,7 @@ class Path(Record):
                                    '{}'.format(record_id))
 
         e, w, p, x, y, r, d, l = read_bool_byte(stream)
-        optional = {}
+        optional: Dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -2035,7 +2038,7 @@ class Trapezoid(Record):
                                    '{}'.format(record_id))
 
         is_vertical, w, h, x, y, r, d, l = read_bool_byte(stream)
-        optional = {}
+        optional: Dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -2227,7 +2230,7 @@ class CTrapezoid(Record):
                                    '{}'.format(record_id))
 
         t, w, h, x, y, r, d, l = read_bool_byte(stream)
-        optional = {}
+        optional: Dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -2348,7 +2351,7 @@ class Circle(Record):
         if z0 or z1:
             raise InvalidDataError('Malformed circle header')
 
-        optional = {}
+        optional: Dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -2390,7 +2393,7 @@ class Circle(Record):
         return size
 
 
-def adjust_repetition(record: Record, modals: Modals):
+def adjust_repetition(record, modals: Modals):
     """
     Merge the record's repetition entry with the one in the modals
 
@@ -2412,7 +2415,7 @@ def adjust_repetition(record: Record, modals: Modals):
             modals.repetition = copy.copy(record.repetition)
 
 
-def adjust_field(record: Record, r_field: str, modals: Modals, m_field: str):
+def adjust_field(record, r_field: str, modals: Modals, m_field: str):
     """
     Merge `record.r_field` with `modals.m_field`
 
@@ -2436,7 +2439,7 @@ def adjust_field(record: Record, r_field: str, modals: Modals, m_field: str):
             raise InvalidDataError('Unfillable field: {}'.format(m_field))
 
 
-def adjust_coordinates(record: Record, modals: Modals, mx_field: str, my_field: str):
+def adjust_coordinates(record, modals: Modals, mx_field: str, my_field: str):
     """
     Merge `record.x` and `record.y` with `modals.mx_field` and `modals.my_field`,
      taking into account the value of `modals.xy_relative`.
@@ -2472,7 +2475,7 @@ def adjust_coordinates(record: Record, modals: Modals, mx_field: str, my_field: 
 
 
 # TODO: Clarify the docs on the dedup_* functions
-def dedup_repetition(record: Record, modals: Modals):
+def dedup_repetition(record, modals: Modals):
     """
     Deduplicate the record's repetition entry with the one in the modals.
     Update the one in the modals if they are different.
@@ -2499,7 +2502,7 @@ def dedup_repetition(record: Record, modals: Modals):
         modals.repetition = record.repetition
 
 
-def dedup_field(record: Record, r_field: str, modals: Modals, m_field: str):
+def dedup_field(record, r_field: str, modals: Modals, m_field: str):
     """
     Deduplicate `record.r_field` using `modals.m_field`
     Update the `modals.m_field` if they are different.
@@ -2529,7 +2532,7 @@ def dedup_field(record: Record, r_field: str, modals: Modals, m_field: str):
         raise InvalidDataError('Unfillable field')
 
 
-def dedup_coordinates(record: Record, modals: Modals, mx_field: str, my_field: str):
+def dedup_coordinates(record, modals: Modals, mx_field: str, my_field: str):
     """
     Deduplicate `record.x` and `record.y` using `modals.mx_field` and `modals.my_field`,
      taking into account the value of `modals.xy_relative`.

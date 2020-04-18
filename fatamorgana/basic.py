@@ -140,7 +140,7 @@ if _USE_NUMPY:
         byte_arr = _read(stream, 1)
         return numpy.unpackbits(numpy.frombuffer(byte_arr, dtype=numpy.uint8))
 
-    def write_bool_byte(stream: io.BufferedIOBase, bits: Tuple[bool]) -> int:
+    def write_bool_byte(stream: io.BufferedIOBase, bits: Tuple[Union[bool, int], ...]) -> int:
         """
         Pack 8 booleans into a byte, and write it to the stream.
 
@@ -173,7 +173,7 @@ else:
         bits = [bool((byte >> i) & 0x01) for i in reversed(range(8))]
         return bits
 
-    def write_bool_byte(stream: io.BufferedIOBase, bits: Tuple[bool]) -> int:
+    def write_bool_byte(stream: io.BufferedIOBase, bits: Tuple[Union[bool, int], ...]) -> int:
         """
         Pack 8 booleans into a byte, and write it to the stream.
 
@@ -1611,6 +1611,7 @@ def write_point_list(stream: io.BufferedIOBase,
         return size
 
     # Try writing a bunch of Manhattan or Octangular deltas
+    deltas: Union[List[ManhattanDelta], List[OctangularDelta], List[Delta]]
     list_type = None
     try:
         deltas = [ManhattanDelta(x, y) for x, y in points]
@@ -1721,6 +1722,7 @@ def read_property_value(stream: io.BufferedIOBase) -> property_value_t:
     Raises:
         InvalidDataError: if an invalid type is read.
     """
+    ref_type: Type
     prop_type = read_uint(stream)
     if 0 <= prop_type <= 7:
         return read_real(stream, prop_type)
@@ -1964,20 +1966,20 @@ class OffsetTable:
         layernames (OffsetEntry): Offset for LayerNames
         xnames (OffsetEntry): Offset for XNames
     """
-    cellnames:   OffsetEntry = None
-    textstrings: OffsetEntry = None
-    propnames:   OffsetEntry = None
-    propstrings: OffsetEntry = None
-    layernames:  OffsetEntry = None
-    xnames:      OffsetEntry = None
+    cellnames:   OffsetEntry
+    textstrings: OffsetEntry
+    propnames:   OffsetEntry
+    propstrings: OffsetEntry
+    layernames:  OffsetEntry
+    xnames:      OffsetEntry
 
     def __init__(self,
-                 cellnames: OffsetEntry = None,
-                 textstrings: OffsetEntry = None,
-                 propnames: OffsetEntry = None,
-                 propstrings: OffsetEntry = None,
-                 layernames: OffsetEntry = None,
-                 xnames: OffsetEntry = None):
+                 cellnames: Optional[OffsetEntry] = None,
+                 textstrings: Optional[OffsetEntry] = None,
+                 propnames: Optional[OffsetEntry] = None,
+                 propstrings: Optional[OffsetEntry] = None,
+                 layernames: Optional[OffsetEntry] = None,
+                 xnames: Optional[OffsetEntry] = None):
         """
         All parameters default to a non-strict entry with offset `0`.
 
@@ -2204,5 +2206,5 @@ def read_magic_bytes(stream: io.BufferedIOBase):
     magic = _read(stream, len(MAGIC_BYTES))
     if magic != MAGIC_BYTES:
         raise InvalidDataError('Could not read magic bytes, '
-                               'found {} : {}'.format(magic, magic.decode()))
+                               'found {!r} : {}'.format(magic, magic.decode()))
 
