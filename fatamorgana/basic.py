@@ -8,6 +8,7 @@ from enum import Enum
 import math
 import struct
 import io
+import warnings
 
 try:
     import numpy
@@ -1038,8 +1039,7 @@ class GridRepetition:
             if self.b_count < 2:
                 self.b_count = None
                 self.b_vector = None
-                print('Warning: removed b_count and b_vector since b_count == 1')
-                # TODO: warn here
+                warnings.warn('Removed b_count and b_vector since b_count == 1')
 
         if self.a_count < 2:
             raise InvalidDataError('Repetition has too-small x-count: '
