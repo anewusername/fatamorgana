@@ -1319,7 +1319,7 @@ class Placement(Record):
             if n:
                 size += write_uint(stream, self.name)
             else:
-                size += self.name.write(self)
+                size += self.name.write(stream)
         if m:
             size += write_real(stream, self.magnification)
         if a:
@@ -1434,7 +1434,7 @@ class Text(Record):
             if n:
                 size += write_uint(stream, self.string)
             else:
-                size += self.string.write(self)
+                size += self.string.write(stream)
         if l:
             size += write_uint(stream, self.layer)
         if d:
