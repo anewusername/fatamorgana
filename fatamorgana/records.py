@@ -978,13 +978,13 @@ class Property(Record):
             size += write_byte(stream, (u << 4) | (v << 3) | (c << 2) | (n << 1) | s)
             if c:
                 if n:
-                    size += write_uint(stream, self.name)
+                    size += write_uint(stream, self.name)   # type: ignore
                 else:
-                    size += self.name.write(stream)
+                    size += self.name.write(stream)         # type: ignore
             if not v:
                 if u == 0x0f:
-                    size += write_uint(stream, self.name)
-                size += sum(write_property_value(stream, p) for p in self.values)
+                    size += write_uint(stream, self.name)   # type: ignore
+                size += sum(write_property_value(stream, p) for p in self.values)   # type: ignore
         return size
 
 
@@ -1188,16 +1188,16 @@ class XGeometry(Record):
         size += write_bool_byte(stream, (0, 0, 0, x, y, r, d, l))
         size += write_uint(stream, self.attribute)
         if l:
-            size += write_uint(stream, self.layer)
+            size += write_uint(stream, self.layer)      # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)
+            size += write_uint(stream, self.datatype)   # type: ignore
         size += write_bstring(stream, self.bstring)
         if x:
-            size += write_sint(stream, self.x)
+            size += write_sint(stream, self.x)          # type: ignore
         if y:
-            size += write_sint(stream, self.y)
+            size += write_sint(stream, self.y)          # type: ignore
         if r:
-            size += self.repetition.write(stream)
+            size += self.repetition.write(stream)       # type: ignore
         return size
 
 
@@ -1352,8 +1352,8 @@ class Placement(Record):
         f = self.flip
 
         if self.angle is not None and self.angle % 90 == 0 and \
-           self.magnification is None or self.magnification == 1:
-            aa = int((self.angle / 90) % 4)
+                self.magnification is None or self.magnification == 1:
+            aa = int((self.angle / 90) % 4)                 # type: ignore
             bools = (c, n, x, y, r, aa & 0b10, aa & 0b01, f)
             m = False
             a = False
@@ -1368,19 +1368,19 @@ class Placement(Record):
         size += write_bool_byte(stream, bools)
         if c:
             if n:
-                size += write_uint(stream, self.name)
+                size += write_uint(stream, self.name)       # type: ignore
             else:
-                size += self.name.write(stream)
+                size += self.name.write(stream)             # type: ignore
         if m:
-            size += write_real(stream, self.magnification)
+            size += write_real(stream, self.magnification)  # type: ignore
         if a:
-            size += write_real(stream, self.angle)
+            size += write_real(stream, self.angle)          # type: ignore
         if x:
-            size += write_sint(stream, self.x)
+            size += write_sint(stream, self.x)              # type: ignore
         if y:
-            size += write_sint(stream, self.y)
+            size += write_sint(stream, self.y)              # type: ignore
         if r:
-            size += self.repetition.write(stream)
+            size += self.repetition.write(stream)           # type: ignore
         return size
 
 
@@ -1484,19 +1484,19 @@ class Text(Record):
         size += write_bool_byte(stream, (0, c, n, x, y, r, d, l))
         if c:
             if n:
-                size += write_uint(stream, self.string)
+                size += write_uint(stream, self.string) # type: ignore
             else:
-                size += self.string.write(stream)
+                size += self.string.write(stream)       # type: ignore
         if l:
-            size += write_uint(stream, self.layer)
+            size += write_uint(stream, self.layer)      # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)
+            size += write_uint(stream, self.datatype)   # type: ignore
         if x:
-            size += write_sint(stream, self.x)
+            size += write_sint(stream, self.x)          # type: ignore
         if y:
-            size += write_sint(stream, self.y)
+            size += write_sint(stream, self.y)          # type: ignore
         if r:
-            size += self.repetition.write(stream)
+            size += self.repetition.write(stream)       # type: ignore
         return size
 
 
@@ -1619,19 +1619,19 @@ class Rectangle(Record):
         size = write_uint(stream, 20)
         size += write_bool_byte(stream, (s, w, h, x, y, r, d, l))
         if l:
-            size += write_uint(stream, self.layer)
+            size += write_uint(stream, self.layer)      # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)
+            size += write_uint(stream, self.datatype)   # type: ignore
         if w:
-            size += write_uint(stream, self.width)
+            size += write_uint(stream, self.width)      # type: ignore
         if h:
-            size += write_uint(stream, self.height)
+            size += write_uint(stream, self.height)     # type: ignore
         if x:
-            size += write_sint(stream, self.x)
+            size += write_sint(stream, self.x)          # type: ignore
         if y:
-            size += write_sint(stream, self.y)
+            size += write_sint(stream, self.y)          # type: ignore
         if r:
-            size += self.repetition.write(stream)
+            size += self.repetition.write(stream)       # type: ignore
         return size
 
 
@@ -1737,17 +1737,18 @@ class Polygon(Record):
         size = write_uint(stream, 21)
         size += write_bool_byte(stream, (0, 0, p, x, y, r, d, l))
         if l:
-            size += write_uint(stream, self.layer)
+            size += write_uint(stream, self.layer)          # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)
+            size += write_uint(stream, self.datatype)       # type: ignore
         if p:
-            size += write_point_list(stream, self.point_list, implicit_closed=True, fast=fast)
+            size += write_point_list(stream, self.point_list,   # type: ignore
+                                     implicit_closed=True, fast=fast)
         if x:
-            size += write_sint(stream, self.x)
+            size += write_sint(stream, self.x)      # type: ignore
         if y:
-            size += write_sint(stream, self.y)
+            size += write_sint(stream, self.y)      # type: ignore
         if r:
-            size += self.repetition.write(stream)
+            size += self.repetition.write(stream)   # type: ignore
         return size
 
 
@@ -1898,11 +1899,11 @@ class Path(Record):
         size = write_uint(stream, 21)
         size += write_bool_byte(stream, (e, w, p, x, y, r, d, l))
         if l:
-            size += write_uint(stream, self.layer)
+            size += write_uint(stream, self.layer)      # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)
+            size += write_uint(stream, self.datatype)   # type: ignore
         if w:
-            size += write_uint(stream, self.half_width)
+            size += write_uint(stream, self.half_width) # type: ignore
         if e:
             scheme = 0
             if self.extension_start is not None:
@@ -1911,17 +1912,18 @@ class Path(Record):
                 scheme += self.extension_end[0].value
             size += write_uint(stream, scheme)
             if scheme & 0b1100 == 0b1100:
-                size += write_sint(stream, self.extension_start[1])
+                size += write_sint(stream, self.extension_start[1]) # type: ignore
             if scheme & 0b0011 == 0b0011:
-                size += write_sint(stream, self.extension_end[1])
+                size += write_sint(stream, self.extension_end[1])   # type: ignore
         if p:
-            size += write_point_list(stream, self.point_list, implicit_closed=False, fast=fast)
+            size += write_point_list(stream, self.point_list,       # type: ignore
+                                     implicit_closed=False, fast=fast)
         if x:
-            size += write_sint(stream, self.x)
+            size += write_sint(stream, self.x)      # type: ignore
         if y:
-            size += write_sint(stream, self.y)
+            size += write_sint(stream, self.y)      # type: ignore
         if r:
-            size += self.repetition.write(stream)
+            size += self.repetition.write(stream)   # type: ignore
         return size
 
 
@@ -2080,23 +2082,23 @@ class Trapezoid(Record):
         size = write_uint(stream, record_id)
         size += write_bool_byte(stream, (v, w, h, x, y, r, d, l))
         if l:
-            size += write_uint(stream, self.layer)
+            size += write_uint(stream, self.layer)      # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)
+            size += write_uint(stream, self.datatype)   # type: ignore
         if w:
-            size += write_uint(stream, self.width)
+            size += write_uint(stream, self.width)      # type: ignore
         if h:
-            size += write_uint(stream, self.height)
+            size += write_uint(stream, self.height)     # type: ignore
         if record_id != 25:
-            size += write_sint(stream, self.delta_a)
+            size += write_sint(stream, self.delta_a)    # type: ignore
         if record_id != 24:
-            size += write_sint(stream, self.delta_b)
+            size += write_sint(stream, self.delta_b)    # type: ignore
         if x:
-            size += write_sint(stream, self.x)
+            size += write_sint(stream, self.x)          # type: ignore
         if y:
-            size += write_sint(stream, self.y)
+            size += write_sint(stream, self.y)          # type: ignore
         if r:
-            size += self.repetition.write(stream)
+            size += self.repetition.write(stream)       # type: ignore
         return size
 
 
@@ -2248,21 +2250,21 @@ class CTrapezoid(Record):
         size = write_uint(stream, 26)
         size += write_bool_byte(stream, (t, w, h, x, y, r, d, l))
         if l:
-            size += write_uint(stream, self.layer)
+            size += write_uint(stream, self.layer)      # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)
+            size += write_uint(stream, self.datatype)   # type: ignore
         if t:
-            size += write_uint(stream, self.ctrapezoid_type)
+            size += write_uint(stream, self.ctrapezoid_type) # type: ignore
         if w:
-            size += write_uint(stream, self.width)
+            size += write_uint(stream, self.width)      # type: ignore
         if h:
-            size += write_uint(stream, self.height)
+            size += write_uint(stream, self.height)     # type: ignore
         if x:
-            size += write_sint(stream, self.x)
+            size += write_sint(stream, self.x)          # type: ignore
         if y:
-            size += write_sint(stream, self.y)
+            size += write_sint(stream, self.y)          # type: ignore
         if r:
-            size += self.repetition.write(stream)
+            size += self.repetition.write(stream)       # type: ignore
         return size
 
 
@@ -2394,17 +2396,17 @@ class Circle(Record):
         size = write_uint(stream, 27)
         size += write_bool_byte(stream, (0, 0, s, x, y, r, d, l))
         if l:
-            size += write_uint(stream, self.layer)
+            size += write_uint(stream, self.layer)      # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)
+            size += write_uint(stream, self.datatype)   # type: ignore
         if s:
-            size += write_uint(stream, self.radius)
+            size += write_uint(stream, self.radius)     # type: ignore
         if x:
-            size += write_sint(stream, self.x)
+            size += write_sint(stream, self.x)          # type: ignore
         if y:
-            size += write_sint(stream, self.y)
+            size += write_sint(stream, self.y)          # type: ignore
         if r:
-            size += self.repetition.write(stream)
+            size += self.repetition.write(stream)       # type: ignore
         return size
 
 
