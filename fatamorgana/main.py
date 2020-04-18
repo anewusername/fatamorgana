@@ -117,7 +117,7 @@ class OasisLayout:
         """
         file_state = FileModals()
         modals = Modals()
-        layout = OasisLayout(unit=None)
+        layout = OasisLayout(unit=-1)    # dummy unit
 
         read_magic_bytes(stream)
 
