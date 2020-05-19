@@ -1891,8 +1891,10 @@ def write_interval(stream: io.BufferedIOBase,
     else:
         if max_bound is None:
             return write_uint(stream, 2) + write_uint(stream, min_bound)
+        elif min_bound == max_bound:
+            return write_uint(stream, 3) + write_uint(stream, min_bound)
         else:
-            size = write_uint(stream, 3)
+            size = write_uint(stream, 4)
             size += write_uint(stream, min_bound)
             size += write_uint(stream, max_bound)
             return size
