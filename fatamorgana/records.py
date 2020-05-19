@@ -1404,9 +1404,9 @@ class Placement(Record):
         r = self.repetition is not None
         f = self.flip
 
-        if self.angle is not None and self.angle % 90 == 0 and \
-                self.magnification is None or self.magnification == 1:
-            aa = int((self.angle / 90) % 4)                 # type: ignore
+        if ((self.magnification is None or self.magnification == 1) and
+                ((self.angle is None or abs(self.angle % 90.0) < 1e-14))):
+            aa = int((self.angle / 90) % 4.0)                 # type: ignore
             bools = (c, n, x, y, r, aa & 0b10, aa & 0b01, f)
             m = False
             a = False
