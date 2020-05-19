@@ -1559,10 +1559,9 @@ def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
             points = []
             x = 0
             y = 0
-            for _ in range(list_len):
-                delta = Delta.read(stream)
-                x += delta.x
-                y += delta.y
+            for delta in deltas:
+                x += delta[0]
+                y += delta[1]
                 points.append([x, y])
     else:
         raise InvalidDataError('Invalid point list type')
