@@ -1677,7 +1677,8 @@ def write_point_list(stream: io.BufferedIOBase,
         previous = [0, 0]
         diff = []
         for point in points:
-            d = [point[0] - previous[0], point[1] - previous[1]]
+            d = [point[0] - previous[0],
+                 point[1] - previous[1]]
             previous = point
             diff.append(d)
 
