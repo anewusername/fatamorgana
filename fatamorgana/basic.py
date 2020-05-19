@@ -156,7 +156,7 @@ if _USE_NUMPY:
         """
         if len(bits) != 8:
             raise InvalidDataError('write_bool_byte received {} bits, requires 8'.format(len(bits)))
-        return stream.write(numpy.packbits(bits))
+        return stream.write(numpy.packbits(bits)[0])
 else:
     def read_bool_byte(stream: io.BufferedIOBase) -> List[bool]:
         """
