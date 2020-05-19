@@ -52,7 +52,9 @@ setup(name='fatamorgana',
       ],
       packages=find_packages(),
       package_data={
-          'fatamorgana': ['VERSION']
+          'fatamorgana': ['VERSION',
+                          'py.typed',
+                          ],
       },
       install_requires=[
             'typing',
