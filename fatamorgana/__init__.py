@@ -28,7 +28,8 @@ import pathlib
 
 from .main import OasisLayout, Cell, XName
 from .basic import NString, AString, Validation, OffsetTable, OffsetEntry, \
-        EOFError, SignedError, InvalidDataError, InvalidRecordError
+        EOFError, SignedError, InvalidDataError, InvalidRecordError, \
+        ReuseRepetition, GridRepetition, ArbitraryRepetition
 
 
 __author__ = 'Jan Petykiewicz'
