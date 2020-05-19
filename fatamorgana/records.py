@@ -921,12 +921,12 @@ class Property(Record):
         values (Optional[List[property_value_t]]): List of property values.
         is_standard (bool): Whether this is a standard property.
     """
-    name: Union[NString, int, None] = None
+    name: Optional[Union[NString, int]] = None
     values: Optional[List[property_value_t]] = None
     is_standard: Optional[bool] = None
 
     def __init__(self,
-                 name: Union[NString, str, int] = None,
+                 name: Union[NString, str, int, None] = None,
                  values: Optional[List[property_value_t]] = None,
                  is_standard: Optional[bool] = None):
         """
@@ -938,10 +938,10 @@ class Property(Record):
             is_standard: `True` if this is a standard property. `None` to use modal.
                 Default `None`.
         """
-        if isinstance(name, str):
-            self.name = NString(name)
-        else:
+        if isinstance(name, (NString, int)) or name is None:
             self.name = name
+        else:
+            self.name = NString(name)
         self.values = values
         self.is_standard = is_standard
 
@@ -1254,12 +1254,12 @@ class Cell(Record):
     """
     name: Union[int, NString]
 
-    def __init__(self, name: Union[int, NString]):
+    def __init__(self, name: Union[int, str, NString]):
         """
         Args:
             name: `NString`, or an int specifying a `CellName` reference number.
         """
-        self.name = name
+        self.name = name if isinstance(name, (int, NString)) else NString(name)
 
     def merge_with_modals(self, modals: Modals):
         modals.reset()
@@ -1316,7 +1316,7 @@ class Placement(Record):
 
     def __init__(self,
                  flip: bool,
-                 name: Union[NString, str, int] = None,
+                 name: Union[NString, str, int, None] = None,
                  magnification: Optional[real_t] = None,
                  angle: Optional[real_t] = None,
                  x: Optional[int] = None,
@@ -1340,10 +1340,10 @@ class Placement(Record):
         self.flip = flip
         self.magnification = magnification
         self.angle = angle
-        if isinstance(name, str):
-            self.name = NString(name)
-        else:
+        if isinstance(name, (int, NString)) or name is None:
             self.name = name
+        else:
+            self.name = NString(name)
 
     def get_name(self) -> Union[NString, int]:
         return verify_modal(self.name)  # type: ignore
@@ -1449,7 +1449,7 @@ class Text(Record, GeometryMixin):
         y (Optional[int]): y-offset, None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any
     """
-    string: Union[AString, int, None] = None
+    string: Optional[Union[AString, int]] = None
     layer: Optional[int] = None
     datatype: Optional[int] = None
     x: Optional[int] = None
@@ -1457,7 +1457,7 @@ class Text(Record, GeometryMixin):
     repetition: Optional[repetition_t] = None
 
     def __init__(self,
-                 string: Union[AString, str, int] = None,
+                 string: Union[AString, str, int, None] = None,
                  layer: Optional[int] = None,
                  datatype: Optional[int] = None,
                  x: Optional[int] = None,
@@ -1478,10 +1478,10 @@ class Text(Record, GeometryMixin):
         self.x = x
         self.y = y
         self.repetition = repetition
-        if isinstance(string, str):
-            self.string = AString(string)
-        else:
+        if isinstance(string, (AString, int)) or string is None:
             self.string = string
+        else:
+            self.string = AString(string)
 
     def get_string(self) -> Union[AString, int]:
         return verify_modal(self.string)          # type: ignore

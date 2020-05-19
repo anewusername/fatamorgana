@@ -386,12 +386,12 @@ class Cell:
     placements: List[records.Placement]
     geometry: List[records.geometry_t]
 
-    def __init__(self, name: Union[NString, int]):
+    def __init__(self, name: Union[NString, str, int]):
         """
         Args:
             name: `NString` or "CellName reference" number
         """
-        self.name = name
+        self.name = name if isinstance(name, (NString, int)) else NString(name)
         self.properties = []
         self.placements = []
         self.geometry = []
