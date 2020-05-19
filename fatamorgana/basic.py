@@ -619,6 +619,9 @@ class NString:
     def __repr__(self) -> str:
         return '[N]' + self._string
 
+    def __str__(self) -> str:
+        return self._string
+
 
 def read_nstring(stream: io.BufferedIOBase) -> str:
     """
@@ -729,6 +732,9 @@ class AString:
 
     def __repr__(self) -> str:
         return '[A]' + self._string
+
+    def __str__(self) -> str:
+        return self._string
 
 
 def read_astring(stream: io.BufferedIOBase) -> str:
