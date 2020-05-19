@@ -1560,17 +1560,21 @@ class Rectangle(Record, GeometryMixin):
     """
     Rectangle record (ID 20)
 
+    (x, y) denotes the lower-left (min-x, min-y) corner of the rectangle.
+
     Attributes:
         is_square (bool): `True` if this is a square.
                         If `True`, `height` must be `None`.
-        width (Optional[int]): `None` means reuse modal.
-        height (Optional[int]): Must be `None` if `is_square` is `True`.
+        width (Optional[int]): X-width. `None` means reuse modal.
+        height (Optional[int]): Y-height. Must be `None` if `is_square` is `True`.
                         If `is_square` is `False`, `None` means reuse modal.
         layer (Optional[int]): None means reuse modal
         datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset, None means reuse modal
-        y (Optional[int]): y-offset, None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any
+        x (Optional[int]): x-offset of the rectangle's lower-left (min-x) point.
+            None means reuse modal.
+        y (Optional[int]): y-offset of the rectangle's lower-left (min-y) point.
+            None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any.
     """
     layer: Optional[int] = None
     datatype: Optional[int] = None
@@ -1590,19 +1594,6 @@ class Rectangle(Record, GeometryMixin):
                  x: Optional[int] = None,
                  y: Optional[int] = None,
                  repetition: Optional[repetition_t] = None):
-        """
-        Args:
-            is_square: `True` if this is a square. If `True`, `height` must
-                be `None`. Default `False`.
-            layer: Layer number. Default `None` (reuse modal).
-            datatype: Datatype number. Default `None` (reuse modal).
-            width: X-width. Default `None` (reuse modal).
-            height: Y-height. Default `None` (reuse modal, or use `width` if
-                square). Must be `None` if `is_square` is `True`.
-            x: X-offset. Default `None` (use modal).
-            y: Y-offset. Default `None` (use modal).
-            repetition: Repetition. Default `None` (no repetition).
-        """
         self.is_square = is_square
         self.layer = layer
         self.datatype = datatype
@@ -1704,14 +1695,21 @@ class Polygon(Record, GeometryMixin):
     Polygon record (ID 21)
 
     Attributes:
-        point_list (Optional[point_list_t]): `[[x0, y0], [x1, y1], ...]`
+        point_list (Optional[point_list_t]): List of offsets from the
+            initial vertex (x, y) to the remaining vertices,
+            `[[dx0, dy0], [dx1, dy1], ...]`.
             The list is an implicitly closed path, vertices are [int, int],
+            The initial vertex is located at (x, y) and is not represented
+              in `point_list`.
             `None` means reuse modal.
-        layer (Optional[int]): None means reuse modal
-        datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset, None means reuse modal
-        y (Optional[int]): y-offset, None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any
+        layer (Optional[int]): Layer number. None means reuse modal
+        datatype (Optional[int]): Datatype number. None means reuse modal
+        x (Optional[int]): x-offset of the polygon's first point.
+            None means reuse modal
+        y (Optional[int]): y-offset of the polygon's first point.
+            None means reuse modal
+        repetition (Optional[repetition_t]): Repetition, if any.
+            Default no repetition.
     """
     layer: Optional[int] = None
     datatype: Optional[int] = None
@@ -1727,17 +1725,6 @@ class Polygon(Record, GeometryMixin):
                  x: Optional[int] = None,
                  y: Optional[int] = None,
                  repetition: Optional[repetition_t] = None):
-        """
-        Args:
-            point_list: List of vertices `[[x0, y0], [x1, y1], ...]`.
-                List forms an implicitly closed path.
-                Default `None` (reuse modal).
-            layer: Layer number. Default `None` (reuse modal).
-            datatype: Datatype number. Default `None` (reuse modal).
-            x: X-offset. Default `None` (use modal).
-            y: Y-offset. Default `None` (use modal).
-            repetition: Repetition. Default `None` (no repetition).
-        """
         self.layer = layer
         self.datatype = datatype
         self.x = x
@@ -1824,8 +1811,12 @@ class Path(Record, GeometryMixin):
     Polygon record (ID 22)
 
     Attributes:
-        point_list (Optional[point_list_t]): `[[x0, y0], [x1, y1], ...]`
-            Vertices are [int, int]; `None` means reuse modal.
+        point_list (Optional[point_list_t]): List of offsets from the
+            initial vertex (x, y) to the remaining vertices,
+            `[[dx0, dy0], [dx1, dy1], ...]`.
+            The initial vertex is located at (x, y) and is not represented
+              in `point_list`.
+            Offsets are [int, int]; `None` means reuse modal.
         half_width (Optional[int]): None means reuse modal
         extension_start (Optional[Tuple]): None means reuse modal.
             Tuple is of the form (`PathExtensionScheme`, Optional[int])
@@ -1859,25 +1850,6 @@ class Path(Record, GeometryMixin):
                  x: Optional[int] = None,
                  y: Optional[int] = None,
                  repetition: Optional[repetition_t] = None):
-        """
-        Args:
-            point_list: List of vertices `[[x0, y0], [x1, y1], ...]`.
-                Default `None` (reuse modal).
-            half_width: Half-width of the path. Default `None` (reuse modal).
-            extension_start: Specification for path extension at start of path.
-                `None` or `Tuple`: `(PathExtensionScheme, int or None)`.
-                int is used only for `PathExtensionScheme.Arbitrary`.
-                Default `None` (reuse modal).
-            extension_end: Specification for path extension at end of path.
-                `None` or `Tuple`: `(PathExtensionScheme, int or None)`.
-                int is used only for `PathExtensionScheme.Arbitrary`.
-                Default `None` (reuse modal).
-            layer: Layer number. Default `None` (reuse modal).
-            datatype: Datatype number. Default `None` (reuse modal).
-            x: X-offset. Default `None` (use modal).
-            y: Y-offset. Default `None` (use modal).
-            repetition: Repetition. Default `None` (no repetition).
-        """
         self.layer = layer
         self.datatype = datatype
         self.x = x
@@ -2010,6 +1982,9 @@ class Trapezoid(Record, GeometryMixin):
     """
     Trapezoid record (ID 23, 24, 25)
 
+    Trapezoid with at least two sides parallel to the x- or y-axis.
+    (x, y) denotes the lower-left (min-x, min-y) corner of the trapezoid's bounding box.
+
     Attributes:
         delta_a (Optional[int]): If horizontal, signed x-distance from top left
             vertex to bottom left vertex. If vertical, signed y-distance from
@@ -2026,8 +2001,10 @@ class Trapezoid(Record, GeometryMixin):
         height (Optional[int]): Bounding box y-height, None means reuse modal.
         layer (Optional[int]): None means reuse modal
         datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset, None means reuse modal
-        y (Optional[int]): y-offset, None means reuse modal
+        x (Optional[int]): x-offset to lower-left corner of the trapezoid's bounding box.
+            None means reuse modal
+        y (Optional[int]): y-offset to lower-left corner of the trapezoid's bounding box.
+            None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any
     """
     layer: Optional[int] = None
@@ -2053,26 +2030,6 @@ class Trapezoid(Record, GeometryMixin):
                  y: int = None,
                  repetition: repetition_t = None):
         """
-        Args:
-            is_vertical: `True` if both the left and right sides are aligned
-               to the y-axis. If the trapezoid is a rectangle, either value
-               is permitted.
-            delta_a: If horizontal, signed x-distance from top-left vertex
-               to bottom-left vertex. If vertical, signed y-distance from bottom-
-               left vertex to bottom-right vertex.
-               Default `None` (reuse modal).
-            delta_b: If horizontal, signed x-distance from bottom-right vertex
-               to top right vertex. If vertical, signed y-distance from top-right
-               vertex to top-left vertex.
-               Default `None` (reuse modal).
-            layer: Layer number. Default `None` (reuse modal).
-            datatype: Datatype number. Default `None` (reuse modal).
-            width: X-width of bounding box. Default `None` (reuse modal).
-            height: Y-height of bounding box. Default `None` (reuse modal)
-            x: X-offset. Default `None` (use modal).
-            y: Y-offset. Default `None` (use modal).
-            repetition: Repetition. Default `None` (no repetition).
-
         Raises:
             InvalidDataError: if dimensions are impossible.
         """
@@ -2196,19 +2153,58 @@ class Trapezoid(Record, GeometryMixin):
         return size
 
 
-# TODO: CTrapezoid type descriptions
 class CTrapezoid(Record, GeometryMixin):
     """
     CTrapezoid record (ID 26)
 
-    Attributes:
-        ctrapezoid_type (Optional[int]): see OASIS spec for details, None means reuse modal.
-        width (Optional[int]): Bounding box x-width, None means reuse modal.
-        height (Optional[int]): Bounding box y-height, None means reuse modal.
+    Compact trapezoid formats.
+    Two sides are assumed to be parallel to the x- or y-axis, and the remaining
+      sides form 45 or 90 degree angles with them.
+
+    `ctrapezoid_type` is in `range(0, 26)`, with the following shapes:
+     ____     ____         _____      ______
+    | 0  \   / 2  |       /  4  \    /  6  /
+    |_____\ /_____|      /_______\  /_____/
+     ______ ______       _________  ______
+    | 1   / \  3  |      \   5   /  \  7  \
+    |____/   \____|       \_____/    \_____\
+        w >= h                 w >= 2h
+
+                  ___   ___   |\     /|    /| |\
+    |\       /|  |   | |   |  | \   / |   / | | \
+    | \     / |  |10 | | 11|  |12| |13|  |14| |15|
+    |  \   /  |  |  /   \  |  |  | |  |  |  | |  |
+    | 8 | | 9 |  | /     \ |  | /   \ |  | /   \ |
+    |___| |___|  |/       \|  |/     \|  |/     \|
+       h >= w       h >= w     h >= 2w    h >= 2w
+
+                                            __________
+    |\       /|       /\       |\     /|   |    24    | (rect)
+    | \     / |      /  \      | \   / |   |__________|
+    |16\   /18|     / 20 \     |22\ /23|
+    |___\ /___|    /______\    |  / \  |
+     ____ ____      ______     | /   \ |
+    |   / \   |    \      /    |/     \|      _____
+    |17/   \19|     \ 21 /      h = 2w       |     | (sqr)
+    | /     \ |      \  /    set h = None    | 25  |
+    |/       \|       \/                     |_____|
+       w = h        w = 2h                    w = h
+    set h = None  set w = None            set h = None
+
+
+   Attributes:
+        ctrapezoid_type (Optional[int]): See above for details.
+            None means reuse modal.
+        width (Optional[int]): Bounding box x-width.
+            None means unnecessary, or reuse modal if necessary.
+        height (Optional[int]): Bounding box y-height.
+            None means unnecessary, or reuse modal if necessary.
         layer (Optional[int]): None means reuse modal
         datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset, None means reuse modal
-        y (Optional[int]): y-offset, None means reuse modal
+        x (Optional[int]): x-offset of lower-left (min-x) point of bounding box.
+            None means reuse modal
+        y (Optional[int]): y-offset of lower-left (min-y) point of bounding box.
+            None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any
     """
     ctrapezoid_type: Optional[int] = None
@@ -2230,17 +2226,6 @@ class CTrapezoid(Record, GeometryMixin):
                  y: int = None,
                  repetition: repetition_t = None):
         """
-        Args:
-            ctrapezoid_type: CTrapezoid type; see OASIS format
-                documentation. Default `None` (reuse modal).
-            layer: Layer number. Default `None` (reuse modal).
-            datatype: Datatype number. Default `None` (reuse modal).
-            width: X-width of bounding box. Default `None` (reuse modal).
-            height: Y-height of bounding box. Default `None` (reuse modal)
-            x: X-offset. Default `None` (use modal).
-            y: Y-offset. Default `None` (use modal).
-            repetition: Repetition. Default `None` (no repetition).
-
         Raises:
             InvalidDataError: if dimensions are invalid.
         """
