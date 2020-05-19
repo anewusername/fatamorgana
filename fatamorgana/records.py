@@ -2649,10 +2649,13 @@ def dedup_field(record, r_field: str, modals: Modals, m_field: str):
     r = getattr(record, r_field)
     m = getattr(modals, m_field)
     if r is not None:
-        if _USE_NUMPY and m_field in ('polygon_point_list', 'path_point_list'):
-            equal = numpy.array_equal(m, r)
+        if m_field in ('polygon_point_list', 'path_point_list'):
+            if _USE_NUMPY:
+                equal = numpy.array_equal(m, r)
+            else:
+                equal = (m is not None) and all(tuple(mm) == tuple(rr) for mm, rr in zip(m, r))
         else:
-            equal = m is not None and m == r
+            equal = (m is not None) and m == r
 
         if equal:
             setattr(record, r_field, None)
