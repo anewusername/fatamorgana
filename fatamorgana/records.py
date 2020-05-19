@@ -11,7 +11,7 @@ Higher-level code (e.g. monitoring for combinations of records with
  in main.py instead.
 """
 from abc import ABCMeta, abstractmethod
-from typing import List, Dict, Tuple, Union, Optional, Sequence, Any
+from typing import List, Dict, Tuple, Union, Optional, Sequence, Any, TypeVar
 import copy
 import math
 import zlib
@@ -24,13 +24,14 @@ from .basic import AString, NString, repetition_t, property_value_t, real_t, \
         read_bstring, read_uint, read_sint, read_real, read_repetition, read_interval, \
         write_bstring, write_uint, write_sint, write_real, write_interval, write_point_list, \
         write_property_value, read_bool_byte, write_bool_byte, read_byte, write_byte, \
-        InvalidDataError, PathExtensionScheme, _USE_NUMPY
+        InvalidDataError, UnfilledModalError, PathExtensionScheme, _USE_NUMPY
 
 if _USE_NUMPY:
     import numpy
 
 
 logger = logging.getLogger(__name__)
+
 
 '''
     Type definitions
@@ -111,6 +112,12 @@ class Modals:
         self.property_name = None
         self.property_is_standard = None
 
+
+T = TypeVar('T')
+def verify_modal(var: Optional[T]) -> T:
+    if var is None:
+        raise UnfilledModalError
+    return var
 
 '''
 
@@ -215,6 +222,34 @@ class Record(metaclass=ABCMeta):
 
     def __repr__(self) -> str:
         return '{}: {}'.format(self.__class__, pprint.pformat(self.__dict__))
+
+
+class GeometryMixin(metaclass=ABCMeta):
+    """
+    Mixin defining common functions for geometry records
+    """
+    x: Optional[int]
+    y: Optional[int]
+    layer: Optional[int]
+    datatype: Optional[int]
+
+    def get_x(self) -> int:
+        return verify_modal(self.x)
+
+    def get_y(self) -> int:
+        return verify_modal(self.y)
+
+    def get_xy(self) -> Tuple[int, int]:
+        return (self.get_x(), self.get_y())
+
+    def get_layer(self) -> int:
+        return verify_modal(self.layer)
+
+    def get_datatype(self) -> int:
+        return verify_modal(self.datatype)
+
+    def get_layer_tuple(self) -> Tuple[int, int]:
+        return (self.get_layer(), self.get_datatype())
 
 
 def read_refname(stream: io.BufferedIOBase,
@@ -910,6 +945,15 @@ class Property(Record):
         self.values = values
         self.is_standard = is_standard
 
+    def get_name(self) -> Union[NString, int]:
+        return verify_modal(self.name)  # type: ignore
+
+    def get_values(self) -> List[property_value_t]:
+        return verify_modal(self.values)
+
+    def get_is_standard(self) -> bool:
+        return verify_modal(self.is_standard)
+
     def merge_with_modals(self, modals: Modals):
         adjust_field(self, 'name', modals, 'property_name')
         adjust_field(self, 'values', modals, 'property_value_list')
@@ -1091,7 +1135,7 @@ class XElement(Record):
         return size
 
 
-class XGeometry(Record):
+class XGeometry(Record, GeometryMixin):
     """
     XGeometry record (ID 33)
 
@@ -1301,6 +1345,15 @@ class Placement(Record):
         else:
             self.name = name
 
+    def get_name(self) -> Union[NString, int]:
+        return verify_modal(self.name)  # type: ignore
+
+    def get_x(self) -> int:
+        return verify_modal(self.x)
+
+    def get_y(self) -> int:
+        return verify_modal(self.y)
+
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'placement_x', 'placement_y')
         adjust_repetition(self, modals)
@@ -1384,7 +1437,7 @@ class Placement(Record):
         return size
 
 
-class Text(Record):
+class Text(Record, GeometryMixin):
     """
     Text record (ID 19)
 
@@ -1429,6 +1482,9 @@ class Text(Record):
             self.string = AString(string)
         else:
             self.string = string
+
+    def get_string(self) -> Union[AString, int]:
+        return verify_modal(self.string)          # type: ignore
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'text_x', 'text_y')
@@ -1500,7 +1556,7 @@ class Text(Record):
         return size
 
 
-class Rectangle(Record):
+class Rectangle(Record, GeometryMixin):
     """
     Rectangle record (ID 20)
 
@@ -1557,6 +1613,14 @@ class Rectangle(Record):
         self.repetition = repetition
         if is_square and self.height is not None:
             raise InvalidDataError('Rectangle is square and also has height')
+
+    def get_width(self) -> int:
+        return verify_modal(self.width)
+
+    def get_height(self) -> int:
+        if self.is_square:
+            return verify_modal(self.width)
+        return verify_modal(self.height)
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
@@ -1635,7 +1699,7 @@ class Rectangle(Record):
         return size
 
 
-class Polygon(Record):
+class Polygon(Record, GeometryMixin):
     """
     Polygon record (ID 21)
 
@@ -1684,6 +1748,9 @@ class Polygon(Record):
         if point_list is not None:
             if len(point_list) < 3:
                 warn('Polygon with < 3 points')
+
+    def get_point_list(self) -> point_list_t:
+        return verify_modal(self.point_list)
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
@@ -1752,7 +1819,7 @@ class Polygon(Record):
         return size
 
 
-class Path(Record):
+class Path(Record, GeometryMixin):
     """
     Polygon record (ID 22)
 
@@ -1820,6 +1887,18 @@ class Path(Record):
         self.half_width = half_width
         self.extension_start = extension_start
         self.extension_end = extension_end
+
+    def get_point_list(self) -> point_list_t:
+        return verify_modal(self.point_list)
+
+    def get_half_width(self) -> int:
+        return verify_modal(self.half_width)
+
+    def get_extension_start(self) -> pathextension_t:
+        return verify_modal(self.extension_start)
+
+    def get_extension_end(self) -> pathextension_t:
+        return verify_modal(self.extension_end)
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
@@ -1927,7 +2006,7 @@ class Path(Record):
         return size
 
 
-class Trapezoid(Record):
+class Trapezoid(Record, GeometryMixin):
     """
     Trapezoid record (ID 23, 24, 25)
 
@@ -2017,6 +2096,21 @@ class Trapezoid(Record):
                 raise InvalidDataError('Trapezoid: w < delta_b - delta_a'
                                  ' ({} < {} - {})'.format(width, delta_b, delta_a))
 
+    def get_is_vertical(self) -> bool:
+        return verify_modal(self.is_vertical)
+
+    def get_delta_a(self) -> int:
+        return verify_modal(self.delta_a)
+
+    def get_delta_b(self) -> int:
+        return verify_modal(self.delta_b)
+
+    def get_width(self) -> int:
+        return verify_modal(self.width)
+
+    def get_height(self) -> int:
+        return verify_modal(self.height)
+
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
         adjust_repetition(self, modals)
@@ -2103,7 +2197,7 @@ class Trapezoid(Record):
 
 
 # TODO: CTrapezoid type descriptions
-class CTrapezoid(Record):
+class CTrapezoid(Record, GeometryMixin):
     """
     CTrapezoid record (ID 26)
 
@@ -2160,6 +2254,23 @@ class CTrapezoid(Record):
         self.repetition = repetition
 
         self.check_valid()
+
+    def get_ctrapezoid_type(self) -> int:
+        return verify_modal(self.ctrapezoid_type)
+
+    def get_height(self) -> int:
+        if self.ctrapezoid_type is None:
+            return verify_modal(self.height)
+        if self.ctrapezoid_type in (16, 17, 18, 19, 22, 23, 25):
+            return verify_modal(self.width)
+        return verify_modal(self.height)
+
+    def get_width(self) -> int:
+        if self.ctrapezoid_type is None:
+            return verify_modal(self.width)
+        if self.ctrapezoid_type in (20, 21):
+            return verify_modal(self.height)
+        return verify_modal(self.width)
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
@@ -2267,7 +2378,6 @@ class CTrapezoid(Record):
             size += self.repetition.write(stream)       # type: ignore
         return size
 
-
     def check_valid(self):
         ctrapezoid_type = self.ctrapezoid_type
         width = self.width
@@ -2299,7 +2409,7 @@ class CTrapezoid(Record):
                                    '{}'.format(ctrapezoid_type))
 
 
-class Circle(Record):
+class Circle(Record, GeometryMixin):
     """
     Circle record (ID 27)
 
@@ -2343,6 +2453,9 @@ class Circle(Record):
         self.x = x
         self.y = y
         self.repetition = repetition
+
+    def get_radius(self) -> int:
+        return verify_modal(self.radius)
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')

@@ -59,6 +59,12 @@ class InvalidRecordError(FatamorganaError):
     """
     pass
 
+class UnfilledModalError(FatamorganaError):
+    """
+    Attempted to call .get_var(), but var() was None!
+    """
+    pass
+
 
 class PathExtensionScheme(Enum):
     """
@@ -2228,4 +2234,3 @@ def read_magic_bytes(stream: io.BufferedIOBase):
     if magic != MAGIC_BYTES:
         raise InvalidDataError('Could not read magic bytes, '
                                'found {!r} : {}'.format(magic, magic.decode()))
-
