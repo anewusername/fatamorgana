@@ -1321,11 +1321,19 @@ class GridRepetition:
         return size
 
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, type(self)) and \
-                self.a_count == other.a_count and \
-                self.b_count == other.b_count and \
-                self.a_vector == other.a_vector and \
-                self.b_vector == other.b_vector
+        if not isinstance(other, type(self)):
+            return False
+        if self.a_count != other.a_count or self.b_count != other.b_count:
+            return False
+        if any(self.a_vector[ii] != other.a_vector[ii] for ii in range(2)):
+            return False
+        if self.b_vector is None and other.b_vector is None:
+            return True
+        if self.b_vector is None or other.b_vector is None:
+            return False
+        if any(self.b_vector[ii] != other.b_vector[ii] for ii in range(2)):
+            return False
+        return True
 
     def __repr__(self) -> str:
         return 'GridRepetition: ({} : {} |  {} : {})'.format(self.a_count, self.a_vector,
