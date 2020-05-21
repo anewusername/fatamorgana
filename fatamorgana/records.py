@@ -2575,16 +2575,14 @@ def adjust_coordinates(record, modals: Modals, mx_field: str, my_field: str):
     if record.x is not None:
         if modals.xy_relative:
             record.x += getattr(modals, mx_field)
-        else:
-            setattr(modals, mx_field, record.x)
+        setattr(modals, mx_field, record.x)
     else:
         record.x = getattr(modals, mx_field)
 
     if record.y is not None:
         if modals.xy_relative:
             record.y += getattr(modals, my_field)
-        else:
-            setattr(modals, my_field, record.y)
+        setattr(modals, my_field, record.y)
     else:
         record.y = getattr(modals, my_field)
 
@@ -2672,6 +2670,7 @@ def dedup_coordinates(record, modals: Modals, mx_field: str, my_field: str):
         mx = getattr(modals, mx_field)
         if modals.xy_relative:
             record.x -= mx
+            setattr(modals, mx_field, record.x)
         else:
             if record.x == mx:
                 record.x = None
@@ -2682,6 +2681,7 @@ def dedup_coordinates(record, modals: Modals, mx_field: str, my_field: str):
         my = getattr(modals, my_field)
         if modals.xy_relative:
             record.y -= my
+            setattr(modals, my_field, record.y)
         else:
             if record.y == my:
                 record.y = None
