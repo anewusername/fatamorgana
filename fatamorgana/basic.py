@@ -1206,25 +1206,20 @@ class GridRepetition:
             InvalidDataError: if `b_count` and `b_vector` inputs conflict
                 with each other or if `a_count < 1`.
         """
-        self.a_vector = a_vector
-        self.b_vector = b_vector
-        self.a_count = a_count
-        self.b_count = b_count
-
-        if self.b_vector is None or self.b_count is None:
-            if self.b_vector is not None or self.b_count is not None:
+        if b_vector is None or b_count is None:
+            if b_vector is not None or b_count is not None:
                 raise InvalidDataError('Repetition has only one of'
                                        'b_vector and b_count')
         else:
-            if self.b_count < 1:
+            if b_count < 1:
                 raise InvalidDataError('Repetition has too-small b_count')
-            if self.b_count < 2:
-                self.b_count = None
-                self.b_vector = None
+            if b_count < 2:
+                b_count = None
+                b_vector = None
                 warnings.warn('Removed b_count and b_vector since b_count == 1')
 
-        if self.a_count < 2:
-            raise InvalidDataError('Repetition has too-small x-count: '
+        if a_count < 2:
+            raise InvalidDataError('Repetition has too-small a_count: '
                                    '{}'.format(a_count))
         self.a_vector = a_vector
         self.b_vector = b_vector
