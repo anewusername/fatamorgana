@@ -1027,7 +1027,7 @@ class Property(Record):
                     size += self.name.write(stream)         # type: ignore
             if not v:
                 if u == 0x0f:
-                    size += write_uint(stream, self.name)   # type: ignore
+                    size += write_uint(stream, len(self.values))   # type: ignore
                 size += sum(write_property_value(stream, p) for p in self.values)   # type: ignore
         return size
 
