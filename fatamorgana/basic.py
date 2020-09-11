@@ -2,8 +2,8 @@
 This module contains all datatypes and parsing/writing functions for
  all abstractions below the 'record' or 'block' level.
 """
-from fractions import Fraction
 from typing import List, Tuple, Type, Union, Optional, Any, Sequence
+from fractions import Fraction
 from enum import Enum
 import math
 import struct

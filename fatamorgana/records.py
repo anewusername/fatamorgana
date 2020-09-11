@@ -10,8 +10,8 @@ Higher-level code (e.g. monitoring for combinations of records with
  parse, or code for dealing with nested records in a CBlock) should live
  in main.py instead.
 """
-from abc import ABCMeta, abstractmethod
 from typing import List, Dict, Tuple, Union, Optional, Sequence, Any, TypeVar
+from abc import ABCMeta, abstractmethod
 import copy
 import math
 import zlib
