@@ -30,10 +30,15 @@ class FileModals:
     textstring_implicit: Optional[bool] = None
     propstring_implicit: Optional[bool] = None
 
+    property_target: List[records.Property]
+
     within_cell: bool = False
     within_cblock: bool = False
-    end_has_offset_table: bool
+    end_has_offset_table: bool = False
     started: bool = False
+
+    def __init__(self, property_target = List[records.Property]):
+        self.property_target = property_target
 
 
 class OasisLayout:
@@ -53,7 +58,7 @@ class OasisLayout:
         validation (Validation): checksum data
 
         (Names)
-        cellnames (Dict[int, NString]): Cell names
+        cellnames (Dict[int, CellName]): Cell names
         propnames (Dict[int, NString]): Property names
         xnames (Dict[int, XName]): Custom names
 
@@ -73,7 +78,7 @@ class OasisLayout:
     properties: List[records.Property]
     cells: List['Cell']
 
-    cellnames: Dict[int, NString]
+    cellnames: Dict[int, 'CellName']
     propnames: Dict[int, NString]
     xnames: Dict[int, 'XName']
 
@@ -115,9 +120,9 @@ class OasisLayout:
         Returns:
             New `OasisLayout` object.
         """
-        file_state = FileModals()
-        modals = Modals()
         layout = OasisLayout(unit=-1)    # dummy unit
+        modals = Modals()
+        file_state = FileModals(layout.properties)
 
         read_magic_bytes(stream)
 
@@ -225,7 +230,10 @@ class OasisLayout:
             key = record.reference_number
             if key is None:
                 key = len(self.cellnames)
-            self.cellnames[key] = record.nstring
+
+            cellname = CellName.from_record(record)
+            self.cellnames[key] = cellname
+            file_state.property_target = cellname.properties
         elif record_id in (5, 6):
             implicit = record_id == 5
             if file_state.textstring_implicit is None:
@@ -272,10 +280,7 @@ class OasisLayout:
         elif record_id in (28, 29):
             record = records.Property.read(stream, record_id)
             record.merge_with_modals(modals)
-            if not file_state.within_cell:
-                self.properties.append(record)
-            else:
-                self.cells[-1].properties.append(record)
+            file_state.property_target.append(record)
         elif record_id in (30, 31):
             implicit = record_id == 30
             if file_state.xname_implicit is None:
@@ -289,6 +294,7 @@ class OasisLayout:
             if key is None:
                 key = len(self.xnames)
             self.xnames[key] = XName.from_record(record)
+            # TODO: do anything with property target?
 
         #
         # Cell and elements
@@ -296,7 +302,9 @@ class OasisLayout:
         elif record_id in (13, 14):
             record = records.Cell.read(stream, record_id)
             record.merge_with_modals(modals)
-            self.cells.append(Cell(record.name))
+            cell = Cell(record.name)
+            self.cells.append(cell)
+            file_state.property_target = cell.properties
         elif record_id in (15, 16):
             record = records.XYMode.read(stream, record_id)
             record.merge_with_modals(modals)
@@ -304,10 +312,12 @@ class OasisLayout:
             record = records.Placement.read(stream, record_id)
             record.merge_with_modals(modals)
             self.cells[-1].placements.append(record)
+            file_state.property_target = record.properties
         elif record_id in _GEOMETRY:
             record = _GEOMETRY[record_id].read(stream, record_id)
             record.merge_with_modals(modals)
             self.cells[-1].geometry.append(record)
+            file_state.property_target = record.properties
         else:
             raise InvalidRecordError('Unknown record id: {}'.format(record_id))
         return False
@@ -330,10 +340,12 @@ class OasisLayout:
         size = 0
         size += write_magic_bytes(stream)
         size += records.Start(self.unit, self.version).dedup_write(stream, modals)
+        size += sum(p.dedup_write(stream, modals) for p in self.properties)
 
         cellnames_offset = OffsetEntry(False, size)
-        size += sum(records.CellName(name, refnum).dedup_write(stream, modals)
-                    for refnum, name in self.cellnames.items())
+        for refnum, cn in self.cellnames.items():
+            size += records.CellName(cn.nstring, refnum).dedup_write(stream, modals)
+            size += sum(p.dedup_write(stream, modals) for p in cn.properties)
 
         propnames_offset = OffsetEntry(False, size)
         size += sum(records.PropName(name, refnum).dedup_write(stream, modals)
@@ -353,8 +365,6 @@ class OasisLayout:
 
         layernames_offset = OffsetEntry(False, size)
         size += sum(r.dedup_write(stream, modals) for r in self.layers)
-
-        size += sum(p.dedup_write(stream, modals) for p in self.properties)
 
         size += sum(c.dedup_write(stream, modals) for c in self.cells)
 
@@ -386,15 +396,17 @@ class Cell:
     placements: List[records.Placement]
     geometry: List[records.geometry_t]
 
-    def __init__(self, name: Union[NString, str, int]):
-        """
-        Args:
-            name: `NString` or "CellName reference" number
-        """
+    def __init__(self,
+                 name: Union[NString, str, int],
+                 *,
+                 properties: Optional[List[records.Property]] = None,
+                 placements: Optional[List[records.Placement]] = None,
+                 geometry: Optional[List[records.geometry_t]] = None,
+                 ):
         self.name = name if isinstance(name, (NString, int)) else NString(name)
-        self.properties = []
-        self.placements = []
-        self.geometry = []
+        self.properties = [] if properties is None else properties
+        self.placements = [] if placements is None else placements
+        self.geometry = [] if geometry is None else geometry
 
     def dedup_write(self, stream: io.BufferedIOBase, modals: Modals) -> int:
         """
@@ -413,9 +425,52 @@ class Cell:
         """
         size = records.Cell(self.name).dedup_write(stream, modals)
         size += sum(p.dedup_write(stream, modals) for p in self.properties)
-        size += sum(p.dedup_write(stream, modals) for p in self.placements)
-        size += sum(g.dedup_write(stream, modals) for g in self.geometry)
+        for placement in self.placements:
+            size += placement.dedup_write(stream, modals)
+            size += sum(p.dedup_write(stream, modals) for p in placement.properties)
+        for shape in self.geometry:
+            size += shape.dedup_write(stream, modals)
+            size += sum(p.dedup_write(stream, modals) for p in shape.properties)
         return size
+
+
+class CellName:
+    """
+    Representation of a CellName.
+
+    This class is effectively a simplified form of a `records.CellName`,
+     with the reference data stripped out.
+    """
+    nstring: NString
+    properties: List[records.Property]
+
+    def __init__(self,
+                 nstring: Union[NString, str],
+                 properties: Optional[List[records.Property]] = None):
+        """
+        Args:
+            nstring: The contained string.
+            properties: Properties which apply to this CellName's cell, but
+                    are placed following the CellName record.
+        """
+        if isinstance(nstring, NString):
+            self.nstring = nstring
+        else:
+            self.nstring = NString(nstring)
+        self.properties = [] if properties is None else properties
+
+    @staticmethod
+    def from_record(record: records.CellName) -> 'CellName':
+        """
+        Create an `CellName` object from a `records.CellName` record.
+
+        Args:
+            record: CellName record to use.
+
+        Returns:
+            A new `CellName` object.
+        """
+        return CellName(record.nstring)
 
 
 class XName:
@@ -446,7 +501,7 @@ class XName:
             record: XName record to use.
 
         Returns:
-            `XName` object.
+            a new `XName` object.
         """
         return XName(record.attribute, record.bstring)
 

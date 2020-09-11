@@ -1101,15 +1101,21 @@ class XElement(Record):
     """
     attribute: int
     bstring: bytes
+    properties: List['Property']
 
-    def __init__(self, attribute: int, bstring: bytes):
+    def __init__(self,
+                 attribute: int,
+                 bstring: bytes,
+                 properties: Optional[List['Property']] = None):
         """
         Args:
             attribute: Attribute number.
             bstring: Binary data for this XElement.
+            properties: List of property records associated with this record.
         """
         self.attribute = attribute
         self.bstring = bstring
+        self.properties = [] if properties is None else properties
 
     def merge_with_modals(self, modals: Modals):
         pass
@@ -1147,6 +1153,7 @@ class XGeometry(Record, GeometryMixin):
         x (Optional[int]): None means reuse modal
         y (Optional[int]): None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any
+        properties (List[Property]): List of property records associate with this record.
     """
     attribute: int
     bstring: bytes
@@ -1155,6 +1162,7 @@ class XGeometry(Record, GeometryMixin):
     x: Optional[int] = None
     y: Optional[int] = None
     repetition: Optional[repetition_t] = None
+    properties: List['Property']
 
     def __init__(self,
                  attribute: int,
@@ -1163,7 +1171,8 @@ class XGeometry(Record, GeometryMixin):
                  datatype: Optional[int] = None,
                  x: Optional[int] = None,
                  y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None):
+                 repetition: Optional[repetition_t] = None,
+                 properties: Optional[List['Property']] = None):
         """
         Args:
             attribute: Attribute number for this XGeometry.
@@ -1173,6 +1182,7 @@ class XGeometry(Record, GeometryMixin):
             x: X-offset. Default `None` (use modal).
             y: Y-offset. Default `None` (use modal).
             repetition: Repetition. Default `None` (no repetition).
+            properties: List of property records associated with this record.
         """
         self.attribute = attribute
         self.bstring = bstring
@@ -1181,6 +1191,7 @@ class XGeometry(Record, GeometryMixin):
         self.x = x
         self.y = y
         self.repetition = repetition
+        self.properties = [] if properties is None else properties
 
     def merge_with_modals(self, modals: Modals):
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
@@ -1305,6 +1316,7 @@ class Placement(Record):
         y (Optional[int]): y-offset, None means reuse modal
         repetition (repetition_t or None): Repetition, if any
         flip (bool): Whether to perform reflection about the x-axis.
+        properties (List[Property]): List of property records associate with this record.
     """
     name: Union[NString, int, None] = None
     magnification: Optional[real_t] = None
@@ -1313,6 +1325,7 @@ class Placement(Record):
     y: Optional[int] = None
     repetition: Optional[repetition_t] = None
     flip: bool
+    properties: List['Property']
 
     def __init__(self,
                  flip: bool,
@@ -1321,7 +1334,8 @@ class Placement(Record):
                  angle: Optional[real_t] = None,
                  x: Optional[int] = None,
                  y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None):
+                 repetition: Optional[repetition_t] = None,
+                 properties: Optional[List['Property']] = None):
         """
         Args:
             flip: Whether to perform reflection about the x-axis.
@@ -1333,6 +1347,7 @@ class Placement(Record):
             x: X-offset. Default `None` (use modal).
             y: Y-offset. Default `None` (use modal).
             repetition: Repetition. Default `None` (no repetition).
+            properties: List of property records associated with this record.
         """
         self.x = x
         self.y = y
@@ -1344,6 +1359,7 @@ class Placement(Record):
             self.name = name
         else:
             self.name = NString(name)
+        self.properties = [] if properties is None else properties
 
     def get_name(self) -> Union[NString, int]:
         return verify_modal(self.name)  # type: ignore
@@ -1448,6 +1464,7 @@ class Text(Record, GeometryMixin):
         x (Optional[int]): x-offset, None means reuse modal
         y (Optional[int]): y-offset, None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any
+        properties (List[Property]): List of property records associate with this record.
     """
     string: Optional[Union[AString, int]] = None
     layer: Optional[int] = None
@@ -1455,6 +1472,7 @@ class Text(Record, GeometryMixin):
     x: Optional[int] = None
     y: Optional[int] = None
     repetition: Optional[repetition_t] = None
+    properties: List['Property']
 
     def __init__(self,
                  string: Union[AString, str, int, None] = None,
@@ -1462,7 +1480,8 @@ class Text(Record, GeometryMixin):
                  datatype: Optional[int] = None,
                  x: Optional[int] = None,
                  y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None):
+                 repetition: Optional[repetition_t] = None,
+                 properties: Optional[List['Property']] = None):
         """
         Args:
             string: Text content, or `TextString` reference number.
@@ -1472,6 +1491,7 @@ class Text(Record, GeometryMixin):
             x: X-offset. Default `None` (use modal).
             y: Y-offset. Default `None` (use modal).
             repetition: Repetition. Default `None` (no repetition).
+            properties: List of property records associated with this record.
         """
         self.layer = layer
         self.datatype = datatype
@@ -1482,6 +1502,7 @@ class Text(Record, GeometryMixin):
             self.string = string
         else:
             self.string = AString(string)
+        self.properties = [] if properties is None else properties
 
     def get_string(self) -> Union[AString, int]:
         return verify_modal(self.string)          # type: ignore
@@ -1575,6 +1596,7 @@ class Rectangle(Record, GeometryMixin):
         y (Optional[int]): y-offset of the rectangle's lower-left (min-y) point.
             None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any.
+        properties (List[Property]): List of property records associate with this record.
     """
     layer: Optional[int] = None
     datatype: Optional[int] = None
@@ -1584,6 +1606,7 @@ class Rectangle(Record, GeometryMixin):
     y: Optional[int] = None
     repetition: Optional[repetition_t] = None
     is_square: bool = False
+    properties: List['Property']
 
     def __init__(self,
                  is_square: bool = False,
@@ -1593,7 +1616,8 @@ class Rectangle(Record, GeometryMixin):
                  height: Optional[int] = None,
                  x: Optional[int] = None,
                  y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None):
+                 repetition: Optional[repetition_t] = None,
+                 properties: Optional[List['Property']] = None):
         self.is_square = is_square
         self.layer = layer
         self.datatype = datatype
@@ -1604,6 +1628,7 @@ class Rectangle(Record, GeometryMixin):
         self.repetition = repetition
         if is_square and self.height is not None:
             raise InvalidDataError('Rectangle is square and also has height')
+        self.properties = [] if properties is None else properties
 
     def get_width(self) -> int:
         return verify_modal(self.width)
@@ -1710,6 +1735,7 @@ class Polygon(Record, GeometryMixin):
             None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any.
             Default no repetition.
+        properties (List[Property]): List of property records associate with this record.
     """
     layer: Optional[int] = None
     datatype: Optional[int] = None
@@ -1717,6 +1743,7 @@ class Polygon(Record, GeometryMixin):
     y: Optional[int] = None
     repetition: Optional[repetition_t] = None
     point_list: Optional[point_list_t] = None
+    properties: List['Property']
 
     def __init__(self,
                  point_list: Optional[point_list_t] = None,
@@ -1724,13 +1751,15 @@ class Polygon(Record, GeometryMixin):
                  datatype: Optional[int] = None,
                  x: Optional[int] = None,
                  y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None):
+                 repetition: Optional[repetition_t] = None,
+                 properties: Optional[List['Property']] = None):
         self.layer = layer
         self.datatype = datatype
         self.x = x
         self.y = y
         self.repetition = repetition
         self.point_list = point_list
+        self.properties = [] if properties is None else properties
 
         if point_list is not None:
             if len(point_list) < 3:
@@ -1829,6 +1858,7 @@ class Path(Record, GeometryMixin):
         x (Optional[int]): x-offset, None means reuse modal
         y (Optional[int]): y-offset, None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any
+        properties (List[Property]): List of property records associate with this record.
     """
     layer: Optional[int] = None
     datatype: Optional[int] = None
@@ -1839,6 +1869,7 @@ class Path(Record, GeometryMixin):
     half_width: Optional[int] = None
     extension_start: Optional[pathextension_t] = None
     extension_end: Optional[pathextension_t] = None
+    properties: List['Property']
 
     def __init__(self,
                  point_list: Optional[point_list_t] = None,
@@ -1849,7 +1880,8 @@ class Path(Record, GeometryMixin):
                  datatype: Optional[int] = None,
                  x: Optional[int] = None,
                  y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None):
+                 repetition: Optional[repetition_t] = None,
+                 properties: Optional[List['Property']] = None):
         self.layer = layer
         self.datatype = datatype
         self.x = x
@@ -1859,6 +1891,7 @@ class Path(Record, GeometryMixin):
         self.half_width = half_width
         self.extension_start = extension_start
         self.extension_end = extension_end
+        self.properties = [] if properties is None else properties
 
     def get_point_list(self) -> point_list_t:
         return verify_modal(self.point_list)
@@ -2006,6 +2039,7 @@ class Trapezoid(Record, GeometryMixin):
         y (Optional[int]): y-offset to lower-left corner of the trapezoid's bounding box.
             None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any
+        properties (List[Property]): List of property records associate with this record.
     """
     layer: Optional[int] = None
     datatype: Optional[int] = None
@@ -2017,6 +2051,7 @@ class Trapezoid(Record, GeometryMixin):
     delta_a: int = 0
     delta_b: int = 0
     is_vertical: bool
+    properties: List['Property']
 
     def __init__(self,
                  is_vertical: bool,
@@ -2028,7 +2063,8 @@ class Trapezoid(Record, GeometryMixin):
                  height: int = None,
                  x: int = None,
                  y: int = None,
-                 repetition: repetition_t = None):
+                 repetition: repetition_t = None,
+                 properties: Optional[List['Property']] = None):
         """
         Raises:
             InvalidDataError: if dimensions are impossible.
@@ -2043,6 +2079,7 @@ class Trapezoid(Record, GeometryMixin):
         self.x = x
         self.y = y
         self.repetition = repetition
+        self.properties = [] if properties is None else properties
 
         if self.is_vertical:
             if height is not None and delta_b - delta_a > height:
@@ -2206,6 +2243,7 @@ class CTrapezoid(Record, GeometryMixin):
         y (Optional[int]): y-offset of lower-left (min-y) point of bounding box.
             None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any
+        properties (List[Property]): List of property records associate with this record.
     """
     ctrapezoid_type: Optional[int] = None
     layer: Optional[int] = None
@@ -2215,6 +2253,7 @@ class CTrapezoid(Record, GeometryMixin):
     x: Optional[int] = None
     y: Optional[int] = None
     repetition: Optional[repetition_t] = None
+    properties: List['Property']
 
     def __init__(self,
                  ctrapezoid_type: int = None,
@@ -2224,7 +2263,8 @@ class CTrapezoid(Record, GeometryMixin):
                  height: int = None,
                  x: int = None,
                  y: int = None,
-                 repetition: repetition_t = None):
+                 repetition: repetition_t = None,
+                 properties: Optional[List['Property']] = None):
         """
         Raises:
             InvalidDataError: if dimensions are invalid.
@@ -2237,6 +2277,7 @@ class CTrapezoid(Record, GeometryMixin):
         self.x = x
         self.y = y
         self.repetition = repetition
+        self.properties = [] if properties is None else properties
 
         self.check_valid()
 
@@ -2405,6 +2446,7 @@ class Circle(Record, GeometryMixin):
         x (Optional[int]): x-offset, None means reuse modal
         y (Optional[int]): y-offset, None means reuse modal
         repetition (Optional[repetition_t]): Repetition, if any
+        properties (List[Property]): List of property records associate with this record.
     """
     layer: Optional[int] = None
     datatype: Optional[int] = None
@@ -2412,6 +2454,7 @@ class Circle(Record, GeometryMixin):
     y: Optional[int] = None
     repetition: Optional[repetition_t] = None
     radius: Optional[int] = None
+    properties: List['Property']
 
     def __init__(self,
                  radius: int = None,
@@ -2419,7 +2462,8 @@ class Circle(Record, GeometryMixin):
                  datatype: int = None,
                  x: int = None,
                  y: int = None,
-                 repetition: repetition_t = None):
+                 repetition: repetition_t = None,
+                 properties: Optional[List['Property']] = None):
         """
         Args:
             radius: Radius. Default `None` (reuse modal).
@@ -2428,6 +2472,7 @@ class Circle(Record, GeometryMixin):
             x: X-offset. Default `None` (use modal).
             y: Y-offset. Default `None` (use modal).
             repetition: Repetition. Default `None` (no repetition).
+            properties: List of property records associated with this record.
 
         Raises:
             InvalidDataError: if dimensions are invalid.
@@ -2438,6 +2483,7 @@ class Circle(Record, GeometryMixin):
         self.x = x
         self.y = y
         self.repetition = repetition
+        self.properties = [] if properties is None else properties
 
     def get_radius(self) -> int:
         return verify_modal(self.radius)
