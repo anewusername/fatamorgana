@@ -1730,9 +1730,9 @@ def read_property_value(stream: io.BufferedIOBase) -> property_value_t:
     10: ASCII string (`AString`)
     11: binary string (`bytes`)
     12: name string (`NString`)
-    13: `PropstringReference` to `AString`
-    14: `PropstringReference` to `bstring` (i.e., to `bytes`)
-    15: `PropstringReference` to `NString`
+    13: `PropStringReference` to `AString`
+    14: `PropStringReference` to `bstring` (i.e., to `bytes`)
+    15: `PropStringReference` to `NString`
 
     Args:
         stream: Stream to read from.

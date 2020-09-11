@@ -16,6 +16,7 @@ from .basic import OffsetEntry, OffsetTable, NString, AString, real_t, Validatio
 
 __author__ = 'Jan Petykiewicz'
 
+#logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +86,6 @@ class OasisLayout:
     textstrings: Dict[int, AString]
     propstrings: Dict[int, AString]
     layers: List[records.LayerName]
-
 
     def __init__(self, unit: real_t, validation: Validation = None):
         """
@@ -202,16 +202,19 @@ class OasisLayout:
             raise InvalidRecordError('Unknown record id: {}'.format(record_id))
 
         if record_id == 0:
-            # Pad
+            ''' Pad '''
             pass
         elif record_id == 1:
+            ''' Start '''
             record = records.Start.read(stream, record_id)
             record.merge_with_modals(modals)
             self.unit = record.unit
             self.version = record.version
             file_state.end_has_offset_table = record.offset_table is None
+            file_state.property_target = self.properties
             # TODO Offset table strict check
         elif record_id == 2:
+            ''' End '''
             record = records.End.read(stream, record_id, file_state.end_has_offset_table)
             record.merge_with_modals(modals)
             self.validation = record.validation
@@ -219,6 +222,7 @@ class OasisLayout:
                 raise InvalidRecordError('Stream continues past End record')
             return True
         elif record_id in (3, 4):
+            ''' CellName '''
             implicit = record_id == 3
             if file_state.cellname_implicit is None:
                 file_state.cellname_implicit = implicit
@@ -235,6 +239,7 @@ class OasisLayout:
             self.cellnames[key] = cellname
             file_state.property_target = cellname.properties
         elif record_id in (5, 6):
+            ''' TextString '''
             implicit = record_id == 5
             if file_state.textstring_implicit is None:
                 file_state.textstring_implicit = implicit
@@ -248,6 +253,7 @@ class OasisLayout:
                 key = len(self.textstrings)
             self.textstrings[key] = record.astring
         elif record_id in (7, 8):
+            ''' PropName '''
             implicit = record_id == 7
             if file_state.propname_implicit is None:
                 file_state.propname_implicit = implicit
@@ -261,6 +267,7 @@ class OasisLayout:
                 key = len(self.propnames)
             self.propnames[key] = record.nstring
         elif record_id in (9, 10):
+            ''' PropString '''
             implicit = record_id == 9
             if file_state.propstring_implicit is None:
                 file_state.propstring_implicit = implicit
@@ -274,14 +281,17 @@ class OasisLayout:
                 key = len(self.propstrings)
             self.propstrings[key] = record.astring
         elif record_id in (11, 12):
+            ''' LayerName '''
             record = records.LayerName.read(stream, record_id)
             record.merge_with_modals(modals)
             self.layers.append(record)
         elif record_id in (28, 29):
+            ''' Property '''
             record = records.Property.read(stream, record_id)
             record.merge_with_modals(modals)
             file_state.property_target.append(record)
         elif record_id in (30, 31):
+            ''' XName '''
             implicit = record_id == 30
             if file_state.xname_implicit is None:
                 file_state.xname_implicit = implicit
@@ -300,20 +310,24 @@ class OasisLayout:
         # Cell and elements
         #
         elif record_id in (13, 14):
+            ''' Cell '''
             record = records.Cell.read(stream, record_id)
             record.merge_with_modals(modals)
             cell = Cell(record.name)
             self.cells.append(cell)
             file_state.property_target = cell.properties
         elif record_id in (15, 16):
+            ''' XYMode '''
             record = records.XYMode.read(stream, record_id)
             record.merge_with_modals(modals)
         elif record_id in (17, 18):
+            ''' Placement '''
             record = records.Placement.read(stream, record_id)
             record.merge_with_modals(modals)
             self.cells[-1].placements.append(record)
             file_state.property_target = record.properties
         elif record_id in _GEOMETRY:
+            ''' Geometry '''
             record = _GEOMETRY[record_id].read(stream, record_id)
             record.merge_with_modals(modals)
             self.cells[-1].geometry.append(record)
@@ -507,7 +521,7 @@ class XName:
 
 
 # Mapping from record id to record class.
-_GEOMETRY: Dict[int, Type] = {
+_GEOMETRY: Dict[int, Type[records.geometry_t]] = {
     19: records.Text,
     20: records.Rectangle,
     21: records.Polygon,
