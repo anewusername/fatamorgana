@@ -9,9 +9,11 @@ import logging
 
 from . import records
 from .records import Modals, Record
-from .basic import OffsetEntry, OffsetTable, NString, AString, real_t, Validation, \
-        read_magic_bytes, write_magic_bytes, read_uint, EOFError, \
-        InvalidDataError, InvalidRecordError
+from .basic import (
+    OffsetEntry, OffsetTable, NString, AString, real_t, Validation,
+    read_magic_bytes, write_magic_bytes, read_uint, EOFError,
+    InvalidRecordError,
+    )
 
 
 __author__ = 'Jan Petykiewicz'

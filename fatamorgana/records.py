@@ -19,12 +19,14 @@ import io
 import logging
 import pprint
 from warnings import warn
-from .basic import AString, NString, repetition_t, property_value_t, real_t, \
-        ReuseRepetition, OffsetTable, Validation, read_point_list, read_property_value, \
-        read_bstring, read_uint, read_sint, read_real, read_repetition, read_interval, \
-        write_bstring, write_uint, write_sint, write_real, write_interval, write_point_list, \
-        write_property_value, read_bool_byte, write_bool_byte, read_byte, write_byte, \
-        InvalidDataError, UnfilledModalError, PathExtensionScheme, _USE_NUMPY
+from .basic import (
+    AString, NString, repetition_t, property_value_t, real_t,
+    ReuseRepetition, OffsetTable, Validation, read_point_list, read_property_value,
+    read_bstring, read_uint, read_sint, read_real, read_repetition, read_interval,
+    write_bstring, write_uint, write_sint, write_real, write_interval, write_point_list,
+    write_property_value, read_bool_byte, write_bool_byte, read_byte, write_byte,
+    InvalidDataError, UnfilledModalError, PathExtensionScheme, _USE_NUMPY,
+    )
 
 if _USE_NUMPY:
     import numpy
@@ -37,7 +39,7 @@ logger = logging.getLogger(__name__)
     Type definitions
 '''
 geometry_t = Union['Text', 'Rectangle', 'Polygon', 'Path', 'Trapezoid',
-                  'CTrapezoid', 'Circle', 'XElement', 'XGeometry']
+                   'CTrapezoid', 'Circle', 'XElement', 'XGeometry']
 pathextension_t = Tuple['PathExtensionScheme', Optional[int]]
 point_list_t = Sequence[Sequence[int]]
 
@@ -118,6 +120,7 @@ def verify_modal(var: Optional[T]) -> T:
     if var is None:
         raise UnfilledModalError
     return var
+
 
 '''
 
@@ -487,7 +490,7 @@ class End(Record):
             offset_table: Optional[OffsetTable] = OffsetTable.read(stream)
         else:
             offset_table = None
-        _padding_string = read_bstring(stream)
+        _padding_string = read_bstring(stream)      # noqa
         validation = Validation.read(stream)
         record = End(validation, offset_table)
         logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
@@ -591,8 +594,8 @@ class CBlock(Record):
         if compression_type == 0:
             count = len(decompressed_bytes)
             compressor = zlib.compressobj(wbits=-zlib.MAX_WBITS, **compression_args)
-            compressed_bytes = compressor.compress(decompressed_bytes) + \
-                               compressor.flush()
+            compressed_bytes = (compressor.compress(decompressed_bytes)
+                                + compressor.flush())
         else:
             raise InvalidDataError('Unknown compression type: '
                                    '{}'.format(compression_type))
@@ -617,8 +620,8 @@ class CBlock(Record):
             decompression_args = {}
         if self.compression_type == 0:
             decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS, **decompression_args)
-            decompressed_bytes = decompressor.decompress(self.compressed_bytes) + \
-                                 decompressor.flush()
+            decompressed_bytes = (decompressor.decompress(self.compressed_bytes)
+                                  + decompressor.flush())
             if len(decompressed_bytes) != self.decompressed_byte_count:
                 raise InvalidDataError('Decompressed data length does not match!')
         else:
@@ -973,7 +976,7 @@ class Property(Record):
         if record_id == 29:
             record = Property()
         else:
-            byte = read_byte(stream)      #UUUUVCNS
+            byte = read_byte(stream)      # UUUUVCNS
             u = 0x0f & (byte >> 4)
             v = 0x01 & (byte >> 3)
             c = 0x01 & (byte >> 2)
@@ -1420,8 +1423,9 @@ class Placement(Record):
         r = self.repetition is not None
         f = self.flip
 
-        if (self.magnification == 1 and
-               self.angle is not None and abs(self.angle % 90.0) < 1e-14):
+        if (self.magnification == 1
+                and self.angle is not None
+                and abs(self.angle % 90.0) < 1e-14):
             aa = int((self.angle / 90) % 4.0)
             bools = (c, n, x, y, r, aa & 0b10, aa & 0b01, f)
             m = False
@@ -1561,19 +1565,19 @@ class Text(Record, GeometryMixin):
         size += write_bool_byte(stream, (0, c, n, x, y, r, d, l))
         if c:
             if n:
-                size += write_uint(stream, self.string) # type: ignore
+                size += write_uint(stream, self.string)  # type: ignore
             else:
-                size += self.string.write(stream)       # type: ignore
+                size += self.string.write(stream)        # type: ignore
         if l:
-            size += write_uint(stream, self.layer)      # type: ignore
+            size += write_uint(stream, self.layer)       # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)   # type: ignore
+            size += write_uint(stream, self.datatype)    # type: ignore
         if x:
-            size += write_sint(stream, self.x)          # type: ignore
+            size += write_sint(stream, self.x)           # type: ignore
         if y:
-            size += write_sint(stream, self.y)          # type: ignore
+            size += write_sint(stream, self.y)           # type: ignore
         if r:
-            size += self.repetition.write(stream)       # type: ignore
+            size += self.repetition.write(stream)        # type: ignore
         return size
 
 
@@ -1983,11 +1987,11 @@ class Path(Record, GeometryMixin):
         size = write_uint(stream, 21)
         size += write_bool_byte(stream, (e, w, p, x, y, r, d, l))
         if l:
-            size += write_uint(stream, self.layer)      # type: ignore
+            size += write_uint(stream, self.layer)       # type: ignore
         if d:
-            size += write_uint(stream, self.datatype)   # type: ignore
+            size += write_uint(stream, self.datatype)    # type: ignore
         if w:
-            size += write_uint(stream, self.half_width) # type: ignore
+            size += write_uint(stream, self.half_width)  # type: ignore
         if e:
             scheme = 0
             if self.extension_start is not None:
@@ -1996,11 +2000,11 @@ class Path(Record, GeometryMixin):
                 scheme += self.extension_end[0].value
             size += write_uint(stream, scheme)
             if scheme & 0b1100 == 0b1100:
-                size += write_sint(stream, self.extension_start[1]) # type: ignore
+                size += write_sint(stream, self.extension_start[1])  # type: ignore
             if scheme & 0b0011 == 0b0011:
-                size += write_sint(stream, self.extension_end[1])   # type: ignore
+                size += write_sint(stream, self.extension_end[1])    # type: ignore
         if p:
-            size += write_point_list(stream, self.point_list,       # type: ignore
+            size += write_point_list(stream, self.point_list,        # type: ignore
                                      implicit_closed=False, fast=fast)
         if x:
             size += write_sint(stream, self.x)      # type: ignore
@@ -2084,11 +2088,11 @@ class Trapezoid(Record, GeometryMixin):
         if self.is_vertical:
             if height is not None and delta_b - delta_a > height:
                 raise InvalidDataError('Trapezoid: h < delta_b - delta_a'
-                                 ' ({} < {} - {})'.format(height, delta_b, delta_a))
+                                       + ' ({} < {} - {})'.format(height, delta_b, delta_a))
         else:
             if width is not None and delta_b - delta_a > width:
                 raise InvalidDataError('Trapezoid: w < delta_b - delta_a'
-                                 ' ({} < {} - {})'.format(width, delta_b, delta_a))
+                                       + ' ({} < {} - {})'.format(width, delta_b, delta_a))
 
     def get_is_vertical(self) -> bool:
         return verify_modal(self.is_vertical)
@@ -2191,7 +2195,7 @@ class Trapezoid(Record, GeometryMixin):
 
 
 class CTrapezoid(Record, GeometryMixin):
-    """
+    r"""
     CTrapezoid record (ID 26)
 
     Compact trapezoid formats.
@@ -2391,7 +2395,7 @@ class CTrapezoid(Record, GeometryMixin):
         if d:
             size += write_uint(stream, self.datatype)   # type: ignore
         if t:
-            size += write_uint(stream, self.ctrapezoid_type) # type: ignore
+            size += write_uint(stream, self.ctrapezoid_type)  # type: ignore
         if w:
             size += write_uint(stream, self.width)      # type: ignore
         if h:

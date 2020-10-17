@@ -13,7 +13,7 @@ import warnings
 try:
     import numpy
     _USE_NUMPY = True
-except:
+except ImportError:
     _USE_NUMPY = False
 
 
@@ -587,7 +587,7 @@ class NString:
 
     @bytes.setter
     def bytes(self, bstring: bytes):
-        if len(bstring) == 0 or  not all(0x21 <= c <= 0x7e for c in bstring):
+        if len(bstring) == 0 or not all(0x21 <= c <= 0x7e for c in bstring):
             raise InvalidDataError('Invalid n-string {!r}'.format(bstring))
         self._string = bstring.decode('ascii')
 
@@ -1491,9 +1491,10 @@ class ArbitraryRepetition:
                             for x, y in zip(self.x_displacements, self.y_displacements))
         return size
 
-
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, type(self)) and self.x_displacements == other.x_displacements and self.y_displacements == other.y_displacements
+        return (isinstance(other, type(self))
+                and self.x_displacements == other.x_displacements
+                and self.y_displacements == other.y_displacements)
 
     def __repr__(self) -> str:
         return 'ArbitraryRepetition: x{} y{})'.format(self.x_displacements, self.y_displacements)
@@ -2020,7 +2021,7 @@ class OffsetTable:
             textstrings = OffsetEntry()
         if propnames is None:
             propnames = OffsetEntry()
-        if propstrings is  None:
+        if propstrings is None:
             propstrings = OffsetEntry()
         if layernames is None:
             layernames = OffsetEntry()
