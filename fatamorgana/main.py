@@ -38,7 +38,7 @@ class FileModals:
     end_has_offset_table: bool = False
     started: bool = False
 
-    def __init__(self, property_target = List[records.Property]):
+    def __init__(self, property_target: List[records.Property]):
         self.property_target = property_target
 
 
