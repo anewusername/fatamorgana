@@ -37,7 +37,5 @@ from .basic import (
 
 __author__ = 'Jan Petykiewicz'
 
-with open(pathlib.Path(__file__).parent / 'VERSION', 'r') as f:
-    __version__ = f.read().strip()
+from .VERSION import __version
 version = __version__
-

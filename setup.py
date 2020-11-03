@@ -2,11 +2,12 @@
 
 from setuptools import setup, find_packages
 
+
 with open('README.md', 'r') as f:
     long_description = f.read()
 
-with open('fatamorgana/VERSION', 'r') as f:
-    version = f.read().strip()
+with open('fatamorgana/VERSION.py', 'rt') as f:
+    version = f.readlines()[2].strip()
 
 setup(name='fatamorgana',
       version=version,
@@ -18,9 +19,7 @@ setup(name='fatamorgana',
       url='https://mpxd.net/code/jan/fatamorgana',
       packages=find_packages(),
       package_data={
-          'fatamorgana': ['VERSION',
-                          'py.typed',
-                          ],
+          'fatamorgana': ['py.typed'],
       },
       install_requires=[
             'typing',
