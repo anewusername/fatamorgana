@@ -37,5 +37,5 @@ from .basic import (
 
 __author__ = 'Jan Petykiewicz'
 
-from .VERSION import __version
+from .VERSION import __version__
 version = __version__
