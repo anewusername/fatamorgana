@@ -195,7 +195,7 @@ class OasisLayout:
             pass
         elif record_id in range(3, 13) or record_id in (28, 29):
             file_state.within_cell = False
-        elif record_id in range(15, 29) or record_id in (32, 33):
+        elif record_id in range(15, 28) or record_id in (32, 33):
             if not file_state.within_cell:
                 raise Exception('Geometry outside Cell')
         elif record_id in (13, 14):
