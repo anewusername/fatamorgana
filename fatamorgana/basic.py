@@ -2230,4 +2230,4 @@ def read_magic_bytes(stream: io.BufferedIOBase):
     magic = _read(stream, len(MAGIC_BYTES))
     if magic != MAGIC_BYTES:
         raise InvalidDataError('Could not read magic bytes, '
-                               'found {!r} : {}'.format(magic, magic.decode()))
+                               'found {!r}'.format(magic))
