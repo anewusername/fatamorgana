@@ -1500,12 +1500,16 @@ class ArbitraryRepetition:
         return 'ArbitraryRepetition: x{} y{})'.format(self.x_displacements, self.y_displacements)
 
 
-def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
+def read_point_list(stream: io.BufferedIOBase,
+                    implicit_closed: bool,
+                    ) -> List[List[int]]:
     """
     Read a point list from a stream.
 
     Args:
         stream: Stream to read from.
+        implicit_closed: If true, the source point list is assumed to be implicitly
+                         closed, and will be explicitly closed in the return value.
 
     Returns:
         Point list of the form `[[x0, y0], [x1, y1], ...]`
@@ -1517,36 +1521,22 @@ def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
     list_len = read_uint(stream)
     if list_type == 0:
         points = []
-        dx, dy = 0, 0
         for i in range(list_len):
-            point = [0, 0]
             n = read_sint(stream)
             if n == 0:
                 raise InvalidDataError('Zero-sized 1-delta')
+            point = [0, 0]
             point[i % 2] = n
             points.append(point)
-            if i % 2:
-                dy += n
-            else:
-                dx += n
-        points.append([-dx, 0])
-        points.append([0, -dy])
     elif list_type == 1:
         points = []
-        dx, dy = 0, 0
         for i in range(list_len):
-            point = [0, 0]
             n = read_sint(stream)
             if n == 0:
                 raise Exception('Zero-sized 1-delta')
+            point = [0, 0]
             point[(i + 1) % 2] = n
             points.append(point)
-            if i % 2:
-                dx += n
-            else:
-                dy += n
-        points.append([0, -dy])
-        points.append([-dx, 0])
     elif list_type == 2:
         points = [ManhattanDelta.read(stream).as_list() for _ in range(list_len)]
     elif list_type == 3:
@@ -1567,6 +1557,28 @@ def read_point_list(stream: io.BufferedIOBase) -> List[List[int]]:
                 points.append([x, y])
     else:
         raise InvalidDataError('Invalid point list type')
+
+    if not implicit_closed:
+        return points
+
+    if _USE_NUMPY:
+        dx, dy = numpy.sum(points, axis=0)
+    else:
+        dx = sum(x for x, _y in points)
+        dy = sum(y for _x, y in points)
+
+    if list_type == 0:
+        points += [[-dx, 0], [0, -dy]]
+    elif list_type == 1:
+        points += [[0, -dy], [-dx, 0]]
+    elif list_type == 2:
+        assert (dx == 0) or (dy == 0)
+        points.append([-dx, -dy])
+    elif list_type == 3:
+        assert (dx == 0) or (dy == 0) or (dx == dy) or (dx == -dy)
+        points.append([-dx, -dy])
+    else:
+        points.append([-dx, -dy])
     return points
 
 

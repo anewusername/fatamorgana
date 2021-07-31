@@ -1803,7 +1803,7 @@ class Polygon(Record, GeometryMixin):
         if d:
             optional['datatype'] = read_uint(stream)
         if p:
-            optional['point_list'] = read_point_list(stream)
+            optional['point_list'] = read_point_list(stream, implicit_closed=True)
         if x:
             optional['x'] = read_sint(stream)
         if y:
@@ -1964,7 +1964,7 @@ class Path(Record, GeometryMixin):
             optional['extension_start'] = get_pathext(scheme_start)
             optional['extension_end'] = get_pathext(scheme_end)
         if p:
-            optional['point_list'] = read_point_list(stream)
+            optional['point_list'] = read_point_list(stream, implicit_closed=False)
         if x:
             optional['x'] = read_sint(stream)
         if y:
