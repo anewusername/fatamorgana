@@ -2074,7 +2074,7 @@ class Trapezoid(Record, GeometryMixin):
         Raises:
             InvalidDataError: if dimensions are impossible.
         """
-        self.is_vertical = is_vertical
+        self.is_vertical = bool(is_vertical)
         self.delta_a = delta_a
         self.delta_b = delta_b
         self.layer = layer
@@ -2152,7 +2152,7 @@ class Trapezoid(Record, GeometryMixin):
             optional['y'] = read_sint(stream)
         if r:
             optional['repetition'] = read_repetition(stream)
-        record = Trapezoid(is_vertical, **optional)
+        record = Trapezoid(bool(is_vertical), **optional)
         logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
         return record
 
