@@ -7,3 +7,8 @@ build
 dist
 fatamorgana.egg-info
 docs
+
+*.gds
+*.gds.gz
+*.oas
+*.oas.gz
