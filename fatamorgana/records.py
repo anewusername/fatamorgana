@@ -993,8 +993,9 @@ class Property(Record):
                                                             for _ in range(value_count)]
             else:
                 values = None
-                if u != 0:
-                    raise InvalidDataError('Malformed property record header')
+#                if u != 0:
+#                    logger.warning('Malformed property record header; requested modal'
+#                                   ' values but had nonzero count. Ignoring count.')
             record = Property(name, values, bool(s))
         logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
         return record
