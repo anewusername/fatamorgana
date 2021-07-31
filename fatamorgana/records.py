@@ -29,7 +29,7 @@ from .basic import (
     )
 
 if _USE_NUMPY:
-    import numpy
+    import numpy    # type: ignore
 
 
 logger = logging.getLogger(__name__)

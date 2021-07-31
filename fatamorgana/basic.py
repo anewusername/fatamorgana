@@ -11,7 +11,7 @@ import io
 import warnings
 
 try:
-    import numpy
+    import numpy        # type: ignore
     _USE_NUMPY = True
 except ImportError:
     _USE_NUMPY = False
