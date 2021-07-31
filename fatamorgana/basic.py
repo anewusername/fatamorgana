@@ -1568,17 +1568,23 @@ def read_point_list(stream: io.BufferedIOBase,
         dy = sum(y for _x, y in points)
 
     if list_type == 0:
-        points += [[-dx, 0], [0, -dy]]
+        close_points = [[-dx, 0], [0, -dy]]
     elif list_type == 1:
-        points += [[0, -dy], [-dx, 0]]
+        close_points = [[0, -dy], [-dx, 0]]
     elif list_type == 2:
         assert (dx == 0) or (dy == 0)
-        points.append([-dx, -dy])
+        close_points = [[-dx, -dy]]
     elif list_type == 3:
         assert (dx == 0) or (dy == 0) or (dx == dy) or (dx == -dy)
-        points.append([-dx, -dy])
+        close_points = [[-dx, -dy]]
     else:
-        points.append([-dx, -dy])
+        close_points = [[-dx, -dy]]
+
+    if _USE_NUMPY:
+        points = numpy.vstack((points, close_points))
+    else:
+        points.append(close_points)
+
     return points
 
 
