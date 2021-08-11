@@ -136,7 +136,7 @@ def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
     # PATH 7
     write_uint(buf, 22)          # PATH record
     write_byte(buf, 0b0001_0101) # EWPX_YRDL
-    write_uint(buf, 1)           # layer                    #NOTE: fixed
+    write_uint(buf, 1)           # layer
     write_sint(buf, 1000)        # geometry-x (relative)
     write_uint(buf, 0)           # repetition (reuse)
 
