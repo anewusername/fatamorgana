@@ -5,7 +5,7 @@ import struct
 
 import pytest       # type: ignore
 
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring
+from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte
 from ..main import OasisLayout
 
 
@@ -31,7 +31,13 @@ def _gen_footer() -> bytes:
     buf = BytesIO()
 
     write_uint(buf, 2)               # END record
-    write_bstring(buf, b'\0' * 252)  # padding (1 + 1 + (2 + 252)) = 256
+
+    # 254-byte padding, (0-byte bstring with length 0;
+    #  length is written as 0x80 0x80 ... 0x80 0x00)
+    for _ in range(253):
+        write_byte(buf, 0x80)
+    write_byte(buf, 0)
+
     write_uint(buf, 0)               # no validation
     return buf.getvalue()
 
