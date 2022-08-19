@@ -15,7 +15,7 @@
   numpy to speed up reading/writing.
 
  Dependencies:
-    - Python 3.5 or later
+    - Python 3.8 or later
     - numpy (optional, faster but no additional functionality)
 
  To get started, try:
@@ -36,6 +36,5 @@ from .basic import (
 
 
 __author__ = 'Jan Petykiewicz'
-
-from .VERSION import __version__
+__version__ = '0.11'
 version = __version__

@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fatamorgana"
+description = "OASIS layout format parser and writer"
+readme = "README.md"
+license = { file = "LICENSE.md" }
+authors = [
+    { name="Jan Petykiewicz", email="jan@mpxd.net" },
+    ]
+homepage = "https://mpxd.net/code/jan/fatamorgana"
+repository = "https://mpxd.net/code/jan/fatamorgana"
+keywords = [
+    "OASIS",
+    "layout",
+    "design",
+    "CAD",
+    "EDA",
+    "oas",
+    "electronics",
+    "open",
+    "artwork",
+    "interchange",
+    "standard",
+    "mask",
+    "pattern",
+    "IC",
+    "geometry",
+    "geometric",
+    "polygon",
+    "gds",
+    ]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Environment :: Other Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Manufacturing",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+    ]
+requires-python = ">=3.8"
+dynamic = ["version"]
+dependencies = [
+    ]
+
+[tool.hatch.version]
+path = "fatamorgana/__init__.py"
+
+[project.optional-dependencies]
+numpy = ["numpy~=1.21"]
