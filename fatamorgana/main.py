@@ -40,7 +40,7 @@ class FileModals:
     end_has_offset_table: bool = False
     started: bool = False
 
-    def __init__(self, property_target: List[records.Property]):
+    def __init__(self, property_target: List[records.Property]) -> None:
         self.property_target = property_target
 
 
@@ -89,7 +89,11 @@ class OasisLayout:
     propstrings: Dict[int, AString]
     layers: List[records.LayerName]
 
-    def __init__(self, unit: real_t, validation: Validation = None):
+    def __init__(
+            self,
+            unit: real_t,
+            validation: Optional[Validation] = None,
+            ) -> None:
         """
         Args:
             unit: Real number (i.e. int, float, or `Fraction`), grid steps per micron.
@@ -132,11 +136,12 @@ class OasisLayout:
             pass
         return layout
 
-    def read_record(self,
-                    stream: io.BufferedIOBase,
-                    modals: Modals,
-                    file_state: FileModals
-                    ) -> bool:
+    def read_record(
+            self,
+            stream: io.BufferedIOBase,
+            modals: Modals,
+            file_state: FileModals
+            ) -> bool:
         """
         Read a single record of unspecified type from a stream, adding its
          contents into this `OasisLayout` object.
@@ -162,7 +167,7 @@ class OasisLayout:
             else:
                 raise e
 
-        logger.info('read_record of type {} at position 0x{:x}'.format(record_id, stream.tell()))
+        logger.info(f'read_record of type {record_id} at position 0x{stream.tell():x}')
 
         record: Record
 
@@ -182,7 +187,7 @@ class OasisLayout:
 
         # Make sure order is valid (eg, no out-of-cell geometry)
         if not file_state.started and record_id != 1:
-            raise InvalidRecordError('Non-Start record {} before Start'.format(record_id))
+            raise InvalidRecordError(f'Non-Start record {record_id} before Start')
         if record_id == 1:
             if file_state.started:
                 raise InvalidRecordError('Duplicate Start record')
@@ -201,7 +206,7 @@ class OasisLayout:
         elif record_id in (13, 14):
             file_state.within_cell = True
         else:
-            raise InvalidRecordError('Unknown record id: {}'.format(record_id))
+            raise InvalidRecordError(f'Unknown record id: {record_id}')
 
         if record_id == 0:
             ''' Pad '''
@@ -335,7 +340,7 @@ class OasisLayout:
             self.cells[-1].geometry.append(record)
             file_state.property_target = record.properties
         else:
-            raise InvalidRecordError('Unknown record id: {}'.format(record_id))
+            raise InvalidRecordError(f'Unknown record id: {record_id}')
         return False
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -412,13 +417,14 @@ class Cell:
     placements: List[records.Placement]
     geometry: List[records.geometry_t]
 
-    def __init__(self,
-                 name: Union[NString, str, int],
-                 *,
-                 properties: Optional[List[records.Property]] = None,
-                 placements: Optional[List[records.Placement]] = None,
-                 geometry: Optional[List[records.geometry_t]] = None,
-                 ):
+    def __init__(
+            self,
+            name: Union[NString, str, int],
+            *,
+            properties: Optional[List[records.Property]] = None,
+            placements: Optional[List[records.Placement]] = None,
+            geometry: Optional[List[records.geometry_t]] = None,
+            ) -> None:
         self.name = name if isinstance(name, (NString, int)) else NString(name)
         self.properties = [] if properties is None else properties
         self.placements = [] if placements is None else placements
@@ -460,9 +466,11 @@ class CellName:
     nstring: NString
     properties: List[records.Property]
 
-    def __init__(self,
-                 nstring: Union[NString, str],
-                 properties: Optional[List[records.Property]] = None):
+    def __init__(
+            self,
+            nstring: Union[NString, str],
+            properties: Optional[List[records.Property]] = None,
+            ) -> None:
         """
         Args:
             nstring: The contained string.
@@ -499,7 +507,7 @@ class XName:
     attribute: int
     bstring: bytes
 
-    def __init__(self, attribute: int, bstring: bytes):
+    def __init__(self, attribute: int, bstring: bytes) -> None:
         """
         Args:
             attribute: Attribute number.
