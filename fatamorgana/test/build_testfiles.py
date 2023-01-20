@@ -12,7 +12,8 @@ from . import (
     test_files_circles, test_files_ctrapezoids, test_files_trapezoids,
     test_files_placements, test_files_paths, test_files_modals,
     test_files_polygons, test_files_rectangles, test_files_empty,
-    test_files_texts, test_files_cells)
+    test_files_texts, test_files_cells,
+    )
 
 
 def build_file(num: str, func: Callable[[BufferedIOBase], BufferedIOBase]) -> None:

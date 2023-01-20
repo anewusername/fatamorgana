@@ -29,7 +29,7 @@ from .basic import (
     )
 
 if _USE_NUMPY:
-    import numpy    # type: ignore
+    import numpy
 
 
 logger = logging.getLogger(__name__)
@@ -76,10 +76,10 @@ class Modals:
     property_name: Union[int, NString, None] = None
     property_is_standard: Optional[bool] = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Resets all modal variables to their default values.
         Default values are:
@@ -133,7 +133,7 @@ class Record(metaclass=ABCMeta):
     Common interface for records.
     """
     @abstractmethod
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         """
         Copy all defined values from this record into the modal variables.
         Fill all undefined values in this record from the modal variables.
@@ -144,7 +144,7 @@ class Record(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         """
         Check all defined values in this record against those in the
          modal variables. If any values are equal, remove them from
@@ -224,7 +224,7 @@ class Record(metaclass=ABCMeta):
         return copy.deepcopy(self)
 
     def __repr__(self) -> str:
-        return '{}: {}'.format(self.__class__, pprint.pformat(self.__dict__))
+        return f'{self.__class__}: ' + pprint.pformat(self.__dict__)
 
 
 class GeometryMixin(metaclass=ABCMeta):
@@ -255,10 +255,11 @@ class GeometryMixin(metaclass=ABCMeta):
         return (self.get_layer(), self.get_datatype())
 
 
-def read_refname(stream: io.BufferedIOBase,
-                 is_present: Union[bool, int],
-                 is_reference: Union[bool, int]
-                 ) -> Union[None, int, NString]:
+def read_refname(
+        stream: io.BufferedIOBase,
+        is_present: Union[bool, int],
+        is_reference: Union[bool, int]
+        ) -> Union[None, int, NString]:
     """
     Helper function for reading a possibly-absent, possibly-referenced NString.
 
@@ -279,10 +280,11 @@ def read_refname(stream: io.BufferedIOBase,
         return NString.read(stream)
 
 
-def read_refstring(stream: io.BufferedIOBase,
-                   is_present: Union[bool, int],
-                   is_reference: Union[bool, int],
-                   ) -> Union[None, int, AString]:
+def read_refstring(
+        stream: io.BufferedIOBase,
+        is_present: Union[bool, int],
+        is_reference: Union[bool, int],
+        ) -> Union[None, int, AString]:
     """
     Helper function for reading a possibly-absent, possibly-referenced `AString`.
 
@@ -307,19 +309,18 @@ class Pad(Record):
     """
     Pad record (ID 0)
     """
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         pass
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         pass
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Pad':
         if record_id != 0:
-            raise InvalidDataError('Invalid record id for Pad '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Pad {record_id}')
         record = Pad()
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -329,31 +330,28 @@ class Pad(Record):
 class XYMode(Record):
     """
     XYMode record (ID 15, 16)
-
-    Attributes:
-        relative (bool): default `False`
     """
-    relative: bool = False
+    relative: bool
 
     @property
     def absolute(self) -> bool:
         return not self.relative
 
     @absolute.setter
-    def absolute(self, b: bool):
+    def absolute(self, b: bool) -> None:
         self.relative = not b
 
-    def __init__(self, relative: bool):
+    def __init__(self, relative: bool) -> None:
         """
         Args:
             relative: `True` if the mode is 'relative', `False` if 'absolute'.
         """
         self.relative = relative
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         modals.xy_relative = self.relative
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         pass
 
     @staticmethod
@@ -361,7 +359,7 @@ class XYMode(Record):
         if record_id not in (15, 16):
             raise InvalidDataError('Invalid record id for XYMode')
         record = XYMode(record_id == 16)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -373,19 +371,21 @@ class Start(Record):
     Start Record (ID 1)
 
     Attributes:
-        version (AString): "1.0"
+        version (AString):
         unit (real_t): positive real number, grid steps per micron
         offset_table (Optional[OffsetTable]): If `None` then table must be
                                             placed in the `End` record)
     """
     version: AString
     unit: real_t
-    offset_table: Optional[OffsetTable] = None
+    offset_table: Optional[OffsetTable]
 
-    def __init__(self,
-                 unit: real_t,
-                 version: Union[AString, str] = None,
-                 offset_table: Optional[OffsetTable] = None):
+    def __init__(
+            self,
+            unit: real_t,
+            version: Union[AString, str] =  "1.0",
+            offset_table: Optional[OffsetTable] = None,
+            ) -> None:
         """
         Args
             unit: Grid steps per micron (positive real number)
@@ -394,37 +394,32 @@ class Start(Record):
                     it in the `End` record instead.
         """
         if unit <= 0:
-            raise InvalidDataError('Non-positive unit: {}'.format(unit))
+            raise InvalidDataError(f'Non-positive unit: {unit}')
         if math.isnan(unit):
             raise InvalidDataError('NaN unit')
         if math.isinf(unit):
             raise InvalidDataError('Non-finite unit')
         self.unit = unit
 
-        if version is None:
-            version = AString('1.0')
         if isinstance(version, AString):
             self.version = version
         else:
             self.version = AString(version)
 
         if self.version.string != '1.0':
-            raise InvalidDataError('Invalid version string, '
-                                   'only "1.0" is allowed: '
-                                   + str(self.version.string))
+            raise InvalidDataError(f'Invalid version string, only "1.0" is allowed: "{self.version.string}"')
         self.offset_table = offset_table
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Start':
         if record_id != 1:
-            raise InvalidDataError('Invalid record id for Start: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Start: {record_id}')
         version = AString.read(stream)
         unit = read_real(stream)
         has_offset_table = read_uint(stream) == 0
@@ -434,7 +429,7 @@ class Start(Record):
         else:
             offset_table = None
         record = Start(unit, version, offset_table)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -458,12 +453,14 @@ class End(Record):
                                   written into the `Start` record instead
         validation (Validation): object containing checksum
     """
-    offset_table: Optional[OffsetTable] = None
+    offset_table: Optional[OffsetTable]
     validation: Validation
 
-    def __init__(self,
-                 validation: Validation,
-                 offset_table: Optional[OffsetTable] = None):
+    def __init__(
+            self,
+            validation: Validation,
+            offset_table: Optional[OffsetTable] = None,
+            ) -> None:
         """
         Args:
             validation: `Validation` object for this file.
@@ -480,12 +477,13 @@ class End(Record):
         pass
 
     @staticmethod
-    def read(stream: io.BufferedIOBase,
-             record_id: int,
-             has_offset_table: bool
-             ) -> 'End':
+    def read(
+            stream: io.BufferedIOBase,
+            record_id: int,
+            has_offset_table: bool
+            ) -> 'End':
         if record_id != 2:
-            raise InvalidDataError('Invalid record id for End {}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for End {record_id}')
         if has_offset_table:
             offset_table: Optional[OffsetTable] = OffsetTable.read(stream)
         else:
@@ -493,7 +491,7 @@ class End(Record):
         _padding_string = read_bstring(stream)      # noqa
         validation = Validation.read(stream)
         record = End(validation, offset_table)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -526,10 +524,12 @@ class CBlock(Record):
     decompressed_byte_count: int
     compressed_bytes: bytes
 
-    def __init__(self,
-                 compression_type: int,
-                 decompressed_byte_count: int,
-                 compressed_bytes: bytes):
+    def __init__(
+            self,
+            compression_type: int,
+            decompressed_byte_count: int,
+            compressed_bytes: bytes,
+            ) -> None:
         """
         Args:
             compression_type: `0` (zlib)
@@ -537,29 +537,27 @@ class CBlock(Record):
             compressed_bytes: The compressed data.
         """
         if compression_type != 0:
-            raise InvalidDataError('CBlock: Invalid compression scheme '
-                                   '{}'.format(compression_type))
+            raise InvalidDataError(f'CBlock: Invalid compression scheme {compression_type}')
 
         self.compression_type = compression_type
         self.decompressed_byte_count = decompressed_byte_count
         self.compressed_bytes = compressed_bytes
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         pass
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         pass
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'CBlock':
         if record_id != 34:
-            raise InvalidDataError('Invalid record id for CBlock: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for CBlock: {record_id}')
         compression_type = read_uint(stream)
         decompressed_count = read_uint(stream)
         compressed_bytes = read_bstring(stream)
         record = CBlock(compression_type, decompressed_count, compressed_bytes)
-        logger.debug('CBlock ending at 0x{:x} was read successfully'.format(stream.tell()))
+        logger.debug(f'CBlock ending at 0x{stream.tell():x} was read successfully')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -570,10 +568,11 @@ class CBlock(Record):
         return size
 
     @staticmethod
-    def from_decompressed(decompressed_bytes: bytes,
-                          compression_type: int = 0,
-                          compression_args: Dict = None
-                          ) -> 'CBlock':
+    def from_decompressed(
+            decompressed_bytes: bytes,
+            compression_type: int = 0,
+            compression_args: Optional[Dict[str, Any]] = None,
+            ) -> 'CBlock':
         """
         Create a CBlock record from uncompressed data.
 
@@ -597,12 +596,11 @@ class CBlock(Record):
             compressed_bytes = (compressor.compress(decompressed_bytes)
                                 + compressor.flush())
         else:
-            raise InvalidDataError('Unknown compression type: '
-                                   '{}'.format(compression_type))
+            raise InvalidDataError(f'Unknown compression type: {compression_type}')
 
         return CBlock(compression_type, count, compressed_bytes)
 
-    def decompress(self, decompression_args: Dict = None) -> bytes:
+    def decompress(self, decompression_args: Optional[Dict[str, Any]] = None) -> bytes:
         """
         Decompress the contents of this CBlock.
 
@@ -625,8 +623,7 @@ class CBlock(Record):
             if len(decompressed_bytes) != self.decompressed_byte_count:
                 raise InvalidDataError('Decompressed data length does not match!')
         else:
-            raise InvalidDataError('Unknown compression type: '
-                                   '{}'.format(self.compression_type))
+            raise InvalidDataError(f'Unknown compression type: {self.compression_type}')
         return decompressed_bytes
 
 
@@ -639,11 +636,13 @@ class CellName(Record):
         reference_number (Optional[int]): `None` results in implicit assignment
     """
     nstring: NString
-    reference_number: Optional[int] = None
+    reference_number: Optional[int]
 
-    def __init__(self,
-                 nstring: Union[NString, str],
-                 reference_number: int = None):
+    def __init__(
+            self,
+            nstring: Union[NString, str],
+            reference_number: Optional[int] = None,
+            ) -> None:
         """
         Args:
             nstring: The contained string.
@@ -656,24 +655,23 @@ class CellName(Record):
             self.nstring = NString(nstring)
         self.reference_number = reference_number
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'CellName':
         if record_id not in (3, 4):
-            raise InvalidDataError('Invalid record id for CellName '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for CellName {record_id}')
         nstring = NString.read(stream)
         if record_id == 4:
             reference_number: Optional[int] = read_uint(stream)
         else:
             reference_number = None
         record = CellName(nstring, reference_number)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -695,9 +693,11 @@ class PropName(Record):
     nstring: NString
     reference_number: Optional[int] = None
 
-    def __init__(self,
-                 nstring: Union[NString, str],
-                 reference_number: int = None):
+    def __init__(
+            self,
+            nstring: Union[NString, str],
+            reference_number: Optional[int] = None,
+            ) -> None:
         """
         Args:
             nstring: The contained string.
@@ -719,15 +719,14 @@ class PropName(Record):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'PropName':
         if record_id not in (7, 8):
-            raise InvalidDataError('Invalid record id for PropName '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for PropName {record_id}')
         nstring = NString.read(stream)
         if record_id == 8:
             reference_number: Optional[int] = read_uint(stream)
         else:
             reference_number = None
         record = PropName(nstring, reference_number)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -750,9 +749,11 @@ class TextString(Record):
     astring: AString
     reference_number: Optional[int] = None
 
-    def __init__(self,
-                 string: Union[AString, str],
-                 reference_number: int = None):
+    def __init__(
+            self,
+            string: Union[AString, str],
+            reference_number: Optional[int] = None,
+            ) -> None:
         """
         Args:
             string: The contained string.
@@ -765,24 +766,23 @@ class TextString(Record):
             self.astring = AString(string)
         self.reference_number = reference_number
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'TextString':
         if record_id not in (5, 6):
-            raise InvalidDataError('Invalid record id for TextString: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for TextString: {record_id}')
         astring = AString.read(stream)
         if record_id == 6:
             reference_number: Optional[int] = read_uint(stream)
         else:
             reference_number = None
         record = TextString(astring, reference_number)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -803,11 +803,13 @@ class PropString(Record):
         reference_number (Optional[int]): `None` results in implicit assignment
     """
     astring: AString
-    reference_number: Optional[int] = None
+    reference_number: Optional[int]
 
-    def __init__(self,
-                 string: Union[AString, str],
-                 reference_number: int = None):
+    def __init__(
+            self,
+            string: Union[AString, str],
+            reference_number: Optional[int] = None,
+            ) -> None:
         """
         Args:
             string: The contained string.
@@ -820,24 +822,23 @@ class PropString(Record):
             self.astring = AString(string)
         self.reference_number = reference_number
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'PropString':
         if record_id not in (9, 10):
-            raise InvalidDataError('Invalid record id for PropString: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for PropString: {record_id}')
         astring = AString.read(stream)
         if record_id == 10:
             reference_number: Optional[int] = read_uint(stream)
         else:
             reference_number = None
         record = PropString(astring, reference_number)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -860,15 +861,17 @@ class LayerName(Record):
         is_textlayer (bool): Is this a text layer?
     """
     nstring: NString
-    layer_interval: Tuple
-    type_interval: Tuple
+    layer_interval: Tuple[Optional[int], Optional[int]]
+    type_interval: Tuple[Optional[int], Optional[int]]
     is_textlayer: bool
 
-    def __init__(self,
-                 nstring: Union[NString, str],
-                 layer_interval: Tuple,
-                 type_interval: Tuple,
-                 is_textlayer: bool):
+    def __init__(
+            self,
+            nstring: Union[NString, str],
+            layer_interval: Tuple[Optional[int], Optional[int]],
+            type_interval: Tuple[Optional[int], Optional[int]],
+            is_textlayer: bool,
+            ) -> None:
         """
         Args:
             nstring: The layer name.
@@ -886,23 +889,22 @@ class LayerName(Record):
         self.type_interval = type_interval
         self.is_textlayer = is_textlayer
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'LayerName':
         if record_id not in (11, 12):
-            raise InvalidDataError('Invalid record id for LayerName: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for LayerName: {record_id}')
         is_textlayer = (record_id == 12)
         nstring = NString.read(stream)
         layer_interval = read_interval(stream)
         type_interval = read_interval(stream)
         record = LayerName(nstring, layer_interval, type_interval, is_textlayer)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -924,14 +926,16 @@ class Property(Record):
         values (Optional[List[property_value_t]]): List of property values.
         is_standard (bool): Whether this is a standard property.
     """
-    name: Optional[Union[NString, int]] = None
-    values: Optional[List[property_value_t]] = None
-    is_standard: Optional[bool] = None
+    name: Optional[Union[NString, int]]
+    values: Optional[List[property_value_t]]
+    is_standard: Optional[bool]
 
-    def __init__(self,
-                 name: Union[NString, str, int, None] = None,
-                 values: Optional[List[property_value_t]] = None,
-                 is_standard: Optional[bool] = None):
+    def __init__(
+            self,
+            name: Union[NString, str, int, None] = None,
+            values: Optional[List[property_value_t]] = None,
+            is_standard: Optional[bool] = None,
+            ) -> None:
         """
         Args:
             name: Property name, reference number, or `None` (i.e. use modal)
@@ -957,12 +961,12 @@ class Property(Record):
     def get_is_standard(self) -> bool:
         return verify_modal(self.is_standard)
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_field(self, 'name', modals, 'property_name')
         adjust_field(self, 'values', modals, 'property_value_list')
         adjust_field(self, 'is_standard', modals, 'property_is_standard')
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_field(self, 'name', modals, 'property_name')
         dedup_field(self, 'values', modals, 'property_value_list')
         if self.values is None and self.name is None:
@@ -971,8 +975,7 @@ class Property(Record):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Property':
         if record_id not in (28, 29):
-            raise InvalidDataError('Invalid record id for PropertyValue: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for PropertyValue: {record_id}')
         if record_id == 29:
             record = Property()
         else:
@@ -997,7 +1000,7 @@ class Property(Record):
 #                    logger.warning('Malformed property record header; requested modal'
 #                                   ' values but had nonzero count. Ignoring count.')
             record = Property(name, values, bool(s))
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -1005,8 +1008,7 @@ class Property(Record):
             return write_uint(stream, 29)
         else:
             if self.is_standard is None:
-                raise InvalidDataError('Property has value or name, '
-                                       'but no is_standard flag!')
+                raise InvalidDataError('Property has value or name, but no is_standard flag!')
             if self.values is not None:
                 value_count = len(self.values)
                 v = 0
@@ -1047,12 +1049,14 @@ class XName(Record):
     """
     attribute: int
     bstring: bytes
-    reference_number: Optional[int] = None
+    reference_number: Optional[int]
 
-    def __init__(self,
-                 attribute: int,
-                 bstring: bytes,
-                 reference_number: int = None):
+    def __init__(
+            self,
+            attribute: int,
+            bstring: bytes,
+            reference_number: Optional[int] = None,
+            ) -> None:
         """
         Args:
             attribute: Attribute number.
@@ -1064,17 +1068,16 @@ class XName(Record):
         self.bstring = bstring
         self.reference_number = reference_number
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'XName':
         if record_id not in (30, 31):
-            raise InvalidDataError('Invalid record id for XName: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for XName: {record_id}')
         attribute = read_uint(stream)
         bstring = read_bstring(stream)
         if record_id == 31:
@@ -1082,7 +1085,7 @@ class XName(Record):
         else:
             reference_number = None
         record = XName(attribute, bstring, reference_number)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -1107,10 +1110,12 @@ class XElement(Record):
     bstring: bytes
     properties: List['Property']
 
-    def __init__(self,
-                 attribute: int,
-                 bstring: bytes,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            attribute: int,
+            bstring: bytes,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         """
         Args:
             attribute: Attribute number.
@@ -1121,21 +1126,20 @@ class XElement(Record):
         self.bstring = bstring
         self.properties = [] if properties is None else properties
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         pass
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         pass
 
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'XElement':
         if record_id != 32:
-            raise InvalidDataError('Invalid record id for XElement: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for XElement: {record_id}')
         attribute = read_uint(stream)
         bstring = read_bstring(stream)
         record = XElement(attribute, bstring)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -1168,15 +1172,17 @@ class XGeometry(Record, GeometryMixin):
     repetition: Optional[repetition_t] = None
     properties: List['Property']
 
-    def __init__(self,
-                 attribute: int,
-                 bstring: bytes,
-                 layer: Optional[int] = None,
-                 datatype: Optional[int] = None,
-                 x: Optional[int] = None,
-                 y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            attribute: int,
+            bstring: bytes,
+            layer: Optional[int] = None,
+            datatype: Optional[int] = None,
+            x: Optional[int] = None,
+            y: Optional[int] = None,
+            repetition: Optional[repetition_t] = None,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         """
         Args:
             attribute: Attribute number for this XGeometry.
@@ -1197,13 +1203,13 @@ class XGeometry(Record, GeometryMixin):
         self.repetition = repetition
         self.properties = [] if properties is None else properties
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
         adjust_repetition(self, modals)
         adjust_field(self, 'layer', modals, 'layer')
         adjust_field(self, 'datatype', modals, 'datatype')
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_coordinates(self, modals, 'geometry_x', 'geometry_y')
         dedup_repetition(self, modals)
         dedup_field(self, 'layer', modals, 'layer')
@@ -1212,8 +1218,7 @@ class XGeometry(Record, GeometryMixin):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'XGeometry':
         if record_id != 33:
-            raise InvalidDataError('Invalid record id for XGeometry: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for XGeometry: {record_id}')
 
         z0, z1, z2, x, y, r, d, l = read_bool_byte(stream)
         if z0 or z1 or z2:
@@ -1233,7 +1238,7 @@ class XGeometry(Record, GeometryMixin):
             optional['repetition'] = read_repetition(stream)
 
         record = XGeometry(attribute, bstring, **optional)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -1269,17 +1274,17 @@ class Cell(Record):
     """
     name: Union[int, NString]
 
-    def __init__(self, name: Union[int, str, NString]):
+    def __init__(self, name: Union[int, str, NString]) -> None:
         """
         Args:
             name: `NString`, or an int specifying a `CellName` reference number.
         """
         self.name = name if isinstance(name, (int, NString)) else NString(name)
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         modals.reset()
 
     @staticmethod
@@ -1290,10 +1295,9 @@ class Cell(Record):
         elif record_id == 14:
             name = NString.read(stream)
         else:
-            raise InvalidDataError('Invalid record id for Cell: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Cell: {record_id}')
         record = Cell(name)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -1331,15 +1335,17 @@ class Placement(Record):
     flip: bool
     properties: List['Property']
 
-    def __init__(self,
-                 flip: bool,
-                 name: Union[NString, str, int, None] = None,
-                 magnification: Optional[real_t] = None,
-                 angle: Optional[real_t] = None,
-                 x: Optional[int] = None,
-                 y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            flip: bool,
+            name: Union[NString, str, int, None] = None,
+            magnification: Optional[real_t] = None,
+            angle: Optional[real_t] = None,
+            x: Optional[int] = None,
+            y: Optional[int] = None,
+            repetition: Optional[repetition_t] = None,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         """
         Args:
             flip: Whether to perform reflection about the x-axis.
@@ -1374,12 +1380,12 @@ class Placement(Record):
     def get_y(self) -> int:
         return verify_modal(self.y)
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_coordinates(self, modals, 'placement_x', 'placement_y')
         adjust_repetition(self, modals)
         adjust_field(self, 'name', modals, 'placement_cell')
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_coordinates(self, modals, 'placement_x', 'placement_y')
         dedup_repetition(self, modals)
         dedup_field(self, 'name', modals, 'placement_cell')
@@ -1387,8 +1393,7 @@ class Placement(Record):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Placement':
         if record_id not in (17, 18):
-            raise InvalidDataError('Invalid record id for Placement: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Placement: {record_id}')
 
         #CNXYRAAF (17) or CNXYRMAF (18)
         c, n, x, y, r, ma0, ma1, flip = read_bool_byte(stream)
@@ -1413,7 +1418,7 @@ class Placement(Record):
             optional['repetition'] = read_repetition(stream)
 
         record = Placement(flip, name, **optional)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -1479,14 +1484,16 @@ class Text(Record, GeometryMixin):
     repetition: Optional[repetition_t] = None
     properties: List['Property']
 
-    def __init__(self,
-                 string: Union[AString, str, int, None] = None,
-                 layer: Optional[int] = None,
-                 datatype: Optional[int] = None,
-                 x: Optional[int] = None,
-                 y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            string: Union[AString, str, int, None] = None,
+            layer: Optional[int] = None,
+            datatype: Optional[int] = None,
+            x: Optional[int] = None,
+            y: Optional[int] = None,
+            repetition: Optional[repetition_t] = None,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         """
         Args:
             string: Text content, or `TextString` reference number.
@@ -1512,14 +1519,14 @@ class Text(Record, GeometryMixin):
     def get_string(self) -> Union[AString, int]:
         return verify_modal(self.string)          # type: ignore
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_coordinates(self, modals, 'text_x', 'text_y')
         adjust_repetition(self, modals)
         adjust_field(self, 'string', modals, 'text_string')
         adjust_field(self, 'layer', modals, 'text_layer')
         adjust_field(self, 'datatype', modals, 'text_datatype')
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_coordinates(self, modals, 'text_x', 'text_y')
         dedup_repetition(self, modals)
         dedup_field(self, 'string', modals, 'text_string')
@@ -1529,8 +1536,7 @@ class Text(Record, GeometryMixin):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Text':
         if record_id != 19:
-            raise InvalidDataError('Invalid record id for Text: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Text: {record_id}')
 
         z0, c, n, x, y, r, d, l = read_bool_byte(stream)
         if z0:
@@ -1550,7 +1556,7 @@ class Text(Record, GeometryMixin):
             optional['repetition'] = read_repetition(stream)
 
         record = Text(string, **optional)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -1613,16 +1619,18 @@ class Rectangle(Record, GeometryMixin):
     is_square: bool = False
     properties: List['Property']
 
-    def __init__(self,
-                 is_square: bool = False,
-                 layer: Optional[int] = None,
-                 datatype: Optional[int] = None,
-                 width: Optional[int] = None,
-                 height: Optional[int] = None,
-                 x: Optional[int] = None,
-                 y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            is_square: bool = False,
+            layer: Optional[int] = None,
+            datatype: Optional[int] = None,
+            width: Optional[int] = None,
+            height: Optional[int] = None,
+            x: Optional[int] = None,
+            y: Optional[int] = None,
+            repetition: Optional[repetition_t] = None,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         self.is_square = is_square
         self.layer = layer
         self.datatype = datatype
@@ -1643,7 +1651,7 @@ class Rectangle(Record, GeometryMixin):
             return verify_modal(self.width)
         return verify_modal(self.height)
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
         adjust_repetition(self, modals)
         adjust_field(self, 'layer', modals, 'layer')
@@ -1654,7 +1662,7 @@ class Rectangle(Record, GeometryMixin):
         else:
             adjust_field(self, 'height', modals, 'geometry_h')
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_coordinates(self, modals, 'geometry_x', 'geometry_y')
         dedup_repetition(self, modals)
         dedup_field(self, 'layer', modals, 'layer')
@@ -1668,8 +1676,7 @@ class Rectangle(Record, GeometryMixin):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Rectangle':
         if record_id != 20:
-            raise InvalidDataError('Invalid record id for Rectangle: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Rectangle: {record_id}')
 
         is_square, w, h, x, y, r, d, l = read_bool_byte(stream)
         optional: Dict[str, Any] = {}
@@ -1688,7 +1695,7 @@ class Rectangle(Record, GeometryMixin):
         if r:
             optional['repetition'] = read_repetition(stream)
         record = Rectangle(is_square, **optional)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -1750,14 +1757,16 @@ class Polygon(Record, GeometryMixin):
     point_list: Optional[point_list_t] = None
     properties: List['Property']
 
-    def __init__(self,
-                 point_list: Optional[point_list_t] = None,
-                 layer: Optional[int] = None,
-                 datatype: Optional[int] = None,
-                 x: Optional[int] = None,
-                 y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            point_list: Optional[point_list_t] = None,
+            layer: Optional[int] = None,
+            datatype: Optional[int] = None,
+            x: Optional[int] = None,
+            y: Optional[int] = None,
+            repetition: Optional[repetition_t] = None,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         self.layer = layer
         self.datatype = datatype
         self.x = x
@@ -1773,14 +1782,14 @@ class Polygon(Record, GeometryMixin):
     def get_point_list(self) -> point_list_t:
         return verify_modal(self.point_list)
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
         adjust_repetition(self, modals)
         adjust_field(self, 'layer', modals, 'layer')
         adjust_field(self, 'datatype', modals, 'datatype')
         adjust_field(self, 'point_list', modals, 'polygon_point_list')
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_coordinates(self, modals, 'geometry_x', 'geometry_y')
         dedup_repetition(self, modals)
         dedup_field(self, 'layer', modals, 'layer')
@@ -1790,8 +1799,7 @@ class Polygon(Record, GeometryMixin):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Polygon':
         if record_id != 21:
-            raise InvalidDataError('Invalid record id for Polygon: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Polygon: {record_id}')
 
         z0, z1, p, x, y, r, d, l = read_bool_byte(stream)
         if z0 or z1:
@@ -1811,7 +1819,7 @@ class Polygon(Record, GeometryMixin):
         if r:
             optional['repetition'] = read_repetition(stream)
         record = Polygon(**optional)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug('Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase, fast: bool = False) -> int:
@@ -1876,17 +1884,19 @@ class Path(Record, GeometryMixin):
     extension_end: Optional[pathextension_t] = None
     properties: List['Property']
 
-    def __init__(self,
-                 point_list: Optional[point_list_t] = None,
-                 half_width: Optional[int] = None,
-                 extension_start: Optional[pathextension_t] = None,
-                 extension_end: Optional[pathextension_t] = None,
-                 layer: Optional[int] = None,
-                 datatype: Optional[int] = None,
-                 x: Optional[int] = None,
-                 y: Optional[int] = None,
-                 repetition: Optional[repetition_t] = None,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            point_list: Optional[point_list_t] = None,
+            half_width: Optional[int] = None,
+            extension_start: Optional[pathextension_t] = None,
+            extension_end: Optional[pathextension_t] = None,
+            layer: Optional[int] = None,
+            datatype: Optional[int] = None,
+            x: Optional[int] = None,
+            y: Optional[int] = None,
+            repetition: Optional[repetition_t] = None,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         self.layer = layer
         self.datatype = datatype
         self.x = x
@@ -1910,7 +1920,7 @@ class Path(Record, GeometryMixin):
     def get_extension_end(self) -> pathextension_t:
         return verify_modal(self.extension_end)
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
         adjust_repetition(self, modals)
         adjust_field(self, 'layer', modals, 'layer')
@@ -1920,7 +1930,7 @@ class Path(Record, GeometryMixin):
         adjust_field(self, 'extension_start', modals, 'path_extension_start')
         adjust_field(self, 'extension_end', modals, 'path_extension_end')
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_coordinates(self, modals, 'geometry_x', 'geometry_y')
         dedup_repetition(self, modals)
         dedup_field(self, 'layer', modals, 'layer')
@@ -1933,8 +1943,7 @@ class Path(Record, GeometryMixin):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Path':
         if record_id != 22:
-            raise InvalidDataError('Invalid record id for Path: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Path: {record_id}')
 
         e, w, p, x, y, r, d, l = read_bool_byte(stream)
         optional: Dict[str, Any] = {}
@@ -1959,7 +1968,7 @@ class Path(Record, GeometryMixin):
                 elif ext_scheme == 3:
                     return PathExtensionScheme.Arbitrary, read_sint(stream)
                 else:
-                    raise InvalidDataError('Invalid ext_scheme: {}'.format(ext_scheme))
+                    raise InvalidDataError(f'Invalid ext_scheme: {ext_scheme}')
 
             optional['extension_start'] = get_pathext(scheme_start)
             optional['extension_end'] = get_pathext(scheme_end)
@@ -1972,7 +1981,7 @@ class Path(Record, GeometryMixin):
         if r:
             optional['repetition'] = read_repetition(stream)
         record = Path(**optional)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase, fast: bool = False) -> int:
@@ -2058,18 +2067,20 @@ class Trapezoid(Record, GeometryMixin):
     is_vertical: bool
     properties: List['Property']
 
-    def __init__(self,
-                 is_vertical: bool,
-                 delta_a: int = 0,
-                 delta_b: int = 0,
-                 layer: int = None,
-                 datatype: int = None,
-                 width: int = None,
-                 height: int = None,
-                 x: int = None,
-                 y: int = None,
-                 repetition: repetition_t = None,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            is_vertical: bool,
+            delta_a: int = 0,
+            delta_b: int = 0,
+            layer: Optional[int] = None,
+            datatype: Optional[int] = None,
+            width: Optional[int] = None,
+            height: Optional[int] = None,
+            x: Optional[int] = None,
+            y: Optional[int] = None,
+            repetition: Optional[repetition_t] = None,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         """
         Raises:
             InvalidDataError: if dimensions are impossible.
@@ -2088,12 +2099,10 @@ class Trapezoid(Record, GeometryMixin):
 
         if self.is_vertical:
             if height is not None and delta_b - delta_a > height:
-                raise InvalidDataError('Trapezoid: h < delta_b - delta_a'
-                                       + ' ({} < {} - {})'.format(height, delta_b, delta_a))
+                raise InvalidDataError(f'Trapezoid: h < delta_b - delta_a ({height} < {delta_b} - {delta_a})')
         else:
             if width is not None and delta_b - delta_a > width:
-                raise InvalidDataError('Trapezoid: w < delta_b - delta_a'
-                                       + ' ({} < {} - {})'.format(width, delta_b, delta_a))
+                raise InvalidDataError(f'Trapezoid: w < delta_b - delta_a ({width} < {delta_b} - {delta_a})')
 
     def get_is_vertical(self) -> bool:
         return verify_modal(self.is_vertical)
@@ -2110,7 +2119,7 @@ class Trapezoid(Record, GeometryMixin):
     def get_height(self) -> int:
         return verify_modal(self.height)
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
         adjust_repetition(self, modals)
         adjust_field(self, 'layer', modals, 'layer')
@@ -2118,7 +2127,7 @@ class Trapezoid(Record, GeometryMixin):
         adjust_field(self, 'width', modals, 'geometry_w')
         adjust_field(self, 'height', modals, 'geometry_h')
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_coordinates(self, modals, 'geometry_x', 'geometry_y')
         dedup_repetition(self, modals)
         dedup_field(self, 'layer', modals, 'layer')
@@ -2129,8 +2138,7 @@ class Trapezoid(Record, GeometryMixin):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Trapezoid':
         if record_id not in (23, 24, 25):
-            raise InvalidDataError('Invalid record id for Trapezoid: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Trapezoid: {record_id}')
 
         is_vertical, w, h, x, y, r, d, l = read_bool_byte(stream)
         optional: Dict[str, Any] = {}
@@ -2153,7 +2161,7 @@ class Trapezoid(Record, GeometryMixin):
         if r:
             optional['repetition'] = read_repetition(stream)
         record = Trapezoid(bool(is_vertical), **optional)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -2260,16 +2268,18 @@ class CTrapezoid(Record, GeometryMixin):
     repetition: Optional[repetition_t] = None
     properties: List['Property']
 
-    def __init__(self,
-                 ctrapezoid_type: int = None,
-                 layer: int = None,
-                 datatype: int = None,
-                 width: int = None,
-                 height: int = None,
-                 x: int = None,
-                 y: int = None,
-                 repetition: repetition_t = None,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            ctrapezoid_type: Optional[int] = None,
+            layer: Optional[int] = None,
+            datatype: Optional[int] = None,
+            width: Optional[int] = None,
+            height: Optional[int] = None,
+            x: Optional[int] = None,
+            y: Optional[int] = None,
+            repetition: Optional[repetition_t] = None,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         """
         Raises:
             InvalidDataError: if dimensions are invalid.
@@ -2303,7 +2313,7 @@ class CTrapezoid(Record, GeometryMixin):
             return verify_modal(self.height)
         return verify_modal(self.width)
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
         adjust_repetition(self, modals)
         adjust_field(self, 'layer', modals, 'layer')
@@ -2312,21 +2322,19 @@ class CTrapezoid(Record, GeometryMixin):
 
         if self.ctrapezoid_type in (20, 21):
             if self.width is not None:
-                raise InvalidDataError('CTrapezoid has spurious width entry: '
-                                       '{}'.format(self.width))
+                raise InvalidDataError(f'CTrapezoid has spurious width entry: {self.width}')
         else:
             adjust_field(self, 'width', modals, 'geometry_w')
 
         if self.ctrapezoid_type in (16, 17, 18, 19, 22, 23, 25):
             if self.height is not None:
-                raise InvalidDataError('CTrapezoid has spurious height entry: '
-                                       '{}'.format(self.height))
+                raise InvalidDataError(f'CTrapezoid has spurious height entry: {self.height}')
         else:
             adjust_field(self, 'height', modals, 'geometry_h')
 
         self.check_valid()
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_coordinates(self, modals, 'geometry_x', 'geometry_y')
         dedup_repetition(self, modals)
         dedup_field(self, 'layer', modals, 'layer')
@@ -2337,15 +2345,13 @@ class CTrapezoid(Record, GeometryMixin):
 
         if self.ctrapezoid_type in (20, 21):
             if self.width is not None:
-                raise InvalidDataError('CTrapezoid has spurious width entry: '
-                                       '{}'.format(self.width))
+                raise InvalidDataError(f'CTrapezoid has spurious width entry: {self.width}')
         else:
             dedup_field(self, 'width', modals, 'geometry_w')
 
         if self.ctrapezoid_type in (16, 17, 18, 19, 22, 23, 25):
             if self.height is not None:
-                raise InvalidDataError('CTrapezoid has spurious height entry: '
-                                       '{}'.format(self.height))
+                raise InvalidDataError(f'CTrapezoid has spurious height entry: {self.height}')
         else:
             dedup_field(self, 'height', modals, 'geometry_h')
 
@@ -2354,8 +2360,7 @@ class CTrapezoid(Record, GeometryMixin):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'CTrapezoid':
         if record_id != 26:
-            raise InvalidDataError('Invalid record id for CTrapezoid: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for CTrapezoid: {record_id}')
 
         t, w, h, x, y, r, d, l = read_bool_byte(stream)
         optional: Dict[str, Any] = {}
@@ -2376,7 +2381,7 @@ class CTrapezoid(Record, GeometryMixin):
         if r:
             optional['repetition'] = read_repetition(stream)
         record = CTrapezoid(**optional)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -2409,35 +2414,28 @@ class CTrapezoid(Record, GeometryMixin):
             size += self.repetition.write(stream)       # type: ignore
         return size
 
-    def check_valid(self):
+    def check_valid(self) -> None:
         ctrapezoid_type = self.ctrapezoid_type
         width = self.width
         height = self.height
 
         if ctrapezoid_type in (20, 21) and width is not None:
-            raise InvalidDataError('CTrapezoid has spurious width entry: '
-                                   '{}'.format(width))
+            raise InvalidDataError(f'CTrapezoid has spurious width entry: {width}')
         if ctrapezoid_type in (16, 17, 18, 19, 22, 23, 25) and height is not None:
-            raise InvalidDataError('CTrapezoid has spurious height entry: '
-                                   '{}'.format(height))
+            raise InvalidDataError(f'CTrapezoid has spurious height entry: {height}')
 
         if width is not None and height is not None:
             if ctrapezoid_type in range(0, 4) and width < height:
-                raise InvalidDataError('CTrapezoid has width < height'
-                                       ' ({} < {})'.format(width, height))
+                raise InvalidDataError(f'CTrapezoid has width < height ({width} < {height})')
             if ctrapezoid_type in range(4, 8) and width < 2 * height:
-                raise InvalidDataError('CTrapezoid has width < 2*height'
-                                       ' ({} < 2 * {})'.format(width, height))
+                raise InvalidDataError(f'CTrapezoid has width < 2*height ({width} < 2 * {height})')
             if ctrapezoid_type in range(8, 12) and width > height:
-                raise InvalidDataError('CTrapezoid has width > height'
-                                       ' ({} > {})'.format(width, height))
+                raise InvalidDataError(f'CTrapezoid has width > height ({width} > {height})')
             if ctrapezoid_type in range(12, 16) and 2 * width > height:
-                raise InvalidDataError('CTrapezoid has 2*width > height'
-                                       ' ({} > 2 * {})'.format(width, height))
+                raise InvalidDataError(f'CTrapezoid has 2*width > height ({width} > 2 * {height})')
 
         if ctrapezoid_type is not None and ctrapezoid_type not in range(0, 26):
-            raise InvalidDataError('CTrapezoid has invalid type: '
-                                   '{}'.format(ctrapezoid_type))
+            raise InvalidDataError(f'CTrapezoid has invalid type: {ctrapezoid_type}')
 
 
 class Circle(Record, GeometryMixin):
@@ -2453,22 +2451,24 @@ class Circle(Record, GeometryMixin):
         repetition (Optional[repetition_t]): Repetition, if any
         properties (List[Property]): List of property records associate with this record.
     """
-    layer: Optional[int] = None
-    datatype: Optional[int] = None
-    x: Optional[int] = None
-    y: Optional[int] = None
-    repetition: Optional[repetition_t] = None
-    radius: Optional[int] = None
+    layer: Optional[int]
+    datatype: Optional[int]
+    x: Optional[int]
+    y: Optional[int]
+    repetition: Optional[repetition_t]
+    radius: Optional[int]
     properties: List['Property']
 
-    def __init__(self,
-                 radius: int = None,
-                 layer: int = None,
-                 datatype: int = None,
-                 x: int = None,
-                 y: int = None,
-                 repetition: repetition_t = None,
-                 properties: Optional[List['Property']] = None):
+    def __init__(
+            self,
+            radius: Optional[int] = None,
+            layer: Optional[int] = None,
+            datatype: Optional[int] = None,
+            x: Optional[int] = None,
+            y: Optional[int] = None,
+            repetition: Optional[repetition_t] = None,
+            properties: Optional[List['Property']] = None,
+            ) -> None:
         """
         Args:
             radius: Radius. Default `None` (reuse modal).
@@ -2493,14 +2493,14 @@ class Circle(Record, GeometryMixin):
     def get_radius(self) -> int:
         return verify_modal(self.radius)
 
-    def merge_with_modals(self, modals: Modals):
+    def merge_with_modals(self, modals: Modals) -> None:
         adjust_coordinates(self, modals, 'geometry_x', 'geometry_y')
         adjust_repetition(self, modals)
         adjust_field(self, 'layer', modals, 'layer')
         adjust_field(self, 'datatype', modals, 'datatype')
         adjust_field(self, 'radius', modals, 'circle_radius')
 
-    def deduplicate_with_modals(self, modals: Modals):
+    def deduplicate_with_modals(self, modals: Modals) -> None:
         dedup_coordinates(self, modals, 'geometry_x', 'geometry_y')
         dedup_repetition(self, modals)
         dedup_field(self, 'layer', modals, 'layer')
@@ -2510,8 +2510,7 @@ class Circle(Record, GeometryMixin):
     @staticmethod
     def read(stream: io.BufferedIOBase, record_id: int) -> 'Circle':
         if record_id != 27:
-            raise InvalidDataError('Invalid record id for Circle: '
-                                   '{}'.format(record_id))
+            raise InvalidDataError(f'Invalid record id for Circle: {record_id}')
 
         z0, z1, has_radius, x, y, r, d, l = read_bool_byte(stream)
         if z0 or z1:
@@ -2531,7 +2530,7 @@ class Circle(Record, GeometryMixin):
         if r:
             optional['repetition'] = read_repetition(stream)
         record = Circle(**optional)
-        logger.debug('Record ending at 0x{:x}:\n {}'.format(stream.tell(), record))
+        logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: io.BufferedIOBase) -> int:
@@ -2559,7 +2558,7 @@ class Circle(Record, GeometryMixin):
         return size
 
 
-def adjust_repetition(record, modals: Modals):
+def adjust_repetition(record, modals: Modals) -> None:
     """
     Merge the record's repetition entry with the one in the modals
 
@@ -2581,7 +2580,7 @@ def adjust_repetition(record, modals: Modals):
             modals.repetition = copy.copy(record.repetition)
 
 
-def adjust_field(record, r_field: str, modals: Modals, m_field: str):
+def adjust_field(record, r_field: str, modals: Modals, m_field: str) -> None:
     """
     Merge `record.r_field` with `modals.m_field`
 
@@ -2602,10 +2601,10 @@ def adjust_field(record, r_field: str, modals: Modals, m_field: str):
         if m is not None:
             setattr(record, r_field, copy.copy(m))
         else:
-            raise InvalidDataError('Unfillable field: {}'.format(m_field))
+            raise InvalidDataError(f'Unfillable field: {m_field}')
 
 
-def adjust_coordinates(record, modals: Modals, mx_field: str, my_field: str):
+def adjust_coordinates(record, modals: Modals, mx_field: str, my_field: str) -> None:
     """
     Merge `record.x` and `record.y` with `modals.mx_field` and `modals.my_field`,
      taking into account the value of `modals.xy_relative`.
@@ -2639,7 +2638,7 @@ def adjust_coordinates(record, modals: Modals, mx_field: str, my_field: str):
 
 
 # TODO: Clarify the docs on the dedup_* functions
-def dedup_repetition(record, modals: Modals):
+def dedup_repetition(record, modals: Modals) -> None:
     """
     Deduplicate the record's repetition entry with the one in the modals.
     Update the one in the modals if they are different.
@@ -2666,7 +2665,7 @@ def dedup_repetition(record, modals: Modals):
         modals.repetition = record.repetition
 
 
-def dedup_field(record, r_field: str, modals: Modals, m_field: str):
+def dedup_field(record, r_field: str, modals: Modals, m_field: str) -> None:
     """
     Deduplicate `record.r_field` using `modals.m_field`
     Update the `modals.m_field` if they are different.
@@ -2699,7 +2698,7 @@ def dedup_field(record, r_field: str, modals: Modals, m_field: str):
         raise InvalidDataError('Unfillable field')
 
 
-def dedup_coordinates(record, modals: Modals, mx_field: str, my_field: str):
+def dedup_coordinates(record, modals: Modals, mx_field: str, my_field: str) -> None:
     """
     Deduplicate `record.x` and `record.y` using `modals.mx_field` and `modals.my_field`,
      taking into account the value of `modals.xy_relative`.
