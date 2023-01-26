@@ -1,8 +1,5 @@
-from typing import List, Tuple, Iterable
 from itertools import chain
 from io import BytesIO
-
-import pytest       # type: ignore
 
 from ..basic import read_uint, read_sint, write_uint, write_sint
 

@@ -7,7 +7,6 @@ from fractions import Fraction
 from enum import Enum
 import math
 import struct
-import io
 import warnings
 
 try:
@@ -1663,13 +1662,13 @@ def write_point_list(
         if implicit_closed:
             ManhattanDelta(points[-1][0] - points[0][0], points[-1][1] - points[0][1])
         list_type = 2
-    except:
+    except InvalidDataError:
         try:
             deltas = [OctangularDelta(x, y) for x, y in points]
             if implicit_closed:
                 OctangularDelta(points[-1][0] - points[0][0], points[-1][1] - points[0][1])
             list_type = 3
-        except:
+        except InvalidDataError:
             pass
     if list_type is not None:
         size = write_uint(stream, list_type)

@@ -1,14 +1,11 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
-import struct
 
-import pytest       # type: ignore
+import pytest
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte
+from ..basic import write_uint, write_sint, write_bstring, write_byte
 from ..basic import InvalidRecordError, InvalidDataError
 from ..basic import GridRepetition, ArbitraryRepetition
 from ..main import OasisLayout
@@ -86,12 +83,12 @@ def common_tests(layout: OasisLayout) -> None:
     assert geometry[13].repetition.b_vector == [-10, 10]
 
     assert geometry[14].repetition.a_count == 3
-    assert geometry[14].repetition.b_count == None
+    assert geometry[14].repetition.b_count is None
     assert geometry[14].repetition.a_vector == [11, 12]
     assert geometry[14].repetition.b_vector is None
 
     assert geometry[15].repetition.a_count == 4
-    assert geometry[15].repetition.b_count == None
+    assert geometry[15].repetition.b_count is None
     assert geometry[15].repetition.a_vector == [-10, 10]
     assert geometry[15].repetition.b_vector is None
 
@@ -256,9 +253,9 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
     write_uint(buf, 8)               # repetition (3x4 matrix w/arb. vectors)
     write_uint(buf, 1)               # (repetition) n-dimension
     write_uint(buf, 2)               # (repetition) m-dimension
-    write_uint(buf, (10 << 4) | 0b0000) # (repetition) n-displacement g-delta: 10/east = (10, 0)
-    write_uint(buf, (11 << 2) | 0b11)   # (repetition) m-displacement g-delta: (-11, -12)
-    write_sint(buf, -12)                # (repetition g-delta)
+    write_uint(buf, (10 << 4) | 0b0000)  # (repetition) n-displacement g-delta: 10/east = (10, 0)
+    write_uint(buf, (11 << 2) | 0b11)    # (repetition) m-displacement g-delta: (-11, -12)
+    write_sint(buf, -12)                 # (repetition g-delta)
 
     # TEXT 13
     write_uint(buf, 19)              # TEXT record
@@ -267,9 +264,9 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
     write_uint(buf, 8)               # repetition (3x4 matrix w/arb. vectors)
     write_uint(buf, 1)               # (repetition) n-dimension
     write_uint(buf, 2)               # (repetition) m-dimension
-    write_uint(buf, (11 << 2) | 0b01)   # (repetition) n-displacement g-delta: (11, 12)
+    write_uint(buf, (11 << 2) | 0b01)    # (repetition) n-displacement g-delta: (11, 12)
     write_sint(buf, 12)
-    write_uint(buf, (10 << 4) | 0b1010) # (repetition) n-displacement g-delta: 10/northwest = (-10, 10)
+    write_uint(buf, (10 << 4) | 0b1010)  # (repetition) n-displacement g-delta: 10/northwest = (-10, 10)
 
     # TEXT 14
     write_uint(buf, 19)              # TEXT record

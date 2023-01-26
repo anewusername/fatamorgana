@@ -27,3 +27,4 @@ ignore =
 per-file-ignores =
     # F401 import without use
     */__init__.py: F401,
+    __init__.py: F401,

@@ -1,16 +1,10 @@
 # type: ignore
+from typing import Sequence
 
-from typing import List, Tuple, Iterable, Sequence
-from itertools import chain
 from io import BytesIO, BufferedIOBase
 
-import pytest       # type: ignore
-import numpy
-from numpy.testing import assert_equal
-
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte, PathExtensionScheme
-from ..basic import InvalidRecordError, InvalidDataError
+from ..basic import write_uint, write_sint, write_bstring, write_byte
 from ..main import OasisLayout
 
 
@@ -37,67 +31,67 @@ def base_tests(layout: OasisLayout) -> None:
 
 
 def write_names_geom(buf: BufferedIOBase, short: bool = False) -> BufferedIOBase:
-    write_uint(buf, 11)         # LAYERNAME record (geometry)
-    write_bstring(buf, b'AA')   # name
-    write_uint(buf, 0)          # all layers
-    write_uint(buf, 0)          # all datatypes
+    write_uint(buf, 11)           # LAYERNAME record (geometry)
+    write_bstring(buf, b'AA')     # name
+    write_uint(buf, 0)            # all layers
+    write_uint(buf, 0)            # all datatypes
 
-    write_uint(buf, 11)         # LAYERNAME record (geometry)
-    write_bstring(buf, b'L5A')  # name
-    write_uint(buf, 1)          # layer <=5
-    write_uint(buf, 5)          # (...)
-    write_uint(buf, 0)          # all datatypes
+    write_uint(buf, 11)           # LAYERNAME record (geometry)
+    write_bstring(buf, b'L5A')    # name
+    write_uint(buf, 1)            # layer <=5
+    write_uint(buf, 5)            # (...)
+    write_uint(buf, 0)            # all datatypes
 
-    write_uint(buf, 11)         # LAYERNAME record (geometry)
-    write_bstring(buf, b'H5A')  # name
-    write_uint(buf, 2)          # layer >=5
-    write_uint(buf, 5)          # (...)
-    write_uint(buf, 0)          # all datatypes
+    write_uint(buf, 11)           # LAYERNAME record (geometry)
+    write_bstring(buf, b'H5A')    # name
+    write_uint(buf, 2)            # layer >=5
+    write_uint(buf, 5)            # (...)
+    write_uint(buf, 0)            # all datatypes
 
-    write_uint(buf, 11)         # LAYERNAME record (geometry)
-    write_bstring(buf, b'E5A')  # name
-    write_uint(buf, 3)          # layer ==5
-    write_uint(buf, 5)          # (...)
-    write_uint(buf, 0)          # all datatypes
+    write_uint(buf, 11)           # LAYERNAME record (geometry)
+    write_bstring(buf, b'E5A')    # name
+    write_uint(buf, 3)            # layer ==5
+    write_uint(buf, 5)            # (...)
+    write_uint(buf, 0)            # all datatypes
 
-    write_uint(buf, 11)         # LAYERNAME record (geometry)
-    write_bstring(buf, b'I56A') # name
-    write_uint(buf, 4)          # layer 5 to 6
-    write_uint(buf, 5)          # (...)
-    write_uint(buf, 6)          # (...)
-    write_uint(buf, 0)          # all datatypes
+    write_uint(buf, 11)           # LAYERNAME record (geometry)
+    write_bstring(buf, b'I56A')   # name
+    write_uint(buf, 4)            # layer 5 to 6
+    write_uint(buf, 5)            # (...)
+    write_uint(buf, 6)            # (...)
+    write_uint(buf, 0)            # all datatypes
 
     if short:
         return buf
 
-    write_uint(buf, 11)         # LAYERNAME record (geometry)
-    write_bstring(buf, b'E5L4') # name
-    write_uint(buf, 3)          # layer ==5
-    write_uint(buf, 5)          # (...)
-    write_uint(buf, 1)          # datatype <=4
-    write_uint(buf, 4)          # (...)
+    write_uint(buf, 11)           # LAYERNAME record (geometry)
+    write_bstring(buf, b'E5L4')   # name
+    write_uint(buf, 3)            # layer ==5
+    write_uint(buf, 5)            # (...)
+    write_uint(buf, 1)            # datatype <=4
+    write_uint(buf, 4)            # (...)
 
-    write_uint(buf, 11)         # LAYERNAME record (geometry)
-    write_bstring(buf, b'E5H4') # name
-    write_uint(buf, 3)          # layer ==5
-    write_uint(buf, 5)          # (...)
-    write_uint(buf, 2)          # datatype >=4
-    write_uint(buf, 4)          # (...)
+    write_uint(buf, 11)           # LAYERNAME record (geometry)
+    write_bstring(buf, b'E5H4')   # name
+    write_uint(buf, 3)            # layer ==5
+    write_uint(buf, 5)            # (...)
+    write_uint(buf, 2)            # datatype >=4
+    write_uint(buf, 4)            # (...)
 
-    write_uint(buf, 11)         # LAYERNAME record (geometry)
-    write_bstring(buf, b'E5E4') # name
-    write_uint(buf, 3)          # layer ==5
-    write_uint(buf, 5)          # (...)
-    write_uint(buf, 3)          # datatype ==4
-    write_uint(buf, 4)          # (...)
+    write_uint(buf, 11)           # LAYERNAME record (geometry)
+    write_bstring(buf, b'E5E4')   # name
+    write_uint(buf, 3)            # layer ==5
+    write_uint(buf, 5)            # (...)
+    write_uint(buf, 3)            # datatype ==4
+    write_uint(buf, 4)            # (...)
 
-    write_uint(buf, 11)         # LAYERNAME record (geometry)
-    write_bstring(buf, b'E5I47') # name
-    write_uint(buf, 3)          # layer ==5
-    write_uint(buf, 5)          # (...)
-    write_uint(buf, 4)          # datatype 4 to 7
-    write_uint(buf, 4)          # (...)
-    write_uint(buf, 7)          # (...)
+    write_uint(buf, 11)           # LAYERNAME record (geometry)
+    write_bstring(buf, b'E5I47')  # name
+    write_uint(buf, 3)            # layer ==5
+    write_uint(buf, 5)            # (...)
+    write_uint(buf, 4)            # datatype 4 to 7
+    write_uint(buf, 4)            # (...)
+    write_uint(buf, 7)            # (...)
 
     return buf
 
@@ -127,7 +121,7 @@ def write_names_text(buf: BufferedIOBase, prefix: bytes = b'') -> BufferedIOBase
     write_uint(buf, 0)          # all datatypes
 
     write_uint(buf, 12)         # LAYERNAME record (geometry)
-    write_bstring(buf, prefix + b'I56A') # name
+    write_bstring(buf, prefix + b'I56A')  # name
     write_uint(buf, 4)          # layer 5 to 6
     write_uint(buf, 5)          # (...)
     write_uint(buf, 6)          # (...)
@@ -160,7 +154,8 @@ def write_text(buf: BufferedIOBase) -> BufferedIOBase:
 
 def name_test(layers: Sequence, is_textlayer: bool) -> None:
     for ii, nn in enumerate(layers):
-        assert is_textlayer == nn.is_textlayer, f'Fail on layername {ii}'
+        msg = f'Fail on layername {ii}'
+        assert is_textlayer == nn.is_textlayer, msg
 
         assert nn.nstring.string == ['AA', 'L5A', 'H5A', 'E5A', 'I56A',
                                      'E5L4', 'E5H4', 'E5E4', 'E5I47'][ii], msg
@@ -172,7 +167,8 @@ def name_test(layers: Sequence, is_textlayer: bool) -> None:
 
 def name_test_text(layers: Sequence) -> None:
     for ii, nn in enumerate(layers):
-        assert nn.is_textlayer, f'Fail on layername {ii}'
+        msg = f'Fail on layername {ii}'
+        assert nn.is_textlayer, msg
 
         assert nn.nstring.string == ['TAA', 'TL5A', 'TH5A', 'TE5A', 'TI56A'][ii], msg
         assert nn.layer_interval[0] == [None, None, 5, 5, 5][ii], msg

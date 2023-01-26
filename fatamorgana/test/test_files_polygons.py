@@ -1,17 +1,12 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
-import struct
 
-import pytest       # type: ignore
 import numpy
 from numpy.testing import assert_equal
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte
-from ..basic import InvalidRecordError, InvalidDataError
+from ..basic import write_uint, write_sint, write_bstring, write_byte
 from ..main import OasisLayout
 
 
@@ -85,8 +80,11 @@ def common_tests(layout: OasisLayout) -> None:
     for ii in range(4):
         msg = f'Fail on poly {ii}'
         assert len(geometry[0].point_list) == 6, msg
-        assert_equal(geometry[0].point_list, [[150, 0], [0, 50], [-50, 0], [0, 50],
-                                              [-100, 0], [0, -100]], err_msg=msg)
+        assert_equal(
+            geometry[0].point_list,
+            [[150, 0], [0, 50], [-50, 0], [0, 50], [-100, 0], [0, -100]],
+            err_msg=msg,
+            )
     assert len(geometry[4].point_list) == 6
     assert_equal(geometry[4].point_list, [[0, 150], [50, 0], [0, -50], [50, 0], [0, -100], [-100, 0]])
 
@@ -97,8 +95,10 @@ def common_tests(layout: OasisLayout) -> None:
     assert len(geometry[7].point_list) == 9
     assert_equal(geometry[7].point_list, [[25, 0], [50, 50], [0, 50], [-50, 50], [-50, 0], [-50, -50], [10, -75], [25, -25], [40, 0]])
     assert len(geometry[8].point_list) == 9
-    assert_equal(geometry[8].point_list,
-        numpy.cumsum([[25, 0], [50, 50], [0, 50], [-50, 50], [-50, 0], [-50, -50], [10, -75], [25, -25], [45, -575]], axis=0))
+    assert_equal(
+        geometry[8].point_list,
+        numpy.cumsum([[25, 0], [50, 50], [0, 50], [-50, 50], [-50, 0], [-50, -50], [10, -75], [25, -25], [45, -575]], axis=0),
+        )
 
     for ii in range(9, 12):
         msg = f'Fail on poly {ii}'
@@ -114,49 +114,49 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
     buf.write(HEADER)
 
     if variant == 3:
-        write_uint(buf, 7)           # PROPNAME record (implict id 0)
-        write_bstring(buf, b'PROP0') # property name
+        write_uint(buf, 7)            # PROPNAME record (implict id 0)
+        write_bstring(buf, b'PROP0')  # property name
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'ABC')   # Cell name
+    write_uint(buf, 14)               # CELL record (explicit)
+    write_bstring(buf, b'ABC')        # Cell name
 
     # POLYGON 0
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_1011) # 00PX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 0)           # pointlist: 1-delta, horiz-fisrt
-    write_uint(buf, 4)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, 0)           # geometry-x (absolute)
-    write_sint(buf, 100)         # geometry-y (absolute)
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_1011)  # 00PX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 0)            # pointlist: 1-delta, horiz-fisrt
+    write_uint(buf, 4)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, 0)            # geometry-x (absolute)
+    write_sint(buf, 100)          # geometry-y (absolute)
 
     if variant == 3:
         # PROPERTY 0
-        write_uint(buf, 28)          # PROPERTY record (explicit)
-        write_byte(buf, 0b0001_0110) # UUUU_VCNS
-        write_uint(buf, 0)           # propname id
-        write_uint(buf, 2)           # property value (real: positive reciprocal)
-        write_uint(buf, 5)           # (real) 1/5
+        write_uint(buf, 28)           # PROPERTY record (explicit)
+        write_byte(buf, 0b0001_0110)  # UUUU_VCNS
+        write_uint(buf, 0)            # propname id
+        write_uint(buf, 2)            # property value (real: positive reciprocal)
+        write_uint(buf, 5)            # (real) 1/5
 
     write_uint(buf, 16)          # XYRELATIVE record
 
     # Polygon 1
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_1011) # 00PX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 0)           # pointlist: 1-delta, horiz-fisrt
-    write_uint(buf, 4)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -200)        # geometry-x (relative)
-    write_sint(buf, 300)         # geometry-y (relative)
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_1011)  # 00PX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 0)            # pointlist: 1-delta, horiz-fisrt
+    write_uint(buf, 4)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -200)         # geometry-x (relative)
+    write_sint(buf, 300)          # geometry-y (relative)
 
     if variant == 3:
         # PROPERTY 1
@@ -165,55 +165,55 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
     write_uint(buf, 15)          # XYABSOLUTE record
 
     # Polygon 2
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_0011) # 00PX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_uint(buf, 0)           # pointlist: 1-delta, horiz-fisrt
-    write_uint(buf, 4)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, 0)           # geometry-x (absolute)
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_0011)  # 00PX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_uint(buf, 0)            # pointlist: 1-delta, horiz-fisrt
+    write_uint(buf, 4)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, 0)            # geometry-x (absolute)
 
     if variant == 3:
         # PROPERTY 2
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # Polygon 3
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0000_1000) # 00PX_YRDL
-    write_sint(buf, 1000)        # geometry-y (absolute)
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0000_1000)  # 00PX_YRDL
+    write_sint(buf, 1000)         # geometry-y (absolute)
 
     if variant == 3:
         # PROPERTY 3
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # Polygon 4
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_0011) # 00PX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_uint(buf, 1)           # pointlist: 1-delta, vert-fisrt
-    write_uint(buf, 4)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, 200)         # geometry-x (absolute)
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_0011)  # 00PX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_uint(buf, 1)            # pointlist: 1-delta, vert-fisrt
+    write_uint(buf, 4)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, 200)          # geometry-x (absolute)
 
     if variant == 3:
         # PROPERTY 4
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # Polygon 5
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_0011) # 00PX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_uint(buf, 2)           # pointlist: 2-delta
-    write_uint(buf, 7)           # (pointlist) dimension
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_0011)  # 00PX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_uint(buf, 2)            # pointlist: 2-delta
+    write_uint(buf, 7)            # (pointlist) dimension
     write_uint(buf, 150 << 2 | 0b00)  # (pointlist)
     write_uint(buf,  50 << 2 | 0b01)  # (pointlist)
     write_uint(buf,  50 << 2 | 0b10)  # (pointlist)
@@ -228,12 +228,12 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # Polygon 6
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_0011) # 00PX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_uint(buf, 3)           # pointlist: 3-delta
-    write_uint(buf, 8)           # (pointlist) dimension
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_0011)  # 00PX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_uint(buf, 3)            # pointlist: 3-delta
+    write_uint(buf, 8)            # (pointlist) dimension
     write_uint(buf, 25 << 3 | 0b000)  # (pointlist)
     write_uint(buf, 50 << 3 | 0b100)  # (pointlist)
     write_uint(buf, 50 << 3 | 0b001)  # (pointlist)
@@ -249,12 +249,12 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # Polygon 7
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_0011) # 00PX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_uint(buf, 4)           # pointlist: g-delta
-    write_uint(buf, 8)           # (pointlist) dimension
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_0011)  # 00PX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_uint(buf, 4)            # pointlist: g-delta
+    write_uint(buf, 8)            # (pointlist) dimension
     write_uint(buf, 25 << 4 | 0b0000)  # (pointlist)
     write_uint(buf, 50 << 4 | 0b1000)  # (pointlist)
     write_uint(buf, 50 << 4 | 0b0010)  # (pointlist)
@@ -263,7 +263,7 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
     write_uint(buf, 50 << 4 | 0b0100)  # (pointlist)
     write_uint(buf, 50 << 4 | 0b1100)  # (pointlist)
     write_uint(buf, 10 << 2 | 0b01)    # (pointlist)
-    write_sint(buf, -75 )
+    write_sint(buf, -75)
     write_uint(buf, 25 << 4 | 0b1110)  # (pointlist)
     write_sint(buf, 900)         # geometry-x (absolute)
 
@@ -272,12 +272,12 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # Polygon 8
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_0011) # 00PX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_uint(buf, 5)           # pointlist: double g-delta
-    write_uint(buf, 8)           # (pointlist) dimension
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_0011)  # 00PX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_uint(buf, 5)            # pointlist: double g-delta
+    write_uint(buf, 8)            # (pointlist) dimension
     write_uint(buf, 25 << 4 | 0b0000)  # (pointlist)
     write_uint(buf, 50 << 4 | 0b1000)  # (pointlist)
     write_uint(buf, 50 << 4 | 0b0010)  # (pointlist)
@@ -286,7 +286,7 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
     write_uint(buf, 50 << 4 | 0b0100)  # (pointlist)
     write_uint(buf, 50 << 4 | 0b1100)  # (pointlist)
     write_uint(buf, 10 << 2 | 0b01)    # (pointlist)
-    write_sint(buf, -75 )
+    write_sint(buf, -75)
     write_uint(buf, 25 << 4 | 0b1110)  # (pointlist)
     write_sint(buf, 1100)         # geometry-x (absolute)
 
@@ -295,62 +295,62 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # Polygon 9
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_1111) # 00PX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_uint(buf, 1)           # pointlist: 1-delta (vert. first)
-    write_uint(buf, 4)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf,  50)         # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf,  50)         # (pointlist)
-    write_sint(buf,    0)        # geometry-x (absolute)
-    write_sint(buf, 2000)        # geometry-y (absolute)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 200)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_1111)  # 00PX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_uint(buf, 1)            # pointlist: 1-delta (vert. first)
+    write_uint(buf, 4)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf,  50)          # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf,  50)          # (pointlist)
+    write_sint(buf,    0)         # geometry-x (absolute)
+    write_sint(buf, 2000)         # geometry-y (absolute)
+    write_uint(buf, 1)            # repetition (3x4 matrix)
+    write_uint(buf, 1)            # (repetition) x-dimension
+    write_uint(buf, 2)            # (repetition) y-dimension
+    write_uint(buf, 200)          # (repetition) x-spacing
+    write_uint(buf, 300)          # (repetition) y-spacing
 
     if variant == 3:
         # PROPERTY 9
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
     # Polygon 10
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_0110) # 00PX_YRDL
-    write_uint(buf, 1)           # datatype
-    write_uint(buf, 1)           # pointlist: 1-delta (vert. first)
-    write_uint(buf, 4)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf,  50)         # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf,  50)         # (pointlist)
-    write_sint(buf, 1000)        # geometry-x (relative)
-    write_uint(buf, 0)           # repetition (reuse)
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_0110)  # 00PX_YRDL
+    write_uint(buf, 1)            # datatype
+    write_uint(buf, 1)            # pointlist: 1-delta (vert. first)
+    write_uint(buf, 4)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf,  50)          # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf,  50)          # (pointlist)
+    write_sint(buf, 1000)         # geometry-x (relative)
+    write_uint(buf, 0)            # repetition (reuse)
 
     if variant == 3:
         # PROPERTY 10
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # Polygon 11
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_0110) # 00PX_YRDL
-    write_uint(buf, 1)           # datatype
-    write_uint(buf, 1)           # pointlist: 1-delta (vert. first)
-    write_uint(buf, 4)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf,  50)         # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf,  50)         # (pointlist)
-    write_sint(buf, 1000)        # geometry-x (relative)
-    write_uint(buf, 6)           # repetition (3 rows)
-    write_uint(buf, 1)           # (repetition) dimension
-    write_uint(buf, 200)         # (repetition) y-delta
-    write_uint(buf, 300)         # (repetition) y-delta
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_0110)  # 00PX_YRDL
+    write_uint(buf, 1)            # datatype
+    write_uint(buf, 1)            # pointlist: 1-delta (vert. first)
+    write_uint(buf, 4)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf,  50)          # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf,  50)          # (pointlist)
+    write_sint(buf, 1000)         # geometry-x (relative)
+    write_uint(buf, 6)            # repetition (3 rows)
+    write_uint(buf, 1)            # (repetition) dimension
+    write_uint(buf, 200)          # (repetition) y-delta
+    write_uint(buf, 300)          # (repetition) y-delta
 
     if variant == 3:
         # PROPERTY 11
@@ -386,21 +386,21 @@ def write_file_2(buf: BufferedIOBase) -> BufferedIOBase:
     write_uint(buf, 15)          # XYRELATIVE record
 
     # POLYGON 0
-    write_uint(buf, 21)          # POLYGON record
-    write_byte(buf, 0b0011_0011) # 00PX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_uint(buf, 4)           # pointlist: g-delta
-    write_uint(buf, 8002)        # (pointlist) dimension
-    write_uint(buf, 1000 << 2 | 0b11)   # (pointlist)
-    write_sint(buf, 0)                  # (pointlist)
+    write_uint(buf, 21)           # POLYGON record
+    write_byte(buf, 0b0011_0011)  # 00PX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_uint(buf, 4)            # pointlist: g-delta
+    write_uint(buf, 8002)         # (pointlist) dimension
+    write_uint(buf, 1000 << 2 | 0b11)    # (pointlist)
+    write_sint(buf, 0)                   # (pointlist)
     for _ in range(4000):
-        write_uint(buf, 10 << 2 | 0b01) # (pointlist)
-        write_sint(buf, 20)             # (pointlist)
-        write_uint(buf, 10 << 2 | 0b11) # (pointlist)
-        write_sint(buf, 20)             # (pointlist)
-    write_uint(buf, 1000 << 2 | 0b01)   # (pointlist)
-    write_sint(buf, 0)                  # (pointlist)
+        write_uint(buf, 10 << 2 | 0b01)  # (pointlist)
+        write_sint(buf, 20)              # (pointlist)
+        write_uint(buf, 10 << 2 | 0b11)  # (pointlist)
+        write_sint(buf, 20)              # (pointlist)
+    write_uint(buf, 1000 << 2 | 0b01)    # (pointlist)
+    write_sint(buf, 0)                   # (pointlist)
     write_sint(buf, 0)           # geometry-x (absolute)
 
     buf.write(FOOTER)
@@ -425,7 +425,8 @@ def test_file_2() -> None:
     assert_equal(poly.point_list,
          ([[-1000, 0]]
         + [[(-1) ** nn * 10, 20] for nn in range(8000)]
-        + [[1000, 0], [0, -20 * 8000]]))
+        + [[1000, 0], [0, -20 * 8000]]),
+        )
 
 
 def test_file_3() -> None:

@@ -1,17 +1,9 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
-import struct
-
-import pytest       # type: ignore
-import numpy
-from numpy.testing import assert_equal
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte, PathExtensionScheme
-from ..basic import InvalidRecordError, InvalidDataError
+from ..basic import write_uint, write_sint, write_bstring, write_byte
 from ..main import OasisLayout
 
 
@@ -37,145 +29,145 @@ def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
     '''
     buf.write(HEADER)
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'ABC')   # Cell name
+    write_uint(buf, 14)           # CELL record (explicit)
+    write_bstring(buf, b'ABC')    # Cell name
 
     # Trapezoid 0
-    write_uint(buf, 23)          # TRAPEZOID record
-    write_byte(buf, 0b0111_1011) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 100)         # width
-    write_uint(buf, 50)          # height
-    write_sint(buf, -20)         # delta-a
-    write_sint(buf,  40)         # delta-b
-    write_sint(buf, 0)           # geometry-x (absolute)
-    write_sint(buf, 100)         # geometry-y (absolute)
+    write_uint(buf, 23)           # TRAPEZOID record
+    write_byte(buf, 0b0111_1011)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 100)          # width
+    write_uint(buf, 50)           # height
+    write_sint(buf, -20)          # delta-a
+    write_sint(buf,  40)          # delta-b
+    write_sint(buf, 0)            # geometry-x (absolute)
+    write_sint(buf, 100)          # geometry-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
     # Trapezoid 1
-    write_uint(buf, 23)          # TRAPEZOID record
-    write_byte(buf, 0b1010_1011) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 50)          # height
-    write_sint(buf, 20)          # delta-a
-    write_sint(buf, 40)          # delta-b
-    write_sint(buf, 300)         # geometry-y (absolute)
+    write_uint(buf, 23)           # TRAPEZOID record
+    write_byte(buf, 0b1010_1011)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 50)           # height
+    write_sint(buf, 20)           # delta-a
+    write_sint(buf, 40)           # delta-b
+    write_sint(buf, 300)          # geometry-y (absolute)
 
     # Trapezoid 2
-    write_uint(buf, 23)          # TRAPEZOID record
-    write_byte(buf, 0b1100_1001) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 150)         # width
-    write_sint(buf, 20)          # delta-a
-    write_sint(buf, -20)         # delta-b
-    write_sint(buf, 300)         # geometry-y (relative)
+    write_uint(buf, 23)           # TRAPEZOID record
+    write_byte(buf, 0b1100_1001)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 150)          # width
+    write_sint(buf, 20)           # delta-a
+    write_sint(buf, -20)          # delta-b
+    write_sint(buf, 300)          # geometry-y (relative)
 
     # Trapezoid 3
-    write_uint(buf, 23)          # TRAPEZOID record
-    write_byte(buf, 0b0100_1101) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 150)         # width
-    write_sint(buf, 20)          # delta-a
-    write_sint(buf, -20)         # delta-b
-    write_sint(buf, 300)         # geometry-y (relative)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 200)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 23)           # TRAPEZOID record
+    write_byte(buf, 0b0100_1101)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 150)          # width
+    write_sint(buf, 20)           # delta-a
+    write_sint(buf, -20)          # delta-b
+    write_sint(buf, 300)          # geometry-y (relative)
+    write_uint(buf, 1)            # repetition (3x4 matrix)
+    write_uint(buf, 1)            # (repetition) x-dimension
+    write_uint(buf, 2)            # (repetition) y-dimension
+    write_uint(buf, 200)          # (repetition) x-spacing
+    write_uint(buf, 300)          # (repetition) y-spacing
 
-    write_uint(buf, 15)          # XYABSOLUTE record
+    write_uint(buf, 15)           # XYABSOLUTE record
 
     # Trapezoid 4
-    write_uint(buf, 24)          # TRAPEZOID record
-    write_byte(buf, 0b0111_1011) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 100)         # width
-    write_uint(buf, 50)          # height
-    write_sint(buf, -20)         # delta-a
-    write_sint(buf, 1000)        # geometry-x (absolute)
-    write_sint(buf, 100)         # geometry-y (absolute)
+    write_uint(buf, 24)           # TRAPEZOID record
+    write_byte(buf, 0b0111_1011)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 100)          # width
+    write_uint(buf, 50)           # height
+    write_sint(buf, -20)          # delta-a
+    write_sint(buf, 1000)         # geometry-x (absolute)
+    write_sint(buf, 100)          # geometry-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
     # Trapezoid 5
-    write_uint(buf, 24)          # TRAPEZOID record
-    write_byte(buf, 0b1010_1011) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 50)          # height
-    write_sint(buf, 20)          # delta-a
-    write_sint(buf, 300)         # geometry-y (relative)
+    write_uint(buf, 24)           # TRAPEZOID record
+    write_byte(buf, 0b1010_1011)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 50)           # height
+    write_sint(buf, 20)           # delta-a
+    write_sint(buf, 300)          # geometry-y (relative)
 
     # Trapezoid 6
-    write_uint(buf, 24)          # TRAPEZOID record
-    write_byte(buf, 0b1100_1001) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 150)         # width
-    write_sint(buf, 20)          # delta-a
-    write_sint(buf, 300)         # geometry-y (relative)
+    write_uint(buf, 24)           # TRAPEZOID record
+    write_byte(buf, 0b1100_1001)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 150)          # width
+    write_sint(buf, 20)           # delta-a
+    write_sint(buf, 300)          # geometry-y (relative)
 
     # Trapezoid 7
-    write_uint(buf, 24)          # TRAPEZOID record
-    write_byte(buf, 0b0100_1101) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 150)         # width
-    write_sint(buf, 20)          # delta-a
-    write_sint(buf, 300)         # geometry-y (relative)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 200)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 24)           # TRAPEZOID record
+    write_byte(buf, 0b0100_1101)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 150)          # width
+    write_sint(buf, 20)           # delta-a
+    write_sint(buf, 300)          # geometry-y (relative)
+    write_uint(buf, 1)            # repetition (3x4 matrix)
+    write_uint(buf, 1)            # (repetition) x-dimension
+    write_uint(buf, 2)            # (repetition) y-dimension
+    write_uint(buf, 200)          # (repetition) x-spacing
+    write_uint(buf, 300)          # (repetition) y-spacing
 
-    write_uint(buf, 15)          # XYABSOLUTE record
+    write_uint(buf, 15)           # XYABSOLUTE record
 
     # Trapezoid 8
-    write_uint(buf, 25)          # TRAPEZOID record
-    write_byte(buf, 0b0111_1011) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 100)         # width
-    write_uint(buf, 50)          # height
-    write_sint(buf, 40)          # delta-b
-    write_sint(buf, 2000)        # geometry-x (absolute)
-    write_sint(buf, 100)         # geometry-y (absolute)
+    write_uint(buf, 25)           # TRAPEZOID record
+    write_byte(buf, 0b0111_1011)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 100)          # width
+    write_uint(buf, 50)           # height
+    write_sint(buf, 40)           # delta-b
+    write_sint(buf, 2000)         # geometry-x (absolute)
+    write_sint(buf, 100)          # geometry-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
     # Trapezoid 9
-    write_uint(buf, 25)          # TRAPEZOID record
-    write_byte(buf, 0b1010_1011) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 50)          # height
-    write_sint(buf, 40)          # delta-b
-    write_sint(buf, 300)         # geometry-y (relative)
+    write_uint(buf, 25)           # TRAPEZOID record
+    write_byte(buf, 0b1010_1011)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 50)           # height
+    write_sint(buf, 40)           # delta-b
+    write_sint(buf, 300)          # geometry-y (relative)
 
     # Trapezoid 10
-    write_uint(buf, 25)          # TRAPEZOID record
-    write_byte(buf, 0b1100_1001) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 150)         # width
-    write_sint(buf, -20)         # delta-b
-    write_sint(buf, 300)         # geometry-y (relative)
+    write_uint(buf, 25)           # TRAPEZOID record
+    write_byte(buf, 0b1100_1001)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 150)          # width
+    write_sint(buf, -20)          # delta-b
+    write_sint(buf, 300)          # geometry-y (relative)
 
     # Trapezoid 11
-    write_uint(buf, 25)          # TRAPEZOID record
-    write_byte(buf, 0b0100_1101) # OWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 150)         # width
-    write_sint(buf, -20)         # delta-b
-    write_sint(buf, 300)         # geometry-y (relative)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 200)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 25)           # TRAPEZOID record
+    write_byte(buf, 0b0100_1101)  # OWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 150)          # width
+    write_sint(buf, -20)          # delta-b
+    write_sint(buf, 300)          # geometry-y (relative)
+    write_uint(buf, 1)            # repetition (3x4 matrix)
+    write_uint(buf, 1)            # (repetition) x-dimension
+    write_uint(buf, 2)            # (repetition) y-dimension
+    write_uint(buf, 200)          # (repetition) x-spacing
+    write_uint(buf, 300)          # (repetition) y-spacing
 
     buf.write(FOOTER)
     return buf

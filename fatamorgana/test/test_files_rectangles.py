@@ -1,15 +1,9 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
-import struct
-
-import pytest       # type: ignore
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte
-from ..basic import InvalidRecordError, InvalidDataError
+from ..basic import write_uint, write_sint, write_bstring, write_byte
 from ..main import OasisLayout
 
 
@@ -88,149 +82,149 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
     buf.write(HEADER)
 
     if variant == 2:
-        write_uint(buf, 7)           # PROPNAME record (implict id 0)
-        write_bstring(buf, b'PROP0') # property name
+        write_uint(buf, 7)            # PROPNAME record (implict id 0)
+        write_bstring(buf, b'PROP0')  # property name
 
     write_uint(buf, 14)          # CELL record (explicit)
     write_bstring(buf, b'ABC')   # Cell name
 
     # RECTANGLE 0
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0111_1011) # SWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 100)         # width
-    write_uint(buf, 200)         # height
-    write_sint(buf, 300)         # geometry-x (absolute)
-    write_sint(buf, -400)        # geometry-y (absolute)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0111_1011)  # SWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 100)          # width
+    write_uint(buf, 200)          # height
+    write_sint(buf, 300)          # geometry-x (absolute)
+    write_sint(buf, -400)         # geometry-y (absolute)
 
     if variant == 2:
         # PROPERTY 0
-        write_uint(buf, 28)          # PROPERTY record (explicit)
-        write_byte(buf, 0b0001_0110) # UUUU_VCNS
-        write_uint(buf, 0)           # propname id
-        write_uint(buf, 2)           # property value (real: positive reciprocal)
-        write_uint(buf, 5)           # (real) 1/5
+        write_uint(buf, 28)           # PROPERTY record (explicit)
+        write_byte(buf, 0b0001_0110)  # UUUU_VCNS
+        write_uint(buf, 0)            # propname id
+        write_uint(buf, 2)            # property value (real: positive reciprocal)
+        write_uint(buf, 5)            # (real) 1/5
 
     write_uint(buf, 16)          # XYRELATIVE record
 
     # RECTANGLE 1
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0111_1011) # SWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 100)         # width
-    write_uint(buf, 200)         # height
-    write_sint(buf, 100)         # geometry-x (relative)
-    write_sint(buf, -100)        # geometry-y (relative)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0111_1011)  # SWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 100)          # width
+    write_uint(buf, 200)          # height
+    write_sint(buf, 100)          # geometry-x (relative)
+    write_sint(buf, -100)         # geometry-y (relative)
 
     if variant == 2:
         # PROPERTY 1
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
-    write_uint(buf, 15)          # XYABSOLUTE record
+    write_uint(buf, 15)           # XYABSOLUTE record
 
     # RECTANGLE 2
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0111_1011) # SWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 100)         # width
-    write_uint(buf, 200)         # height
-    write_sint(buf, 600)         # geometry-x (absolute)
-    write_sint(buf, -300)        # geometry-y (absolute)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0111_1011)  # SWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 100)          # width
+    write_uint(buf, 200)          # height
+    write_sint(buf, 600)          # geometry-x (absolute)
+    write_sint(buf, -300)         # geometry-y (absolute)
 
     if variant == 2:
         # PROPERTY 2
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # RECTANGLE 3
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0111_0011) # SWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 100)         # width
-    write_uint(buf, 200)         # height
-    write_sint(buf, 800)         # geometry-x (absolute)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0111_0011)  # SWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 100)          # width
+    write_uint(buf, 200)          # height
+    write_sint(buf, 800)          # geometry-x (absolute)
 
     if variant == 2:
         # PROPERTY 3
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # RECTANGLE 4
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0110_1011) # SWHX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_uint(buf, 100)         # width
-    write_uint(buf, 200)         # height
-    write_sint(buf, -600)        # geometry-y (absolute)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0110_1011)  # SWHX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_uint(buf, 100)          # width
+    write_uint(buf, 200)          # height
+    write_sint(buf, -600)         # geometry-y (absolute)
 
     if variant == 2:
         # PROPERTY 4
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # RECTANGLE 5
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0110_1000) # SWHX_YRDL
-    write_uint(buf, 100)         # width
-    write_uint(buf, 200)         # height
-    write_sint(buf, -900)        # geometry-y (absolute)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0110_1000)  # SWHX_YRDL
+    write_uint(buf, 100)          # width
+    write_uint(buf, 200)          # height
+    write_sint(buf, -900)         # geometry-y (absolute)
 
     if variant == 2:
         # PROPERTY 5
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # RECTANGLE 6
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0000_1000) # SWHX_YRDL
-    write_sint(buf, -1200)       # geometry-y (absolute)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0000_1000)  # SWHX_YRDL
+    write_sint(buf, -1200)        # geometry-y (absolute)
 
     if variant == 2:
         # PROPERTY 6
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # RECTANGLE 7
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b1100_1000) # SWHX_YRDL
-    write_uint(buf, 150)         # width
-    write_sint(buf, -1500)       # geometry-y (absolute)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b1100_1000)  # SWHX_YRDL
+    write_uint(buf, 150)          # width
+    write_sint(buf, -1500)        # geometry-y (absolute)
 
     if variant == 2:
         # PROPERTY 7
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # RECTANGLE 8
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0000_1000) # SWHX_YRDL
-    write_sint(buf, -1800)       # geometry-y (absolute)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0000_1000)  # SWHX_YRDL
+    write_sint(buf, -1800)        # geometry-y (absolute)
 
     if variant == 2:
         # PROPERTY 8
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # RECTANGLE 9
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0000_1100) # SWHX_YRDL
-    write_sint(buf, 500)         # geometry-y (absolute)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 200)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0000_1100)  # SWHX_YRDL
+    write_sint(buf, 500)          # geometry-y (absolute)
+    write_uint(buf, 1)            # repetition (3x4 matrix)
+    write_uint(buf, 1)            # (repetition) x-dimension
+    write_uint(buf, 2)            # (repetition) y-dimension
+    write_uint(buf, 200)          # (repetition) x-spacing
+    write_uint(buf, 300)          # (repetition) y-spacing
 
     if variant == 2:
         # PROPERTY 9
         write_uint(buf, 29)          # PROPERTY record (repeat)
 
     # RECTANGLE 10
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0000_1100) # SWHX_YRDL
-    write_sint(buf, 2000)        # geometry-y (absolute)
-    write_uint(buf, 4)           # repetition (3 arbitrary cols.)
-    write_uint(buf, 1)           # (repetition) dimension
-    write_uint(buf, 200)         # (repetition) x-delta
-    write_uint(buf, 300)         # (repetition) x-delta
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0000_1100)  # SWHX_YRDL
+    write_sint(buf, 2000)         # geometry-y (absolute)
+    write_uint(buf, 4)            # repetition (3 arbitrary cols.)
+    write_uint(buf, 1)            # (repetition) dimension
+    write_uint(buf, 200)          # (repetition) x-delta
+    write_uint(buf, 300)          # (repetition) x-delta
 
     if variant == 2:
         # PROPERTY 10

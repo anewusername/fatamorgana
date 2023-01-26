@@ -1,17 +1,9 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
-import struct
-
-import pytest       # type: ignore
-import numpy
-from numpy.testing import assert_equal
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte, PathExtensionScheme
-from ..basic import InvalidRecordError, InvalidDataError
+from ..basic import write_uint, write_sint, write_bstring, write_byte
 from ..main import OasisLayout
 
 
@@ -37,52 +29,52 @@ def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
     '''
     buf.write(HEADER)
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'A')     # Cell name
+    write_uint(buf, 14)           # CELL record (explicit)
+    write_bstring(buf, b'A')      # Cell name
 
-    write_uint(buf, 27)          # CIRCLE record
-    write_byte(buf, 0b0011_1011) # 00rX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 150)         # radius
-    write_sint(buf, -100)        # geometry-x (absolute)
-    write_sint(buf, 200)         # geometry-y (absolute)
+    write_uint(buf, 27)           # CIRCLE record
+    write_byte(buf, 0b0011_1011)  # 00rX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 150)          # radius
+    write_sint(buf, -100)         # geometry-x (absolute)
+    write_sint(buf, 200)          # geometry-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
-    write_uint(buf, 27)          # CIRCLE record
-    write_byte(buf, 0b0000_1000) # 00rX_YRDL
-    write_sint(buf, 400)         # geometry-y (relative)
+    write_uint(buf, 27)           # CIRCLE record
+    write_byte(buf, 0b0000_1000)  # 00rX_YRDL
+    write_sint(buf, 400)          # geometry-y (relative)
 
-    write_uint(buf, 27)          # CIRCLE record
-    write_byte(buf, 0b0010_1000) # 00rX_YRDL
-    write_uint(buf, 0)           # radius
-    write_sint(buf, 400)         # geometry-y (relative)
+    write_uint(buf, 27)           # CIRCLE record
+    write_byte(buf, 0b0010_1000)  # 00rX_YRDL
+    write_uint(buf, 0)            # radius
+    write_sint(buf, 400)          # geometry-y (relative)
 
-    write_uint(buf, 27)          # CIRCLE record
-    write_byte(buf, 0b0010_1000) # 00rX_YRDL
-    write_uint(buf, 1)           # radius
-    write_sint(buf, 400)         # geometry-y (relative)
+    write_uint(buf, 27)           # CIRCLE record
+    write_byte(buf, 0b0010_1000)  # 00rX_YRDL
+    write_uint(buf, 1)            # radius
+    write_sint(buf, 400)          # geometry-y (relative)
 
-    write_uint(buf, 27)          # CIRCLE record
-    write_byte(buf, 0b0010_1000) # 00rX_YRDL
-    write_uint(buf, 6)           # radius
-    write_sint(buf, 400)         # geometry-y (relative)
+    write_uint(buf, 27)           # CIRCLE record
+    write_byte(buf, 0b0010_1000)  # 00rX_YRDL
+    write_uint(buf, 6)            # radius
+    write_sint(buf, 400)          # geometry-y (relative)
 
-    write_uint(buf, 27)          # CIRCLE record
-    write_byte(buf, 0b0010_1000) # 00rX_YRDL
-    write_uint(buf, 20)          # radius
-    write_sint(buf, 400)         # geometry-y (relative)
+    write_uint(buf, 27)           # CIRCLE record
+    write_byte(buf, 0b0010_1000)  # 00rX_YRDL
+    write_uint(buf, 20)           # radius
+    write_sint(buf, 400)          # geometry-y (relative)
 
-    write_uint(buf, 27)          # CIRCLE record
-    write_byte(buf, 0b0010_1100) # 00rX_YRDL
-    write_uint(buf, 100)         # radius
-    write_sint(buf, 400)         # geometry-y (relative)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 400)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 27)           # CIRCLE record
+    write_byte(buf, 0b0010_1100)  # 00rX_YRDL
+    write_uint(buf, 100)          # radius
+    write_sint(buf, 400)          # geometry-y (relative)
+    write_uint(buf, 1)            # repetition (3x4 matrix)
+    write_uint(buf, 1)            # (repetition) x-dimension
+    write_uint(buf, 2)            # (repetition) y-dimension
+    write_uint(buf, 400)          # (repetition) x-spacing
+    write_uint(buf, 300)          # (repetition) y-spacing
 
     buf.write(FOOTER)
     return buf

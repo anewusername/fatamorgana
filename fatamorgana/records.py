@@ -383,7 +383,7 @@ class Start(Record):
     def __init__(
             self,
             unit: real_t,
-            version: Union[AString, str] =  "1.0",
+            version: Union[AString, str] = "1.0",
             offset_table: Optional[OffsetTable] = None,
             ) -> None:
         """

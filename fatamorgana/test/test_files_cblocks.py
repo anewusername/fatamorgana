@@ -1,17 +1,11 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
-import struct
 
-import pytest       # type: ignore
-import numpy
 from numpy.testing import assert_equal
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte, PathExtensionScheme
-from ..basic import InvalidRecordError, InvalidDataError
+from ..basic import write_uint, write_bstring, write_byte
 from ..main import OasisLayout
 
 
@@ -98,86 +92,105 @@ def test_file_1() -> None:
     assert geometry[1].height == 610
     assert geometry[1].width == 680
 
-    assert_equal(geometry[2].point_list,
-        [[-30, -360], [480, -50], [180, 430], [-630, -20]])
+    assert_equal(geometry[2].point_list, [
+        [-30, -360],
+        [480, -50],
+        [180, 430],
+        [-630, -20],
+        ])
 
-    assert_equal(geometry[3].point_list,
-        [[-30, -400],
-         [450, 40],
-         [70, -220],
-         [10, 210],
-         [740, -20],
-         [0, 660],
-         [570, 10],
-         [50, 500],
-         [630, 20],
-         [10, 100],
-         [-810, 10],
-         [20, -470],
-         [-660, 0],
-         [20, -470],
-         [-620, 10],
-         [0, 610],
-         [610, -10],
-         [0, -100],
-         [210, 10],
-         [40, 820],
-         [-1340, 60],
-         [30, -1370]])
+    assert_equal(geometry[3].point_list, [
+        [-30, -400],
+        [450, 40],
+        [70, -220],
+        [10, 210],
+        [740, -20],
+        [0, 660],
+        [570, 10],
+        [50, 500],
+        [630, 20],
+        [10, 100],
+        [-810, 10],
+        [20, -470],
+        [-660, 0],
+        [20, -470],
+        [-620, 10],
+        [0, 610],
+        [610, -10],
+        [0, -100],
+        [210, 10],
+        [40, 820],
+        [-1340, 60],
+        [30, -1370],
+        ])
 
-    assert_equal(geometry[4].point_list,
-        [[40, -760], [490, -50], [110, 800], [-640, 10]])
+    assert_equal(geometry[4].point_list, [
+        [40, -760],
+        [490, -50],
+        [110, 800],
+        [-640, 10],
+        ])
 
-    assert_equal(geometry[5].point_list,
-        [[140, -380],
-         [340, -10],
-         [30, -100],
-         [-320, 20],
-         [130, -460],
-         [-480, -20],
-         [-210, 910],
-         [370, 40]])
+    assert_equal(geometry[5].point_list, [
+        [140, -380],
+        [340, -10],
+        [30, -100],
+        [-320, 20],
+        [130, -460],
+        [-480, -20],
+        [-210, 910],
+        [370, 40],
+        ])
 
-    assert_equal(geometry[6].point_list,
-        [[720, -20],
-         [20, 20],
-         [690, 0],
-         [-10, 650],
-         [-20, 30],
-         [-90, -10],
-         [10, 70],
-         [470, -30],
-         [20, -120],
-         [-320, 0],
-         [40, -790],
-         [-90, -20],
-         [-60, 140],
-         [-1390, 50],
-         [10, 30]])
+    assert_equal(geometry[6].point_list, [
+        [720, -20],
+        [20, 20],
+        [690, 0],
+        [-10, 650],
+        [-20, 30],
+        [-90, -10],
+        [10, 70],
+        [470, -30],
+        [20, -120],
+        [-320, 0],
+        [40, -790],
+        [-90, -20],
+        [-60, 140],
+        [-1390, 50],
+        [10, 30],
+        ])
 
-    assert_equal(geometry[7].point_list,
-        [[150, -830],
-         [-1320, 40],
-         [-70, 370],
-         [310, -30],
-         [10, 220],
-         [250, -40],
-         [40, -220],
-         [340, 10],
-         [-20, 290],
-         [-1070, 20],
-         [0, 230],
-         [1380, -60]])
+    assert_equal(geometry[7].point_list, [
+        [150, -830],
+        [-1320, 40],
+        [-70, 370],
+        [310, -30],
+        [10, 220],
+        [250, -40],
+        [40, -220],
+        [340, 10],
+        [-20, 290],
+        [-1070, 20],
+        [0, 230],
+        [1380, -60],
+        ])
 
-    assert_equal(geometry[8].point_list,
-        [[330, 0], [-10, 480], [620, -20], [-10, 330], [-930, 60], [0, -850]])
+    assert_equal(geometry[8].point_list, [
+        [330, 0],
+        [-10, 480],
+        [620, -20],
+        [-10, 330],
+        [-930, 60],
+        [0, -850],
+        ])
 
-    assert_equal(geometry[9].point_list,
-        [[-140, -410],
-         [10, -140],
-         [270, 0],
-         [130, 1030],
-         [-500, 50],
-         [10, -330],
-         [210, -10],
-         [10, -190]])
+    assert_equal(geometry[9].point_list, [
+        [-140, -410],
+        [10, -140],
+        [270, 0],
+        [130, 1030],
+        [-500, 50],
+        [10, -330],
+        [210, -10],
+        [10, -190],
+        ])
