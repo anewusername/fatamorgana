@@ -1,6 +1,6 @@
 # type: ignore
-
-from io import BytesIO, BufferedIOBase
+from typing import IO
+from io import BytesIO
 import struct
 
 from .utils import MAGIC_BYTES, FOOTER
@@ -22,7 +22,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert not layout.layers
 
 
-def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_1(buf: IO[bytes]) -> IO[bytes]:
     '''
     File contains one PAD record.
     1000 units/micron
@@ -55,7 +55,7 @@ def test_file_1() -> None:
     assert layout.unit == 1000
 
 
-def write_file_2(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_2(buf: IO[bytes]) -> IO[bytes]:
     '''
     File contains no records.
     1/2 unit/micron
@@ -86,7 +86,7 @@ def test_file_2() -> None:
     assert layout.unit == 0.5
 
 
-def write_file_3(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_3(buf: IO[bytes]) -> IO[bytes]:
     '''
     File contains no records.
     10/4 unit/micron
@@ -118,7 +118,7 @@ def test_file_3() -> None:
     assert layout.unit == 10 / 4
 
 
-def write_file_4(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_4(buf: IO[bytes]) -> IO[bytes]:
     '''
     File contains no records.
     12.5 unit/micron (float32)
@@ -149,7 +149,7 @@ def test_file_4() -> None:
     assert layout.unit == 12.5
 
 
-def write_file_5(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_5(buf: IO[bytes]) -> IO[bytes]:
     '''
     File contains no records.
     12.5 unit/micron (float64)

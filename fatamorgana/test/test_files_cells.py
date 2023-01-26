@@ -1,6 +1,6 @@
 # type: ignore
-
-from io import BytesIO, BufferedIOBase
+from typing import IO
+from io import BytesIO
 
 import pytest
 
@@ -23,7 +23,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert not layout.layers
 
 
-def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_1(buf: IO[bytes]) -> IO[bytes]:
     '''
     Single cell with explicit name 'XYZ'
     '''
@@ -48,7 +48,7 @@ def test_file_1() -> None:
     assert not layout.cellnames
 
 
-def write_file_2(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_2(buf: IO[bytes]) -> IO[bytes]:
     '''
     Two cellnames ('XYZ', 'ABC') and two cells with name references.
     '''
@@ -85,7 +85,7 @@ def test_file_2() -> None:
     assert layout.cells[1].name == 1
 
 
-def write_file_3(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_3(buf: IO[bytes]) -> IO[bytes]:
     '''
     Invalid file, contains a mix of explicit and implicit cellnames
     '''
@@ -116,7 +116,7 @@ def test_file_3() -> None:
         layout = OasisLayout.read(buf)
 
 
-def write_file_4(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_4(buf: IO[bytes]) -> IO[bytes]:
     '''
     Two cells referencing two names with explicit ids (unsorted)
     '''
@@ -155,7 +155,7 @@ def test_file_4() -> None:
     assert layout.cells[1].name == 1
 
 
-def write_file_5(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_5(buf: IO[bytes]) -> IO[bytes]:
     '''
     Reference to non-existent cell name.
     '''
@@ -196,7 +196,7 @@ def test_file_5() -> None:
     #TODO add optional error checking for this case
 
 
-def write_file_6(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_6(buf: IO[bytes]) -> IO[bytes]:
     '''
     Cellname with invalid n-string.
     '''
@@ -237,7 +237,7 @@ def test_file_6() -> None:
     #assert layout.cells[1].name == 1
 
 
-def write_file_7(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_7(buf: IO[bytes]) -> IO[bytes]:
     '''
     Unused cellname.
     '''

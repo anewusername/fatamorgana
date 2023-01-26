@@ -1,6 +1,6 @@
 # type: ignore
-
-from io import BytesIO, BufferedIOBase
+from typing import IO
+from io import BytesIO
 
 import numpy
 from numpy.testing import assert_equal
@@ -106,7 +106,7 @@ def common_tests(layout: OasisLayout) -> None:
         assert_equal(geometry[ii].point_list, [[0, 150], [50, 0], [0, -50], [50, 0], [0, -100], [-100, 0]], err_msg=msg)
 
 
-def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
+def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
     '''
     '''
     assert variant in (1, 3), 'Error in test!!'
@@ -375,7 +375,7 @@ def test_file_1() -> None:
         assert not gg.properties, f'Fail on polygon {ii}'
 
 
-def write_file_2(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_2(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)

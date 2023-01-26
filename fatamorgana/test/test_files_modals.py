@@ -1,6 +1,6 @@
 # type: ignore
-
-from io import BytesIO, BufferedIOBase
+from typing import IO
+from io import BytesIO
 
 from .utils import HEADER, FOOTER
 from ..basic import write_uint, write_sint, write_bstring, write_byte
@@ -20,7 +20,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert not layout.layers
 
 
-def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_1(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)

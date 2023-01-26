@@ -1,6 +1,6 @@
 # type: ignore
-
-from io import BytesIO, BufferedIOBase
+from typing import IO
+from io import BytesIO
 
 import pytest
 
@@ -99,7 +99,7 @@ def common_tests(layout: OasisLayout) -> None:
     assert geometry[19].repetition.y_displacements == [12, -9]
 
 
-def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
+def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
     '''
     Single cell with explicit name 'XYZ'
     '''
@@ -460,7 +460,7 @@ def test_file_12() -> None:
     assert layout.textstrings[2].string == 'B'
 
 
-def write_file_3(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_3(buf: IO[bytes]) -> IO[bytes]:
     '''
     File with one textstring with explicit id, and one with an implicit id.
     Should fail.
@@ -497,7 +497,7 @@ def test_file_3() -> None:
         layout = OasisLayout.read(buf)
 
 
-def write_file_4(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_4(buf: IO[bytes]) -> IO[bytes]:
     '''
     File with a TEXT record that references a non-existent TEXTSTRING
 
@@ -537,7 +537,7 @@ def test_file_4() -> None:
     base_tests(layout)
 
 
-def write_file_6(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_6(buf: IO[bytes]) -> IO[bytes]:
     '''
     File with TEXT record that uses an un-filled modal for the repetition
     '''
@@ -570,7 +570,7 @@ def test_file_6() -> None:
         layout = OasisLayout.read(buf)
 
 
-def write_file_7(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_7(buf: IO[bytes]) -> IO[bytes]:
     '''
     File with TEXT record that uses an un-filled modal for the layer
     '''
@@ -601,7 +601,7 @@ def test_file_7() -> None:
         layout = OasisLayout.read(buf)
 
 
-def write_file_8(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_8(buf: IO[bytes]) -> IO[bytes]:
     '''
     File with TEXT record that uses an un-filled modal for the datatype
     '''
@@ -632,7 +632,7 @@ def test_file_8() -> None:
         layout = OasisLayout.read(buf)
 
 
-def write_file_9(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_9(buf: IO[bytes]) -> IO[bytes]:
     '''
     File with TEXT record that uses a default modal for the x coordinate
     '''
@@ -668,7 +668,7 @@ def test_file_9() -> None:
     assert text.y == -200
 
 
-def write_file_10(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_10(buf: IO[bytes]) -> IO[bytes]:
     '''
     File with TEXT record that uses a default modal for the y coordinate
     '''
@@ -704,7 +704,7 @@ def test_file_10() -> None:
     assert text.x == 100
 
 
-def write_file_11(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_11(buf: IO[bytes]) -> IO[bytes]:
     '''
     File with TEXT record that uses an un-filled modal for the text string
     '''

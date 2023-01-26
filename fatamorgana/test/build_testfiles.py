@@ -1,10 +1,8 @@
 '''
 Build files equivalent to the test cases used by KLayout.
 '''
-# type: ignore
 
-from typing import Callable
-from io import BufferedIOBase
+from typing import Callable, IO
 
 
 from . import (
@@ -16,7 +14,7 @@ from . import (
     )
 
 
-def build_file(num: str, func: Callable[[BufferedIOBase], BufferedIOBase]) -> None:
+def build_file(num: str, func: Callable[[IO[bytes]], IO[bytes]]) -> None:
     with open('t' + num + '.oas', 'wb') as f:
         func(f)
 
