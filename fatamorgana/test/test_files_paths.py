@@ -1,6 +1,6 @@
 # type: ignore
-
-from io import BytesIO, BufferedIOBase
+from typing import IO
+from io import BytesIO
 
 from numpy.testing import assert_equal
 
@@ -26,7 +26,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert not layout.cells[0].properties
 
 
-def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_1(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)

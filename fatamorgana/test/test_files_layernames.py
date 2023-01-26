@@ -1,18 +1,19 @@
 # type: ignore
-from typing import Sequence
+from typing import Sequence, IO
 
-from io import BytesIO, BufferedIOBase
+from io import BytesIO
 
 from .utils import HEADER, FOOTER
 from ..basic import write_uint, write_sint, write_bstring, write_byte
 from ..main import OasisLayout
 
 
-LAYERS = [(1, 2), (1, 5), (1, 6), (1, 8),
-          (5, 2), (5, 5), (5, 6), (5, 8),
-          (6, 2), (6, 5), (6, 6), (6, 8),
-          (7, 2), (7, 5), (7, 6), (7, 8),
-          ]
+LAYERS = [
+    (1, 2), (1, 5), (1, 6), (1, 8),
+    (5, 2), (5, 5), (5, 6), (5, 8),
+    (6, 2), (6, 5), (6, 6), (6, 8),
+    (7, 2), (7, 5), (7, 6), (7, 8),
+    ]
 
 def base_tests(layout: OasisLayout) -> None:
     assert layout.version.string == '1.0'
@@ -30,7 +31,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert not layout.cells[0].properties
 
 
-def write_names_geom(buf: BufferedIOBase, short: bool = False) -> BufferedIOBase:
+def write_names_geom(buf: IO[bytes], short: bool = False) -> IO[bytes]:
     write_uint(buf, 11)           # LAYERNAME record (geometry)
     write_bstring(buf, b'AA')     # name
     write_uint(buf, 0)            # all layers
@@ -96,7 +97,7 @@ def write_names_geom(buf: BufferedIOBase, short: bool = False) -> BufferedIOBase
     return buf
 
 
-def write_names_text(buf: BufferedIOBase, prefix: bytes = b'') -> BufferedIOBase:
+def write_names_text(buf: IO[bytes], prefix: bytes = b'') -> IO[bytes]:
     write_uint(buf, 12)         # LAYERNAME record (geometry)
     write_bstring(buf, prefix + b'AA')   # name
     write_uint(buf, 0)          # all layers
@@ -128,7 +129,7 @@ def write_names_text(buf: BufferedIOBase, prefix: bytes = b'') -> BufferedIOBase
     write_uint(buf, 0)          # all datatypes
     return buf
 
-def write_geom(buf: BufferedIOBase) -> BufferedIOBase:
+def write_geom(buf: IO[bytes]) -> IO[bytes]:
     for ll, dt in LAYERS:
         write_uint(buf, 27)           # CIRCLE record
         write_byte(buf, 0b0011_1011)  # 00rX_YRDL
@@ -140,7 +141,7 @@ def write_geom(buf: BufferedIOBase) -> BufferedIOBase:
     return buf
 
 
-def write_text(buf: BufferedIOBase) -> BufferedIOBase:
+def write_text(buf: IO[bytes]) -> IO[bytes]:
     for ll, dt in LAYERS:
         write_uint(buf, 19)              # TEXT record
         write_byte(buf, 0b0101_1011)     # 0CNX_YRTL
@@ -205,7 +206,7 @@ def elem_test_text(geometry: Sequence) -> None:
         assert not gg.properties, msg
 
 
-def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_1(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
@@ -235,7 +236,7 @@ def test_file_1() -> None:
     name_test(layout.layers, is_textlayer=False)
 
 
-def write_file_2(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_2(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
@@ -265,7 +266,7 @@ def test_file_2() -> None:
     name_test(layout.layers, is_textlayer=True)
 
 
-def write_file_3(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_3(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
@@ -281,7 +282,7 @@ def write_file_3(buf: BufferedIOBase) -> BufferedIOBase:
     return buf
 
 
-def write_file_4(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_4(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)

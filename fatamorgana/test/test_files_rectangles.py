@@ -1,6 +1,6 @@
 # type: ignore
-
-from io import BytesIO, BufferedIOBase
+from typing import IO
+from io import BytesIO
 
 from .utils import HEADER, FOOTER
 from ..basic import write_uint, write_sint, write_bstring, write_byte
@@ -74,7 +74,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert geometry[10].repetition.x_displacements == [200, 300]
 
 
-def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
+def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
     '''
     '''
     assert variant in (1, 2), 'Error in test!!'

@@ -1,11 +1,12 @@
 # type: ignore
-from typing import Tuple
-from io import BytesIO, BufferedIOBase
+from typing import Tuple, IO, cast, List
+from io import BytesIO
 
 from numpy.testing import assert_equal
 
 from .utils import HEADER, FOOTER
 from ..basic import write_uint, write_sint, write_bstring, write_byte, write_float32, write_float64
+from ..records import Rectangle
 from ..main import OasisLayout
 
 
@@ -21,7 +22,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert not layout.layers
 
 
-def write_rectangle(buf: BufferedIOBase, pos: Tuple[int, int] = (300, -400)) -> None:
+def write_rectangle(buf: IO[bytes], pos: Tuple[int, int] = (300, -400)) -> None:
     write_uint(buf, 20)           # RECTANGLE record
     write_byte(buf, 0b0111_1011)  # SWHX_YRDL
     write_uint(buf, 1)            # layer
@@ -32,7 +33,7 @@ def write_rectangle(buf: BufferedIOBase, pos: Tuple[int, int] = (300, -400)) -> 
     write_sint(buf, pos[1])       # geometry-y (absolute)
 
 
-def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_1(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
@@ -173,7 +174,7 @@ def test_file_1() -> None:
     assert not layout.cells[1].properties
     assert not layout.cells[1].geometry
 
-    geometry = layout.cells[0].geometry
+    geometry = cast(List[Rectangle], layout.cells[0].geometry)
     assert len(geometry) == 1
     assert geometry[0].layer == 1
     assert geometry[0].datatype == 2
@@ -248,7 +249,7 @@ def test_file_1() -> None:
     assert placements[12].repetition.b_vector == [-330, 330]
 
 
-def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
+def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
     '''
     '''
     assert variant in (2, 3, 5, 7), 'Error in test definition!'
@@ -514,7 +515,7 @@ def common_tests(layout: OasisLayout, variant: int) -> None:
     assert placements[6].y == 2400
 
 
-def write_file_4(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_4(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
@@ -593,7 +594,7 @@ def write_file_4(buf: BufferedIOBase) -> BufferedIOBase:
     return buf
 
 
-def write_file_6(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_6(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
@@ -746,7 +747,7 @@ def test_file_6() -> None:
         assert pp.y == [0, 1000][ii], msg
 
 
-def write_file_8(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_8(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
@@ -842,7 +843,7 @@ def test_file_8() -> None:
     assert not layout.cells[2].properties
     assert not layout.cells[2].placements
 
-    geometry = layout.cells[2].geometry
+    geometry = cast(List[Rectangle], layout.cells[2].geometry)
     assert len(geometry) == 1
     assert geometry[0].layer == 1
     assert geometry[0].datatype == 2

@@ -1,6 +1,6 @@
 # type: ignore
-
-from io import BytesIO, BufferedIOBase
+from typing import IO
+from io import BytesIO
 
 import pytest
 from numpy.testing import assert_equal
@@ -23,7 +23,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert not layout.layers
 
 
-def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
+def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
     '''
     '''
     include_repetitions = variant in (2, 5)
@@ -354,7 +354,7 @@ def test_file_5() -> None:
         assert gg.repetition.b_vector == [0, 320], msg
 
 
-def write_file_3(buf: BufferedIOBase) -> BufferedIOBase:
+def write_file_3(buf: IO[bytes]) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
@@ -579,7 +579,7 @@ def test_file_3() -> None:
         assert geometry[ii].properties[0].values[1].string == 'PROP_VALUE2', msg
 
 
-def write_file_4_6(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
+def write_file_4_6(buf: IO[bytes], variant: int) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
@@ -927,7 +927,7 @@ def test_file_6() -> None:
         assert placements[ii].properties[0].values[1].string == 'PROP_VALUE2', msg
 
 
-def write_file_7_8_9(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
+def write_file_7_8_9(buf: IO[bytes], variant: int) -> IO[bytes]:
     '''
     '''
     buf.write(HEADER)
