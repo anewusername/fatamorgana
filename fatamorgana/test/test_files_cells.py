@@ -1,14 +1,11 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
-import struct
 
-import pytest       # type: ignore
+import pytest
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring
+from ..basic import write_uint, write_bstring
 from ..basic import InvalidRecordError, InvalidDataError
 from ..main import OasisLayout
 

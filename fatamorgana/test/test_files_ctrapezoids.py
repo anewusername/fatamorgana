@@ -1,17 +1,9 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
-import struct
-
-import pytest       # type: ignore
-import numpy
-from numpy.testing import assert_equal
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte, PathExtensionScheme
-from ..basic import InvalidRecordError, InvalidDataError
+from ..basic import write_uint, write_sint, write_bstring, write_byte
 from ..main import OasisLayout
 
 
@@ -33,29 +25,29 @@ def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
     '''
     buf.write(HEADER)
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'A')     # Cell name
+    write_uint(buf, 14)           # CELL record (explicit)
+    write_bstring(buf, b'A')      # Cell name
 
-    write_uint(buf, 26)          # CTRAPEZOID record
-    write_byte(buf, 0b1111_1011) # TWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 24)          # ctrapezoid type
-    write_uint(buf, 100)         # width
-    write_uint(buf, 200)         # height
-    write_sint(buf, -100)        # geometry-x (absolute)
-    write_sint(buf, 200)         # geometry-y (absolute)
+    write_uint(buf, 26)           # CTRAPEZOID record
+    write_byte(buf, 0b1111_1011)  # TWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 24)           # ctrapezoid type
+    write_uint(buf, 100)          # width
+    write_uint(buf, 200)          # height
+    write_sint(buf, -100)         # geometry-x (absolute)
+    write_sint(buf, 200)          # geometry-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
-    write_uint(buf, 26)          # CTRAPEZOID record
-    write_byte(buf, 0b0000_1000) # TWHX_YRDL
-    write_sint(buf, 400)         # geometry-y (relative)
+    write_uint(buf, 26)           # CTRAPEZOID record
+    write_byte(buf, 0b0000_1000)  # TWHX_YRDL
+    write_sint(buf, 400)          # geometry-y (relative)
 
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0000_0011) # SWHX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0000_0011)  # SWHX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
 
     h = [250, 100]
     v = [100, 250]
@@ -66,33 +58,34 @@ def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
            + [0b10] * 4
            + [0b01] * 2
            + [0b10] * 2
-           + [0b11, 0b10])
+           + [0b11, 0b10]
+           )
 
     for t, (x, x_en) in enumerate(zip(wh, wh_en)):
-        write_uint(buf, 26)          # CTRAPEZOID record
+        write_uint(buf, 26)           # CTRAPEZOID record
         write_byte(buf, 0b1000_1011 | (x_en << 5))    # TWHX_YRDL
-        write_uint(buf, 1)           # layer
-        write_uint(buf, 2)           # datatype
-        write_uint(buf, t)           # ctrapezoid type
+        write_uint(buf, 1)            # layer
+        write_uint(buf, 2)            # datatype
+        write_uint(buf, t)            # ctrapezoid type
         if x_en & 0b10:
-            write_uint(buf, x[0])    # width
+            write_uint(buf, x[0])     # width
         if x_en & 0b01:
-            write_uint(buf, x[1])    # height
-        write_sint(buf, 400)         # geometry-y (relative)
+            write_uint(buf, x[1])     # height
+        write_sint(buf, 400)          # geometry-y (relative)
 
-        write_uint(buf, 20)          # RECTANGLE record
-        write_byte(buf, 0b0000_0011) # SWHX_YRDL
-        write_uint(buf, 2)           # layer
-        write_uint(buf, 3)           # datatype
+        write_uint(buf, 20)           # RECTANGLE record
+        write_byte(buf, 0b0000_0011)  # SWHX_YRDL
+        write_uint(buf, 2)            # layer
+        write_uint(buf, 3)            # datatype
 
-    write_uint(buf, 26)          # CTRAPEZOID record
-    write_byte(buf, 0b0000_1100) # TWHX_YRDL
-    write_sint(buf, 400)         # geometry-y (relative)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 400)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 26)           # CTRAPEZOID record
+    write_byte(buf, 0b0000_1100)  # TWHX_YRDL
+    write_sint(buf, 400)          # geometry-y (relative)
+    write_uint(buf, 1)            # repetition (3x4 matrix)
+    write_uint(buf, 1)            # (repetition) x-dimension
+    write_uint(buf, 2)            # (repetition) y-dimension
+    write_uint(buf, 400)          # (repetition) x-spacing
+    write_uint(buf, 300)          # (repetition) y-spacing
 
     buf.write(FOOTER)
     return buf
@@ -143,7 +136,7 @@ def test_file_1() -> None:
             elif ct_type in range(22, 24) or ct_type == 25:
                 assert gg.height == [100, None][is_ctrapz], msg
             else:
-                if ct_type < 8 or 16 <= ct_type < 25 or 26 <= ct_type :
+                if ct_type < 8 or 16 <= ct_type < 25 or 26 <= ct_type:
                     assert gg.width == 250, msg
                     assert gg.height == 100, msg
                 else:
@@ -169,39 +162,39 @@ def write_file_2(buf: BufferedIOBase) -> BufferedIOBase:
     write_bstring(buf, b'A')     # Cell name
 
     # Shouldn't access (undefined) height modal, despite not having a height.
-    write_uint(buf, 26)          # CTRAPEZOID record
-    write_byte(buf, 0b1101_1011) # TWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 16)          # ctrapezoid type
-    write_uint(buf, 200)         # width
-    write_sint(buf, -100)        # geometry-x (absolute)
-    write_sint(buf, 200)         # geometry-y (absolute)
+    write_uint(buf, 26)           # CTRAPEZOID record
+    write_byte(buf, 0b1101_1011)  # TWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 16)           # ctrapezoid type
+    write_uint(buf, 200)          # width
+    write_sint(buf, -100)         # geometry-x (absolute)
+    write_sint(buf, 200)          # geometry-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
-    write_uint(buf, 26)          # CTRAPEZOID record
-    write_byte(buf, 0b0000_1000) # TWHX_YRDL
-    write_sint(buf, 400)         # geometry-y (relative)
+    write_uint(buf, 26)           # CTRAPEZOID record
+    write_byte(buf, 0b0000_1000)  # TWHX_YRDL
+    write_sint(buf, 400)          # geometry-y (relative)
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'B')     # Cell name
+    write_uint(buf, 14)           # CELL record (explicit)
+    write_bstring(buf, b'B')      # Cell name
 
     # Shouldn't access (undefined) width modal, despite not having a width.
-    write_uint(buf, 26)          # CTRAPEZOID record
-    write_byte(buf, 0b1011_1011) # TWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 20)          # ctrapezoid type
-    write_uint(buf, 200)         # height
-    write_sint(buf, -100)        # geometry-x (absolute)
-    write_sint(buf, 200)         # geometry-y (absolute)
+    write_uint(buf, 26)           # CTRAPEZOID record
+    write_byte(buf, 0b1011_1011)  # TWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 20)           # ctrapezoid type
+    write_uint(buf, 200)          # height
+    write_sint(buf, -100)         # geometry-x (absolute)
+    write_sint(buf, 200)          # geometry-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
-    write_uint(buf, 26)          # CTRAPEZOID record
-    write_byte(buf, 0b0000_1000) # TWHX_YRDL
-    write_sint(buf, 400)         # geometry-y (relative)
+    write_uint(buf, 26)           # CTRAPEZOID record
+    write_byte(buf, 0b0000_1000)  # TWHX_YRDL
+    write_sint(buf, 400)          # geometry-y (relative)
 
     buf.write(FOOTER)
     return buf

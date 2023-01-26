@@ -1,12 +1,6 @@
-from typing import List, Tuple, Iterable
-from itertools import chain
-from io import BytesIO, BufferedIOBase
-import struct
+from io import BytesIO
 
-import pytest       # type: ignore
-
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte
-from ..main import OasisLayout
+from ..basic import write_uint, write_bstring, write_byte
 
 
 MAGIC_BYTES = b'%SEMI-OASIS\r\n'

@@ -1,14 +1,10 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
 import struct
 
-import pytest       # type: ignore
-
 from .utils import MAGIC_BYTES, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring
+from ..basic import write_uint, write_bstring
 from ..main import OasisLayout
 
 
@@ -57,7 +53,6 @@ def test_file_1() -> None:
 
     base_tests(layout)
     assert layout.unit == 1000
-
 
 
 def write_file_2(buf: BufferedIOBase) -> BufferedIOBase:

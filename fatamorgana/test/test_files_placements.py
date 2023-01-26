@@ -1,17 +1,11 @@
 # type: ignore
-
-from typing import List, Tuple, Iterable
-from itertools import chain
+from typing import Tuple
 from io import BytesIO, BufferedIOBase
-import struct
 
-import pytest       # type: ignore
-import numpy
 from numpy.testing import assert_equal
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte, PathExtensionScheme
-from ..basic import InvalidRecordError, InvalidDataError, write_float32, write_float64
+from ..basic import write_uint, write_sint, write_bstring, write_byte, write_float32, write_float64
 from ..main import OasisLayout
 
 
@@ -28,14 +22,14 @@ def base_tests(layout: OasisLayout) -> None:
 
 
 def write_rectangle(buf: BufferedIOBase, pos: Tuple[int, int] = (300, -400)) -> None:
-    write_uint(buf, 20)          # RECTANGLE record
-    write_byte(buf, 0b0111_1011) # SWHX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 100)         # width
-    write_uint(buf, 200)         # height
-    write_sint(buf, pos[0])      # geometry-x (absolute)
-    write_sint(buf, pos[1])      # geometry-y (absolute)
+    write_uint(buf, 20)           # RECTANGLE record
+    write_byte(buf, 0b0111_1011)  # SWHX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 100)          # width
+    write_uint(buf, 200)          # height
+    write_sint(buf, pos[0])       # geometry-x (absolute)
+    write_sint(buf, pos[1])       # geometry-y (absolute)
 
 
 def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
@@ -43,120 +37,120 @@ def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
     '''
     buf.write(HEADER)
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'A')     # Cell name
+    write_uint(buf, 14)            # CELL record (explicit)
+    write_bstring(buf, b'A')       # Cell name
 
     write_rectangle(buf)
 
-    write_uint(buf, 14)          # CELL record (explicit)
+    write_uint(buf, 14)            # CELL record (explicit)
     write_bstring(buf, b'TOP')     # Cell name
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)            # XYRELATIVE record
 
     # PLACEMENT 0
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b1011_0000) # CNXY_RAAF
-    write_bstring(buf, b'A')     # cell reference
-    write_sint(buf, -300)        # placement-x (relative)
-    write_sint(buf, 400)         # placement-y (relative)
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b1011_0000)   # CNXY_RAAF
+    write_bstring(buf, b'A')       # cell reference
+    write_sint(buf, -300)          # placement-x (relative)
+    write_sint(buf, 400)           # placement-y (relative)
 
     # PLACEMENT 1
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_0000) # CNXY_RAAF
-    write_sint(buf, 0)           # placement-x (relative)
-    write_sint(buf, 400)         # placement-y (relative)
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0011_0000)   # CNXY_RAAF
+    write_sint(buf, 0)             # placement-x (relative)
+    write_sint(buf, 400)           # placement-y (relative)
 
     # PLACEMENT 2
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0001_0000) # CNXY_RAAF
-    write_sint(buf, 400)         # placement-y (relative)
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0001_0000)   # CNXY_RAAF
+    write_sint(buf, 400)           # placement-y (relative)
 
     # PLACEMENT 3
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0010_0000) # CNXY_RAAF
-    write_sint(buf, 300)         # placement-x (relative)
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0010_0000)   # CNXY_RAAF
+    write_sint(buf, 300)           # placement-x (relative)
 
-    write_uint(buf, 15)          # XYABSOLUTE record
+    write_uint(buf, 15)            # XYABSOLUTE record
 
     # PLACEMENT 4
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_0001) # CNXY_RAAF
-    write_sint(buf, 700)         # placement-x (absolute)
-    write_sint(buf, 400)         # placement-y (absolute)
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0011_0001)   # CNXY_RAAF
+    write_sint(buf, 700)           # placement-x (absolute)
+    write_sint(buf, 400)           # placement-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)            # XYRELATIVE record
 
     # PLACEMENT 5
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0001_0010) # CNXY_RAAF
-    write_sint(buf, 1000)        # placement-y (relative)
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0001_0010)   # CNXY_RAAF
+    write_sint(buf, 1000)          # placement-y (relative)
 
     # PLACEMENT 6
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0001_0011) # CNXY_RAAF
-    write_sint(buf, 1000)        # placement-y (relative)
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0001_0011)   # CNXY_RAAF
+    write_sint(buf, 1000)          # placement-y (relative)
 
-    write_uint(buf, 15)          # XYABSOLUTE record
+    write_uint(buf, 15)            # XYABSOLUTE record
 
     # PLACEMENT 7
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_1111) # CNXY_RAAF
-    write_sint(buf, 2000)        # placement-x (absolute)
-    write_sint(buf, 0)           # placement-y (absolute)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 300)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0011_1111)   # CNXY_RAAF
+    write_sint(buf, 2000)          # placement-x (absolute)
+    write_sint(buf, 0)             # placement-y (absolute)
+    write_uint(buf, 1)             # repetition (3x4 matrix)
+    write_uint(buf, 1)             # (repetition) x-dimension
+    write_uint(buf, 2)             # (repetition) y-dimension
+    write_uint(buf, 300)           # (repetition) x-spacing
+    write_uint(buf, 300)           # (repetition) y-spacing
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)            # XYRELATIVE record
 
     # PLACEMENT 8
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_1111) # CNXY_RAAF
-    write_sint(buf, 2000)        # placement-x (relative)
-    write_sint(buf, 0)           # placement-y (relative)
-    write_uint(buf, 0)           # repetition (reuse)
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0011_1111)   # CNXY_RAAF
+    write_sint(buf, 2000)          # placement-x (relative)
+    write_sint(buf, 0)             # placement-y (relative)
+    write_uint(buf, 0)             # repetition (reuse)
 
     # PLACEMENT 9
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_1111) # CNXY_RAAF
-    write_sint(buf, 2000)        # placement-x (relative)
-    write_sint(buf, 0)           # placement-y (relative)
-    write_uint(buf, 2)           # repetition (3 cols.)
-    write_uint(buf, 1)           # (repetition) count
-    write_uint(buf, 320)         # (repetition) spacing
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0011_1111)   # CNXY_RAAF
+    write_sint(buf, 2000)          # placement-x (relative)
+    write_sint(buf, 0)             # placement-y (relative)
+    write_uint(buf, 2)             # repetition (3 cols.)
+    write_uint(buf, 1)             # (repetition) count
+    write_uint(buf, 320)           # (repetition) spacing
 
     # PLACEMENT 10
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_1111) # CNXY_RAAF
-    write_sint(buf, 2000)        # placement-x (relative)
-    write_sint(buf, 0)           # placement-y (relative)
-    write_uint(buf, 3)           # repetition (4 rows)
-    write_uint(buf, 2)           # (repetition) count
-    write_uint(buf, 310)         # (repetition) spacing
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0011_1111)   # CNXY_RAAF
+    write_sint(buf, 2000)          # placement-x (relative)
+    write_sint(buf, 0)             # placement-y (relative)
+    write_uint(buf, 3)             # repetition (4 rows)
+    write_uint(buf, 2)             # (repetition) count
+    write_uint(buf, 310)           # (repetition) spacing
 
     # PLACEMENT 11
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_1111) # CNXY_RAAF
-    write_sint(buf, 2000)        # placement-x (relative)
-    write_sint(buf, 0)           # placement-y (relative)
-    write_uint(buf, 4)           # repetition (4 arbitrary cols.)
-    write_uint(buf, 2)           # (repetition) dimension
-    write_uint(buf, 320)         # (repetition) spacing
-    write_uint(buf, 330)         # (repetition) spacing
-    write_uint(buf, 340)         # (repetition) spacing
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0011_1111)   # CNXY_RAAF
+    write_sint(buf, 2000)          # placement-x (relative)
+    write_sint(buf, 0)             # placement-y (relative)
+    write_uint(buf, 4)             # repetition (4 arbitrary cols.)
+    write_uint(buf, 2)             # (repetition) dimension
+    write_uint(buf, 320)           # (repetition) spacing
+    write_uint(buf, 330)           # (repetition) spacing
+    write_uint(buf, 340)           # (repetition) spacing
 
     # PLACEMENT 12
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_1111) # CNXY_RAAF
-    write_sint(buf, 2000)        # placement-x (relative)
-    write_sint(buf, 0)           # placement-y (relative)
-    write_uint(buf, 8)           # repetition (3x4 matrix, arbitrary vectors)
-    write_uint(buf, 1)           # (repetition) n-dimension
-    write_uint(buf, 2)           # (repetition) m-dimension
-    write_uint(buf, 310 << 2 | 0b01)     # (repetition) n-displacement g-delta: (310, 320)
-    write_sint(buf, 320)                 # (repetition g-delta)
+    write_uint(buf, 17)            # PLACEMENT (simple)
+    write_byte(buf, 0b0011_1111)   # CNXY_RAAF
+    write_sint(buf, 2000)          # placement-x (relative)
+    write_sint(buf, 0)             # placement-y (relative)
+    write_uint(buf, 8)             # repetition (3x4 matrix, arbitrary vectors)
+    write_uint(buf, 1)             # (repetition) n-dimension
+    write_uint(buf, 2)             # (repetition) m-dimension
+    write_uint(buf, 310 << 2 | 0b01)    # (repetition) n-displacement g-delta: (310, 320)
+    write_sint(buf, 320)                # (repetition g-delta)
     write_uint(buf, 330 << 4 | 0b1010)  # (repetition) m-displacement g-delta: 330-northwest (-330, 330)
 
     buf.write(FOOTER)
@@ -211,9 +205,9 @@ def test_file_1() -> None:
             assert pp.y == 0, msg
 
         if ii < 4 or ii == 5:
-            assert pp.flip == False, msg
+            assert not bool(pp.flip), msg
         else:
-            assert pp.flip == True, msg
+            assert bool(pp.flip), msg
 
         if ii < 5:
             assert pp.angle == 0, msg
@@ -286,49 +280,49 @@ def write_file_common(buf: BufferedIOBase, variant: int) -> BufferedIOBase:
     # PLACEMENT 0
     write_uint(buf, 17)          # PLACEMENT (simple)
     if variant == 2:
-        write_byte(buf, 0b1011_0000) # CNXY_RAAF
-        write_bstring(buf, b'A')     # cell reference
+        write_byte(buf, 0b1011_0000)  # CNXY_RAAF
+        write_bstring(buf, b'A')      # cell reference
     else:
-        write_byte(buf, 0b1111_0000) # CNXY_RAAF
-        write_uint(buf, 0)           # cell reference
-    write_sint(buf, -300)        # placement-x (relative)
-    write_sint(buf, 400)         # placement-y (relative)
+        write_byte(buf, 0b1111_0000)  # CNXY_RAAF
+        write_uint(buf, 0)            # cell reference
+    write_sint(buf, -300)             # placement-x (relative)
+    write_sint(buf, 400)              # placement-y (relative)
 
     # PLACEMENT 1
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_0000) # CNXY_RAAF
-    write_sint(buf, 0)           # placement-x (relative)
-    write_sint(buf, 400)         # placement-y (relative)
+    write_uint(buf, 17)               # PLACEMENT (simple)
+    write_byte(buf, 0b0011_0000)      # CNXY_RAAF
+    write_sint(buf, 0)                # placement-x (relative)
+    write_sint(buf, 400)              # placement-y (relative)
 
     # PLACEMENT 2
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0001_0000) # CNXY_RAAF
-    write_sint(buf, 400)         # placement-y (relative)
+    write_uint(buf, 17)               # PLACEMENT (simple)
+    write_byte(buf, 0b0001_0000)      # CNXY_RAAF
+    write_sint(buf, 400)              # placement-y (relative)
 
     # PLACEMENT 3
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0010_0000) # CNXY_RAAF
-    write_sint(buf, 300)         # placement-x (relative)
+    write_uint(buf, 17)               # PLACEMENT (simple)
+    write_byte(buf, 0b0010_0000)      # CNXY_RAAF
+    write_sint(buf, 300)              # placement-x (relative)
 
-    write_uint(buf, 15)          # XYABSOLUTE record
+    write_uint(buf, 15)               # XYABSOLUTE record
 
     # PLACEMENT 4
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_0001) # CNXY_RAAF
-    write_sint(buf, 700)         # placement-x (absolute)
-    write_sint(buf, 400)         # placement-y (absolute)
+    write_uint(buf, 17)               # PLACEMENT (simple)
+    write_byte(buf, 0b0011_0001)      # CNXY_RAAF
+    write_sint(buf, 700)              # placement-x (absolute)
+    write_sint(buf, 400)              # placement-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)               # XYRELATIVE record
 
     # PLACEMENT 5
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0001_0010) # CNXY_RAAF
-    write_sint(buf, 1000)        # placement-y (relative)
+    write_uint(buf, 17)               # PLACEMENT (simple)
+    write_byte(buf, 0b0001_0010)      # CNXY_RAAF
+    write_sint(buf, 1000)             # placement-y (relative)
 
     # PLACEMENT 6
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0001_0011) # CNXY_RAAF
-    write_sint(buf, 1000)        # placement-y (relative)
+    write_uint(buf, 17)               # PLACEMENT (simple)
+    write_byte(buf, 0b0001_0011)      # CNXY_RAAF
+    write_sint(buf, 1000)             # placement-y (relative)
 
     if variant == 2:
         write_uint(buf, 14)          # CELL record (explicit)
@@ -502,9 +496,9 @@ def common_tests(layout: OasisLayout, variant: int) -> None:
             assert pp.y == 400 * (ii + 1), msg
 
         if ii in (4, 6):
-            assert pp.flip == True, msg
+            assert bool(pp.flip), msg
         else:
-            assert pp.flip == False, msg
+            assert not bool(pp.flip), msg
 
         if ii in (5, 6):
             assert pp.angle == 90, msg
@@ -525,73 +519,73 @@ def write_file_4(buf: BufferedIOBase) -> BufferedIOBase:
     '''
     buf.write(HEADER)
 
-    write_uint(buf, 3)           # CELLNAME record (implicit id 0)
+    write_uint(buf, 3)            # CELLNAME record (implicit id 0)
     write_bstring(buf, b'A')
 
-    write_uint(buf, 3)           # CELLNAME record (implicit id 1)
+    write_uint(buf, 3)            # CELLNAME record (implicit id 1)
     write_bstring(buf, b'TOP')
 
-    write_uint(buf, 13)          # CELL record (name ref.)
-    write_uint(buf, 1)           # Cell name 1 (TOP)
+    write_uint(buf, 13)           # CELL record (name ref.)
+    write_uint(buf, 1)            # Cell name 1 (TOP)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
     # PLACEMENT 0
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b1111_1000) # CNXY_RAAF
-    write_uint(buf, 0)           # cell reference
-    write_sint(buf, -300)        # placement-x (relative)
-    write_sint(buf, 400)         # placement-y (relative)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 20)          # (repetition) x-spacing
-    write_uint(buf, 30)          # (repetition) y-spacing
+    write_uint(buf, 17)           # PLACEMENT (simple)
+    write_byte(buf, 0b1111_1000)  # CNXY_RAAF
+    write_uint(buf, 0)            # cell reference
+    write_sint(buf, -300)         # placement-x (relative)
+    write_sint(buf, 400)          # placement-y (relative)
+    write_uint(buf, 1)            # repetition (3x4 matrix)
+    write_uint(buf, 1)            # (repetition) x-dimension
+    write_uint(buf, 2)            # (repetition) y-dimension
+    write_uint(buf, 20)           # (repetition) x-spacing
+    write_uint(buf, 30)           # (repetition) y-spacing
 
     # PLACEMENT 1
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_1000) # CNXY_RAAF
-    write_sint(buf, 0)           # placement-x (relative)
-    write_sint(buf, 400)         # placement-y (relative)
-    write_uint(buf, 0)           # repetition (reuse)
+    write_uint(buf, 17)           # PLACEMENT (simple)
+    write_byte(buf, 0b0011_1000)  # CNXY_RAAF
+    write_sint(buf, 0)            # placement-x (relative)
+    write_sint(buf, 400)          # placement-y (relative)
+    write_uint(buf, 0)            # repetition (reuse)
 
     # PLACEMENT 2
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0001_1000) # CNXY_RAAF
-    write_sint(buf, 400)         # placement-y (relative)
-    write_uint(buf, 0)           # repetition (reuse)
+    write_uint(buf, 17)           # PLACEMENT (simple)
+    write_byte(buf, 0b0001_1000)  # CNXY_RAAF
+    write_sint(buf, 400)          # placement-y (relative)
+    write_uint(buf, 0)            # repetition (reuse)
 
     # PLACEMENT 3
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0010_1000) # CNXY_RAAF
-    write_sint(buf, 300)         # placement-x (relative)
-    write_uint(buf, 0)           # repetition (reuse)
+    write_uint(buf, 17)           # PLACEMENT (simple)
+    write_byte(buf, 0b0010_1000)  # CNXY_RAAF
+    write_sint(buf, 300)          # placement-x (relative)
+    write_uint(buf, 0)            # repetition (reuse)
 
-    write_uint(buf, 15)          # XYABSOLUTE record
+    write_uint(buf, 15)           # XYABSOLUTE record
 
     # PLACEMENT 4
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0011_1001) # CNXY_RAAF
-    write_sint(buf, 700)         # placement-x (absolute)
-    write_sint(buf, 400)         # placement-y (absolute)
-    write_uint(buf, 0)           # repetition (reuse)
+    write_uint(buf, 17)           # PLACEMENT (simple)
+    write_byte(buf, 0b0011_1001)  # CNXY_RAAF
+    write_sint(buf, 700)          # placement-x (absolute)
+    write_sint(buf, 400)          # placement-y (absolute)
+    write_uint(buf, 0)            # repetition (reuse)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
     # PLACEMENT 5
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0001_1010) # CNXY_RAAF
-    write_sint(buf, 1000)        # placement-y (relative)
-    write_uint(buf, 0)           # repetition (reuse)
+    write_uint(buf, 17)           # PLACEMENT (simple)
+    write_byte(buf, 0b0001_1010)  # CNXY_RAAF
+    write_sint(buf, 1000)         # placement-y (relative)
+    write_uint(buf, 0)            # repetition (reuse)
 
     # PLACEMENT 6
-    write_uint(buf, 17)          # PLACEMENT (simple)
-    write_byte(buf, 0b0001_1011) # CNXY_RAAF
-    write_sint(buf, 1000)        # placement-y (relative)
-    write_uint(buf, 0)           # repetition (reuse)
+    write_uint(buf, 17)           # PLACEMENT (simple)
+    write_byte(buf, 0b0001_1011)  # CNXY_RAAF
+    write_sint(buf, 1000)         # placement-y (relative)
+    write_uint(buf, 0)            # repetition (reuse)
 
-    write_uint(buf, 13)          # CELL record (name ref.)
-    write_uint(buf, 0)           # Cell name 0 (A)
+    write_uint(buf, 13)           # CELL record (name ref.)
+    write_uint(buf, 0)            # Cell name 0 (A)
 
     write_rectangle(buf)
 
@@ -604,84 +598,84 @@ def write_file_6(buf: BufferedIOBase) -> BufferedIOBase:
     '''
     buf.write(HEADER)
 
-    write_uint(buf, 14)           # CELL record (explicit)
-    write_bstring(buf, b'TOPTOP') # Cell name
+    write_uint(buf, 14)            # CELL record (explicit)
+    write_bstring(buf, b'TOPTOP')  # Cell name
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)            # XYRELATIVE record
 
-    write_uint(buf, 18)          # PLACEMENT (mag 0.5, manhattan)
-    write_byte(buf, 0b1011_0110) # CNXY_RMAF
-    write_bstring(buf, b'TOP')   # Cell reference
-    write_uint(buf, 6)           # magnitude, float32
-    write_float32(buf, 0.5)      # (magnitude)
-    write_uint(buf, 7)           # angle, float64
-    write_float64(buf, 90.0)     # (angle)
-    write_sint(buf, 100)         # placement-x (relative)
-    write_sint(buf, 0)           # placement-y (relative)
+    write_uint(buf, 18)            # PLACEMENT (mag 0.5, manhattan)
+    write_byte(buf, 0b1011_0110)   # CNXY_RMAF
+    write_bstring(buf, b'TOP')     # Cell reference
+    write_uint(buf, 6)             # magnitude, float32
+    write_float32(buf, 0.5)        # (magnitude)
+    write_uint(buf, 7)             # angle, float64
+    write_float64(buf, 90.0)       # (angle)
+    write_sint(buf, 100)           # placement-x (relative)
+    write_sint(buf, 0)             # placement-y (relative)
 
-    write_uint(buf, 18)          # PLACEMENT (no mag, manhattan)
-    write_byte(buf, 0b0011_0000) # CNXY_RMAF
-    write_sint(buf, 100)         # placement-x (relative)
-    write_sint(buf, 1000)        # placement-y (relative)
+    write_uint(buf, 18)            # PLACEMENT (no mag, manhattan)
+    write_byte(buf, 0b0011_0000)   # CNXY_RMAF
+    write_sint(buf, 100)           # placement-x (relative)
+    write_sint(buf, 1000)          # placement-y (relative)
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'TOP')   # Cell name
+    write_uint(buf, 14)            # CELL record (explicit)
+    write_bstring(buf, b'TOP')     # Cell name
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)            # XYRELATIVE record
 
     # PLACEMENT 0
-    write_uint(buf, 18)          # PLACEMENT (mag 0.5, manhattan)
-    write_byte(buf, 0b1011_0110) # CNXY_RMAF
-    write_bstring(buf, b'A')     # Cell reference
-    write_uint(buf, 6)           # magnitude, float32
-    write_float32(buf, 0.5)      # (magnitude)
-    write_uint(buf, 7)           # angle, float64
-    write_float64(buf, 0.0)      # (angle)
-    write_sint(buf, -150)        # placement-x (relative)
-    write_sint(buf, 200)         # placement-y (relative)
+    write_uint(buf, 18)            # PLACEMENT (mag 0.5, manhattan)
+    write_byte(buf, 0b1011_0110)   # CNXY_RMAF
+    write_bstring(buf, b'A')       # Cell reference
+    write_uint(buf, 6)             # magnitude, float32
+    write_float32(buf, 0.5)        # (magnitude)
+    write_uint(buf, 7)             # angle, float64
+    write_float64(buf, 0.0)        # (angle)
+    write_sint(buf, -150)          # placement-x (relative)
+    write_sint(buf, 200)           # placement-y (relative)
 
     # PLACEMENT 1
-    write_uint(buf, 18)          # PLACEMENT (no mag, manhattan)
-    write_byte(buf, 0b0011_0000) # CNXY_RMAF
-    write_sint(buf, -150)        # placement-x (relative)
-    write_sint(buf, 600)         # placement-y (relative)
+    write_uint(buf, 18)            # PLACEMENT (no mag, manhattan)
+    write_byte(buf, 0b0011_0000)   # CNXY_RMAF
+    write_sint(buf, -150)          # placement-x (relative)
+    write_sint(buf, 600)           # placement-y (relative)
 
     # PLACEMENT 2
-    write_uint(buf, 18)          # PLACEMENT (no mag, manhattan)
-    write_byte(buf, 0b0001_0000) # CNXY_RMAF
-    write_sint(buf, 400)         # placement-y (relative)
+    write_uint(buf, 18)            # PLACEMENT (no mag, manhattan)
+    write_byte(buf, 0b0001_0000)   # CNXY_RMAF
+    write_sint(buf, 400)           # placement-y (relative)
 
     # PLACEMENT 3
-    write_uint(buf, 18)          # PLACEMENT (no mag, manhattan)
-    write_byte(buf, 0b0010_0000) # CNXY_RMAF
-    write_sint(buf, 300)         # placement-x (relative)
+    write_uint(buf, 18)            # PLACEMENT (no mag, manhattan)
+    write_byte(buf, 0b0010_0000)   # CNXY_RMAF
+    write_sint(buf, 300)           # placement-x (relative)
 
-    write_uint(buf, 15)          # XYABSOLUTE record
+    write_uint(buf, 15)            # XYABSOLUTE record
 
     # PLACEMENT 4
-    write_uint(buf, 18)          # PLACEMENT (no mag, manhattan)
-    write_byte(buf, 0b0011_0001) # CNXY_RMAF
-    write_sint(buf, 700)         # placement-x (absolute)
-    write_sint(buf, 400)         # placement-y (absolute)
+    write_uint(buf, 18)            # PLACEMENT (no mag, manhattan)
+    write_byte(buf, 0b0011_0001)   # CNXY_RMAF
+    write_sint(buf, 700)           # placement-x (absolute)
+    write_sint(buf, 400)           # placement-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)            # XYRELATIVE record
 
     # PLACEMENT 5
-    write_uint(buf, 18)          # PLACEMENT (no mag, manhattan)
-    write_byte(buf, 0b0001_0010) # CNXY_RMAF
-    write_uint(buf, 0)           # angle (uint, positive)
-    write_uint(buf, 90)          # (angle)
-    write_sint(buf, 1000)        # placement-y (relative)
+    write_uint(buf, 18)            # PLACEMENT (no mag, manhattan)
+    write_byte(buf, 0b0001_0010)   # CNXY_RMAF
+    write_uint(buf, 0)             # angle (uint, positive)
+    write_uint(buf, 90)            # (angle)
+    write_sint(buf, 1000)          # placement-y (relative)
 
     # PLACEMENT 6
-    write_uint(buf, 18)          # PLACEMENT (no mag, manhattan)
-    write_byte(buf, 0b0001_0011) # CNXY_RMAF
-    write_uint(buf, 1)           # angle (uint, negative)
-    write_uint(buf, 90)          # (angle)
-    write_sint(buf, 1000)        # placement-y (relative)
+    write_uint(buf, 18)            # PLACEMENT (no mag, manhattan)
+    write_byte(buf, 0b0001_0011)   # CNXY_RMAF
+    write_uint(buf, 1)             # angle (uint, negative)
+    write_uint(buf, 90)            # (angle)
+    write_sint(buf, 1000)          # placement-y (relative)
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'A')     # Cell name
+    write_uint(buf, 14)            # CELL record (explicit)
+    write_bstring(buf, b'A')       # Cell name
 
     write_rectangle(buf)
 
@@ -757,71 +751,71 @@ def write_file_8(buf: BufferedIOBase) -> BufferedIOBase:
     '''
     buf.write(HEADER)
 
-    write_uint(buf, 14)           # CELL record (explicit)
-    write_bstring(buf, b'TOPTOP') # Cell name
+    write_uint(buf, 14)            # CELL record (explicit)
+    write_bstring(buf, b'TOPTOP')  # Cell name
 
-    write_uint(buf, 15)          # XYABSOLUTE record
+    write_uint(buf, 15)            # XYABSOLUTE record
 
-    write_uint(buf, 18)          # PLACEMENT (mag 0.5, arbitrary angle)
-    write_byte(buf, 0b1011_0110) # CNXY_RMAF
-    write_bstring(buf, b'TOP')   # Cell reference
-    write_uint(buf, 6)           # magnitude, float32
-    write_float32(buf, 0.5)      # (magnitude)
-    write_uint(buf, 7)           # angle, float64
-    write_float64(buf, 22.5)     # (angle)
-    write_sint(buf, 100)         # placement-x (absolute)
-    write_sint(buf, 0)           # placement-y (absolute)
+    write_uint(buf, 18)            # PLACEMENT (mag 0.5, arbitrary angle)
+    write_byte(buf, 0b1011_0110)   # CNXY_RMAF
+    write_bstring(buf, b'TOP')     # Cell reference
+    write_uint(buf, 6)             # magnitude, float32
+    write_float32(buf, 0.5)        # (magnitude)
+    write_uint(buf, 7)             # angle, float64
+    write_float64(buf, 22.5)       # (angle)
+    write_sint(buf, 100)           # placement-x (absolute)
+    write_sint(buf, 0)             # placement-y (absolute)
 
-    write_uint(buf, 18)          # PLACEMENT (mag 1.0, manhattan)
-    write_byte(buf, 0b1011_0110) # CNXY_RMAF
-    write_bstring(buf, b'TOP')   # Cell reference
-    write_uint(buf, 6)           # magnitude, float32
-    write_float32(buf, 1.0)      # (magnitude)
-    write_uint(buf, 7)           # angle, float64
-    write_float64(buf, 0.0)      # (angle)
-    write_sint(buf, 1100)        # placement-x (absolute)
-    write_sint(buf, 0)           # placement-y (absolute)
+    write_uint(buf, 18)            # PLACEMENT (mag 1.0, manhattan)
+    write_byte(buf, 0b1011_0110)   # CNXY_RMAF
+    write_bstring(buf, b'TOP')     # Cell reference
+    write_uint(buf, 6)             # magnitude, float32
+    write_float32(buf, 1.0)        # (magnitude)
+    write_uint(buf, 7)             # angle, float64
+    write_float64(buf, 0.0)        # (angle)
+    write_sint(buf, 1100)          # placement-x (absolute)
+    write_sint(buf, 0)             # placement-y (absolute)
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'TOP')   # Cell name
+    write_uint(buf, 14)            # CELL record (explicit)
+    write_bstring(buf, b'TOP')     # Cell name
 
-    write_uint(buf, 18)          # PLACEMENT (mag 2.0, manhattan)
-    write_byte(buf, 0b1011_0110) # CNXY_RMAF
-    write_bstring(buf, b'A')     # Cell reference
-    write_uint(buf, 6)           # magnitude, float32
-    write_float32(buf, 2.0)      # (magnitude)
-    write_uint(buf, 7)           # angle, float64
-    write_float64(buf, 0.0)      # (angle)
-    write_sint(buf, -100)        # placement-x (absolute)
-    write_sint(buf, 100)         # placement-y (absolute)
+    write_uint(buf, 18)            # PLACEMENT (mag 2.0, manhattan)
+    write_byte(buf, 0b1011_0110)   # CNXY_RMAF
+    write_bstring(buf, b'A')       # Cell reference
+    write_uint(buf, 6)             # magnitude, float32
+    write_float32(buf, 2.0)        # (magnitude)
+    write_uint(buf, 7)             # angle, float64
+    write_float64(buf, 0.0)        # (angle)
+    write_sint(buf, -100)          # placement-x (absolute)
+    write_sint(buf, 100)           # placement-y (absolute)
 
-    write_uint(buf, 18)          # PLACEMENT (mag 1.0, arbitrary angle)
-    write_byte(buf, 0b1011_0110) # CNXY_RMAF
-    write_bstring(buf, b'A')     # Cell reference
-    write_uint(buf, 6)           # magnitude, float32
-    write_float32(buf, 1.0)      # (magnitude)
-    write_uint(buf, 7)           # angle, float64
-    write_float64(buf, 45.0)     # (angle)
-    write_sint(buf, -150)        # placement-x (absolute)
-    write_sint(buf, 1100)        # placement-y (absolute)
+    write_uint(buf, 18)            # PLACEMENT (mag 1.0, arbitrary angle)
+    write_byte(buf, 0b1011_0110)   # CNXY_RMAF
+    write_bstring(buf, b'A')       # Cell reference
+    write_uint(buf, 6)             # magnitude, float32
+    write_float32(buf, 1.0)        # (magnitude)
+    write_uint(buf, 7)             # angle, float64
+    write_float64(buf, 45.0)       # (angle)
+    write_sint(buf, -150)          # placement-x (absolute)
+    write_sint(buf, 1100)          # placement-y (absolute)
 
-    write_uint(buf, 18)          # PLACEMENT (mag 0.5, arbitrary angle)
-    write_byte(buf, 0b1011_1111) # CNXY_RMAF
-    write_bstring(buf, b'A')     # Cell reference
-    write_uint(buf, 6)           # magnitude, float32
-    write_float32(buf, 0.5)      # (magnitude)
-    write_uint(buf, 7)           # angle, float64
-    write_float64(buf, 135.0)    # (angle)
-    write_sint(buf, -200)        # placement-x (absolute)
-    write_sint(buf, 2100)        # placement-y (absolute)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 200)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 18)            # PLACEMENT (mag 0.5, arbitrary angle)
+    write_byte(buf, 0b1011_1111)   # CNXY_RMAF
+    write_bstring(buf, b'A')       # Cell reference
+    write_uint(buf, 6)             # magnitude, float32
+    write_float32(buf, 0.5)        # (magnitude)
+    write_uint(buf, 7)             # angle, float64
+    write_float64(buf, 135.0)      # (angle)
+    write_sint(buf, -200)          # placement-x (absolute)
+    write_sint(buf, 2100)          # placement-y (absolute)
+    write_uint(buf, 1)             # repetition (3x4 matrix)
+    write_uint(buf, 1)             # (repetition) x-dimension
+    write_uint(buf, 2)             # (repetition) y-dimension
+    write_uint(buf, 200)           # (repetition) x-spacing
+    write_uint(buf, 300)           # (repetition) y-spacing
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'A')     # Cell name
+    write_uint(buf, 14)            # CELL record (explicit)
+    write_bstring(buf, b'A')       # Cell name
 
     write_rectangle(buf, pos=(30, -40))
 

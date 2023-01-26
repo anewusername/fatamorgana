@@ -1,17 +1,11 @@
 # type: ignore
 
-from typing import List, Tuple, Iterable
-from itertools import chain
 from io import BytesIO, BufferedIOBase
-import struct
 
-import pytest       # type: ignore
-import numpy
 from numpy.testing import assert_equal
 
 from .utils import HEADER, FOOTER
-from ..basic import write_uint, write_sint, read_uint, read_sint, write_bstring, write_byte, PathExtensionScheme
-from ..basic import InvalidRecordError, InvalidDataError
+from ..basic import write_uint, write_sint, write_bstring, write_byte, PathExtensionScheme
 from ..main import OasisLayout
 
 
@@ -37,108 +31,108 @@ def write_file_1(buf: BufferedIOBase) -> BufferedIOBase:
     '''
     buf.write(HEADER)
 
-    write_uint(buf, 14)          # CELL record (explicit)
-    write_bstring(buf, b'ABC')   # Cell name
+    write_uint(buf, 14)           # CELL record (explicit)
+    write_bstring(buf, b'ABC')    # Cell name
 
     # PATH 0
-    write_uint(buf, 22)          # PATH record
-    write_byte(buf, 0b1111_1011) # EWPX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 10)          # half-width
-    write_byte(buf, 0b0000_1111) # extension-scheme 0000_SSEE
-    write_sint(buf, 5)           # (extension-scheme) start
-    write_sint(buf, -5)          # (extension-scheme) end
-    write_uint(buf, 0)           # pointlist: 1-delta, horiz-fisrt
-    write_uint(buf, 3)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf, 0)           # geometry-x (absolute)
-    write_sint(buf, 100)         # geometry-y (absolute)
+    write_uint(buf, 22)           # PATH record
+    write_byte(buf, 0b1111_1011)  # EWPX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 10)           # half-width
+    write_byte(buf, 0b0000_1111)  # extension-scheme 0000_SSEE
+    write_sint(buf, 5)            # (extension-scheme) start
+    write_sint(buf, -5)           # (extension-scheme) end
+    write_uint(buf, 0)            # pointlist: 1-delta, horiz-fisrt
+    write_uint(buf, 3)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf, 0)            # geometry-x (absolute)
+    write_sint(buf, 100)          # geometry-y (absolute)
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
     # PATH 1
-    write_uint(buf, 22)          # PATH record
-    write_byte(buf, 0b1110_1011) # EWPX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 10)          # half-width
-    write_byte(buf, 0b0000_0000) # extension-scheme 0000_SSEE
-    write_uint(buf, 0)           # pointlist: 1-delta, horiz-fisrt
-    write_uint(buf, 3)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf, 200)         # geometry-y (relative)
+    write_uint(buf, 22)           # PATH record
+    write_byte(buf, 0b1110_1011)  # EWPX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 10)           # half-width
+    write_byte(buf, 0b0000_0000)  # extension-scheme 0000_SSEE
+    write_uint(buf, 0)            # pointlist: 1-delta, horiz-fisrt
+    write_uint(buf, 3)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf, 200)          # geometry-y (relative)
 
     # PATH 2
-    write_uint(buf, 22)          # PATH record
-    write_byte(buf, 0b1110_1001) # EWPX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 10)          # half-width
-    write_byte(buf, 0b0000_0100) # extension-scheme 0000_SSEE
-    write_uint(buf, 0)           # pointlist: 1-delta, horiz-fisrt
-    write_uint(buf, 3)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf, 200)         # geometry-y (relative)
+    write_uint(buf, 22)           # PATH record
+    write_byte(buf, 0b1110_1001)  # EWPX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 10)           # half-width
+    write_byte(buf, 0b0000_0100)  # extension-scheme 0000_SSEE
+    write_uint(buf, 0)            # pointlist: 1-delta, horiz-fisrt
+    write_uint(buf, 3)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf, 200)          # geometry-y (relative)
 
     # PATH 3
-    write_uint(buf, 22)          # PATH record
-    write_byte(buf, 0b1110_1010) # EWPX_YRDL
-    write_uint(buf, 2)           # datatype
-    write_uint(buf, 12)          # half-width
-    write_byte(buf, 0b0000_0101) # extension-scheme 0000_SSEE
-    write_uint(buf, 0)           # pointlist: 1-delta, horiz-fisrt
-    write_uint(buf, 3)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf, 200)         # geometry-y (relative)
+    write_uint(buf, 22)           # PATH record
+    write_byte(buf, 0b1110_1010)  # EWPX_YRDL
+    write_uint(buf, 2)            # datatype
+    write_uint(buf, 12)           # half-width
+    write_byte(buf, 0b0000_0101)  # extension-scheme 0000_SSEE
+    write_uint(buf, 0)            # pointlist: 1-delta, horiz-fisrt
+    write_uint(buf, 3)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf, 200)          # geometry-y (relative)
 
     # PATH 4
-    write_uint(buf, 22)          # PATH record
-    write_byte(buf, 0b1010_1011) # EWPX_YRDL
-    write_uint(buf, 1)           # layer
-    write_uint(buf, 2)           # datatype
-    write_byte(buf, 0b0000_1010) # extension-scheme 0000_SSEE
-    write_uint(buf, 0)           # pointlist: 1-delta, horiz-fisrt
-    write_uint(buf, 3)           # (pointlist) dimension
-    write_sint(buf, 150)         # (pointlist)
-    write_sint(buf, 50)          # (pointlist)
-    write_sint(buf, -50)         # (pointlist)
-    write_sint(buf, 200)         # geometry-y (relative)
+    write_uint(buf, 22)           # PATH record
+    write_byte(buf, 0b1010_1011)  # EWPX_YRDL
+    write_uint(buf, 1)            # layer
+    write_uint(buf, 2)            # datatype
+    write_byte(buf, 0b0000_1010)  # extension-scheme 0000_SSEE
+    write_uint(buf, 0)            # pointlist: 1-delta, horiz-fisrt
+    write_uint(buf, 3)            # (pointlist) dimension
+    write_sint(buf, 150)          # (pointlist)
+    write_sint(buf, 50)           # (pointlist)
+    write_sint(buf, -50)          # (pointlist)
+    write_sint(buf, 200)          # geometry-y (relative)
 
     # PATH 5
-    write_uint(buf, 22)          # PATH record
-    write_byte(buf, 0b0000_1011) # EWPX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_sint(buf, 200)         # geometry-y (relative)
+    write_uint(buf, 22)           # PATH record
+    write_byte(buf, 0b0000_1011)  # EWPX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_sint(buf, 200)          # geometry-y (relative)
 
     # PATH 6
-    write_uint(buf, 22)          # PATH record
-    write_byte(buf, 0b0000_1111) # EWPX_YRDL
-    write_uint(buf, 2)           # layer
-    write_uint(buf, 3)           # datatype
-    write_sint(buf, 200)         # geometry-y (relative)
-    write_uint(buf, 1)           # repetition (3x4 matrix)
-    write_uint(buf, 1)           # (repetition) x-dimension
-    write_uint(buf, 2)           # (repetition) y-dimension
-    write_uint(buf, 200)         # (repetition) x-spacing
-    write_uint(buf, 300)         # (repetition) y-spacing
+    write_uint(buf, 22)           # PATH record
+    write_byte(buf, 0b0000_1111)  # EWPX_YRDL
+    write_uint(buf, 2)            # layer
+    write_uint(buf, 3)            # datatype
+    write_sint(buf, 200)          # geometry-y (relative)
+    write_uint(buf, 1)            # repetition (3x4 matrix)
+    write_uint(buf, 1)            # (repetition) x-dimension
+    write_uint(buf, 2)            # (repetition) y-dimension
+    write_uint(buf, 200)          # (repetition) x-spacing
+    write_uint(buf, 300)          # (repetition) y-spacing
 
-    write_uint(buf, 16)          # XYRELATIVE record
+    write_uint(buf, 16)           # XYRELATIVE record
 
     # PATH 7
-    write_uint(buf, 22)          # PATH record
-    write_byte(buf, 0b0001_0101) # EWPX_YRDL
-    write_uint(buf, 1)           # layer
-    write_sint(buf, 1000)        # geometry-x (relative)
-    write_uint(buf, 0)           # repetition (reuse)
+    write_uint(buf, 22)           # PATH record
+    write_byte(buf, 0b0001_0101)  # EWPX_YRDL
+    write_uint(buf, 1)            # layer
+    write_sint(buf, 1000)         # geometry-x (relative)
+    write_uint(buf, 0)            # repetition (reuse)
 
     buf.write(FOOTER)
     return buf
