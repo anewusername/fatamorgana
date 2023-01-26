@@ -3,7 +3,7 @@ This module contains data structures and functions for reading from and
  writing to whole OASIS layout files, and provides a few additional
  abstractions for the data contained inside them.
 """
-from typing import List, Dict, Union, Optional, Type
+from typing import List, Dict, Union, Optional, Type, IO
 import io
 import logging
 
@@ -116,7 +116,7 @@ class OasisLayout:
         self.layers = []
 
     @staticmethod
-    def read(stream: io.BufferedIOBase) -> 'OasisLayout':
+    def read(stream: IO[bytes]) -> 'OasisLayout':
         """
         Read an entire .oas file into an `OasisLayout` object.
 
@@ -138,7 +138,7 @@ class OasisLayout:
 
     def read_record(
             self,
-            stream: io.BufferedIOBase,
+            stream: IO[bytes],
             modals: Modals,
             file_state: FileModals
             ) -> bool:
@@ -343,7 +343,7 @@ class OasisLayout:
             raise InvalidRecordError(f'Unknown record id: {record_id}')
         return False
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write this object in OASIS fromat to a stream.
 
@@ -430,7 +430,7 @@ class Cell:
         self.placements = [] if placements is None else placements
         self.geometry = [] if geometry is None else geometry
 
-    def dedup_write(self, stream: io.BufferedIOBase, modals: Modals) -> int:
+    def dedup_write(self, stream: IO[bytes], modals: Modals) -> int:
         """
         Write this cell to a stream, using the provided modal variables to
          deduplicate any repeated data.

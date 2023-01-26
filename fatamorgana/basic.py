@@ -2,7 +2,7 @@
 This module contains all datatypes and parsing/writing functions for
  all abstractions below the 'record' or 'block' level.
 """
-from typing import List, Tuple, Type, Union, Optional, Any, Sequence
+from typing import List, Tuple, Type, Union, Optional, Any, Sequence, IO
 from fractions import Fraction
 from enum import Enum
 import math
@@ -24,6 +24,7 @@ except ImportError:
 real_t = Union[int, float, Fraction]
 repetition_t = Union['ReuseRepetition', 'GridRepetition', 'ArbitraryRepetition']
 property_value_t = Union[int, bytes, 'AString', 'NString', 'PropStringReference', float, Fraction]
+bytes_t = bytes
 
 
 class FatamorganaError(Exception):
@@ -85,7 +86,7 @@ MAGIC_BYTES: bytes = b'%SEMI-OASIS\r\n'
 '''
     Basic IO
 '''
-def _read(stream: io.BufferedIOBase, n: int) -> bytes:
+def _read(stream: IO[bytes], n: int) -> bytes:
     """
     Read n bytes from the stream.
     Raise an EOFError if there were not enough bytes in the stream.
@@ -106,7 +107,7 @@ def _read(stream: io.BufferedIOBase, n: int) -> bytes:
     return b
 
 
-def read_byte(stream: io.BufferedIOBase) -> int:
+def read_byte(stream: IO[bytes]) -> int:
     """
     Read a single byte and return it.
 
@@ -119,7 +120,7 @@ def read_byte(stream: io.BufferedIOBase) -> int:
     return _read(stream, 1)[0]
 
 
-def write_byte(stream: io.BufferedIOBase, n: int) -> int:
+def write_byte(stream: IO[bytes], n: int) -> int:
     """
     Write a single byte to the stream.
 
@@ -132,7 +133,7 @@ def write_byte(stream: io.BufferedIOBase, n: int) -> int:
     return stream.write(bytes((n,)))
 
 
-def _py_read_bool_byte(stream: io.BufferedIOBase) -> List[bool]:
+def _py_read_bool_byte(stream: IO[bytes]) -> List[bool]:
     """
     Read a single byte from the stream, and interpret its bits as
       a list of 8 booleans.
@@ -147,7 +148,7 @@ def _py_read_bool_byte(stream: io.BufferedIOBase) -> List[bool]:
     bits = [bool((byte >> i) & 0x01) for i in reversed(range(8))]
     return bits
 
-def _py_write_bool_byte(stream: io.BufferedIOBase, bits: Tuple[Union[bool, int], ...]) -> int:
+def _py_write_bool_byte(stream: IO[bytes], bits: Tuple[Union[bool, int], ...]) -> int:
     """
     Pack 8 booleans into a byte, and write it to the stream.
 
@@ -170,7 +171,7 @@ def _py_write_bool_byte(stream: io.BufferedIOBase, bits: Tuple[Union[bool, int],
 
 
 if _USE_NUMPY:
-    def _np_read_bool_byte(stream: io.BufferedIOBase) -> NDArray[numpy.uint8]:
+    def _np_read_bool_byte(stream: IO[bytes]) -> NDArray[numpy.uint8]:
         """
         Read a single byte from the stream, and interpret its bits as
           a list of 8 booleans.
@@ -184,7 +185,7 @@ if _USE_NUMPY:
         byte_arr = _read(stream, 1)
         return numpy.unpackbits(numpy.frombuffer(byte_arr, dtype=numpy.uint8))
 
-    def _np_write_bool_byte(stream: io.BufferedIOBase, bits: Tuple[Union[bool, int], ...]) -> int:
+    def _np_write_bool_byte(stream: IO[bytes], bits: Tuple[Union[bool, int], ...]) -> int:
         """
         Pack 8 booleans into a byte, and write it to the stream.
 
@@ -208,7 +209,7 @@ else:
     read_bool_byte = _py_read_bool_byte    # type: ignore
     write_bool_byte = _py_write_bool_byte
 
-def read_uint(stream: io.BufferedIOBase) -> int:
+def read_uint(stream: IO[bytes]) -> int:
     """
     Read an unsigned integer from the stream.
 
@@ -234,7 +235,7 @@ def read_uint(stream: io.BufferedIOBase) -> int:
     return result
 
 
-def write_uint(stream: io.BufferedIOBase, n: int) -> int:
+def write_uint(stream: IO[bytes], n: int) -> int:
     """
     Write an unsigned integer to the stream.
     See format details in `read_uint()`.
@@ -297,7 +298,7 @@ def encode_sint(sint: int) -> int:
     return (abs(sint) << 1) | (sint < 0)
 
 
-def read_sint(stream: io.BufferedIOBase) -> int:
+def read_sint(stream: IO[bytes]) -> int:
     """
     Read a signed integer from the stream.
     See `decode_sint()` for format details.
@@ -311,7 +312,7 @@ def read_sint(stream: io.BufferedIOBase) -> int:
     return decode_sint(read_uint(stream))
 
 
-def write_sint(stream: io.BufferedIOBase, n: int) -> int:
+def write_sint(stream: IO[bytes], n: int) -> int:
     """
     Write a signed integer to the stream.
     See `decode_sint()` for format details.
@@ -326,7 +327,7 @@ def write_sint(stream: io.BufferedIOBase, n: int) -> int:
     return write_uint(stream, encode_sint(n))
 
 
-def read_bstring(stream: io.BufferedIOBase) -> bytes:
+def read_bstring(stream: IO[bytes]) -> bytes:
     """
     Read a binary string from the stream.
     The format is:
@@ -343,7 +344,7 @@ def read_bstring(stream: io.BufferedIOBase) -> bytes:
     return _read(stream, length)
 
 
-def write_bstring(stream: io.BufferedIOBase, bstring: bytes):
+def write_bstring(stream: IO[bytes], bstring: bytes):
     """
     Write a binary string to the stream.
     See `read_bstring()` for format details.
@@ -359,7 +360,7 @@ def write_bstring(stream: io.BufferedIOBase, bstring: bytes):
     return stream.write(bstring)
 
 
-def read_ratio(stream: io.BufferedIOBase) -> Fraction:
+def read_ratio(stream: IO[bytes]) -> Fraction:
     """
     Read a ratio (unsigned) from the stream.
     The format is:
@@ -377,7 +378,7 @@ def read_ratio(stream: io.BufferedIOBase) -> Fraction:
     return Fraction(numer, denom)
 
 
-def write_ratio(stream: io.BufferedIOBase, r: Fraction) -> int:
+def write_ratio(stream: IO[bytes], r: Fraction) -> int:
     """
     Write an unsigned ratio to the stream.
     See `read_ratio()` for format details.
@@ -399,7 +400,7 @@ def write_ratio(stream: io.BufferedIOBase, r: Fraction) -> int:
     return size
 
 
-def read_float32(stream: io.BufferedIOBase) -> float:
+def read_float32(stream: IO[bytes]) -> float:
     """
     Read a 32-bit float from the stream.
 
@@ -413,7 +414,7 @@ def read_float32(stream: io.BufferedIOBase) -> float:
     return struct.unpack("<f", b)[0]
 
 
-def write_float32(stream: io.BufferedIOBase, f: float) -> int:
+def write_float32(stream: IO[bytes], f: float) -> int:
     """
     Write a 32-bit float to the stream.
 
@@ -428,7 +429,7 @@ def write_float32(stream: io.BufferedIOBase, f: float) -> int:
     return stream.write(b)
 
 
-def read_float64(stream: io.BufferedIOBase) -> float:
+def read_float64(stream: IO[bytes]) -> float:
     """
     Read a 64-bit float from the stream.
 
@@ -442,7 +443,7 @@ def read_float64(stream: io.BufferedIOBase) -> float:
     return struct.unpack("<d", b)[0]
 
 
-def write_float64(stream: io.BufferedIOBase, f: float) -> int:
+def write_float64(stream: IO[bytes], f: float) -> int:
     """
     Write a 64-bit float to the stream.
 
@@ -457,7 +458,7 @@ def write_float64(stream: io.BufferedIOBase, f: float) -> int:
     return stream.write(b)
 
 
-def read_real(stream: io.BufferedIOBase, real_type: Optional[int] = None) -> real_t:
+def read_real(stream: IO[bytes], real_type: Optional[int] = None) -> real_t:
     """
     Read a real number from the stream.
 
@@ -508,7 +509,7 @@ def read_real(stream: io.BufferedIOBase, real_type: Optional[int] = None) -> rea
 
 
 def write_real(
-        stream: io.BufferedIOBase,
+        stream: IO[bytes],
         r: real_t,
         force_float32: bool = False
         ) -> int:
@@ -594,7 +595,7 @@ class NString:
         self._string = bstring.decode('ascii')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase) -> 'NString':
+    def read(stream: IO[bytes_t]) -> 'NString':
         """
         Create an NString object by reading a bstring from the provided stream.
 
@@ -609,7 +610,7 @@ class NString:
         """
         return NString(read_bstring(stream))
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes_t]) -> int:
         """
         Write this NString to a stream.
 
@@ -631,7 +632,7 @@ class NString:
         return self._string
 
 
-def read_nstring(stream: io.BufferedIOBase) -> str:
+def read_nstring(stream: IO[bytes]) -> str:
     """
     Read a name string from the provided stream.
     See `NString` for constraints on name strings.
@@ -648,7 +649,7 @@ def read_nstring(stream: io.BufferedIOBase) -> str:
     return NString.read(stream).string
 
 
-def write_nstring(stream: io.BufferedIOBase, string: str) -> int:
+def write_nstring(stream: IO[bytes], string: str) -> int:
     """
     Write a name string to a stream.
     See `NString` for constraints on name strings.
@@ -708,7 +709,7 @@ class AString:
         self._string = bstring.decode('ascii')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase) -> 'AString':
+    def read(stream: IO[bytes_t]) -> 'AString':
         """
         Create an `AString` object by reading a bstring from the provided stream.
 
@@ -723,7 +724,7 @@ class AString:
         """
         return AString(read_bstring(stream))
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes_t]) -> int:
         """
         Write this `AString` to a stream.
 
@@ -745,7 +746,7 @@ class AString:
         return self._string
 
 
-def read_astring(stream: io.BufferedIOBase) -> str:
+def read_astring(stream: IO[bytes]) -> str:
     """
     Read an ASCII string from the provided stream.
     See `AString` for constraints on ASCII strings.
@@ -762,7 +763,7 @@ def read_astring(stream: io.BufferedIOBase) -> str:
     return AString.read(stream).string
 
 
-def write_astring(stream: io.BufferedIOBase, string: str) -> int:
+def write_astring(stream: IO[bytes], string: str) -> int:
     """
     Write an ASCII string to a stream.
     See AString for constraints on ASCII strings.
@@ -853,7 +854,7 @@ class ManhattanDelta:
         return d
 
     @staticmethod
-    def read(stream: io.BufferedIOBase) -> 'ManhattanDelta':
+    def read(stream: IO[bytes]) -> 'ManhattanDelta':
         """
         Read a `ManhattanDelta` object from the provided stream.
 
@@ -868,7 +869,7 @@ class ManhattanDelta:
         n = read_uint(stream)
         return ManhattanDelta.from_uint(n)
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write a `ManhattanDelta` object to the provided stream.
 
@@ -989,7 +990,7 @@ class OctangularDelta:
         return d
 
     @staticmethod
-    def read(stream: io.BufferedIOBase) -> 'OctangularDelta':
+    def read(stream: IO[bytes]) -> 'OctangularDelta':
         """
         Read an `OctangularDelta` object from the provided stream.
 
@@ -1004,7 +1005,7 @@ class OctangularDelta:
         n = read_uint(stream)
         return OctangularDelta.from_uint(n)
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write an `OctangularDelta` object to the provided stream.
 
@@ -1057,7 +1058,7 @@ class Delta:
         return [self.x, self.y]
 
     @staticmethod
-    def read(stream: io.BufferedIOBase) -> 'Delta':
+    def read(stream: IO[bytes]) -> 'Delta':
         """
         Read a `Delta` object from the provided stream.
 
@@ -1083,7 +1084,7 @@ class Delta:
             y = read_sint(stream)
         return Delta(x, y)
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write a `Delta` object to the provided stream.
 
@@ -1109,7 +1110,7 @@ class Delta:
         return str(self.as_list())
 
 
-def read_repetition(stream: io.BufferedIOBase) -> repetition_t:
+def read_repetition(stream: IO[bytes]) -> repetition_t:
     """
     Read a repetition entry from the given stream.
 
@@ -1133,7 +1134,7 @@ def read_repetition(stream: io.BufferedIOBase) -> repetition_t:
         raise InvalidDataError(f'Unexpected repetition type: {rtype}')
 
 
-def write_repetition(stream: io.BufferedIOBase, repetition: repetition_t) -> int:
+def write_repetition(stream: IO[bytes], repetition: repetition_t) -> int:
     """
     Write a repetition entry to the given stream.
 
@@ -1153,10 +1154,10 @@ class ReuseRepetition:
      the most recently written repetition should be reused.
     """
     @staticmethod
-    def read(_stream: io.BufferedIOBase, _repetition_type: int) -> 'ReuseRepetition':
+    def read(_stream: IO[bytes], _repetition_type: int) -> 'ReuseRepetition':
         return ReuseRepetition()
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         return write_uint(stream, 0)
 
     def __eq__(self, other: Any) -> bool:
@@ -1230,7 +1231,7 @@ class GridRepetition:
         self.b_count = b_count
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, repetition_type: int) -> 'GridRepetition':
+    def read(stream: IO[bytes], repetition_type: int) -> 'GridRepetition':
         """
         Read a `GridRepetition` from a stream.
 
@@ -1276,7 +1277,7 @@ class GridRepetition:
             raise InvalidDataError(f'Invalid type for grid repetition {repetition_type}')
         return GridRepetition(a_vector, na, b_vector, nb)
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write the `GridRepetition` to a stream.
 
@@ -1375,7 +1376,7 @@ class ArbitraryRepetition:
         self.y_displacements = list(y_displacements)
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, repetition_type: int) -> 'ArbitraryRepetition':
+    def read(stream: IO[bytes], repetition_type: int) -> 'ArbitraryRepetition':
         """
         Read an `ArbitraryRepetition` from a stream.
 
@@ -1429,7 +1430,7 @@ class ArbitraryRepetition:
             raise InvalidDataError(f'Invalid ArbitraryRepetition repetition_type: {repetition_type}')
         return ArbitraryRepetition(x_displacements, y_displacements)
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write the `ArbitraryRepetition` to a stream.
 
@@ -1504,7 +1505,7 @@ class ArbitraryRepetition:
 
 
 def read_point_list(
-        stream: io.BufferedIOBase,
+        stream: IO[bytes],
         implicit_closed: bool,
         ) -> List[List[int]]:
     """
@@ -1537,7 +1538,7 @@ def read_point_list(
         for i in range(list_len):
             n = read_sint(stream)
             if n == 0:
-                raise Exception('Zero-sized 1-delta')
+                raise InvalidDataError('Zero-sized 1-delta')
             point = [0, 0]
             point[(i + 1) % 2] = n
             points.append(point)
@@ -1593,7 +1594,7 @@ def read_point_list(
 
 
 def write_point_list(
-        stream: io.BufferedIOBase,
+        stream: IO[bytes],
         points: List[Sequence[int]],
         fast: bool = False,
         implicit_closed: bool = True
@@ -1740,7 +1741,7 @@ class PropStringReference:
         return f'[{self.ref_type} : {self.ref}]'
 
 
-def read_property_value(stream: io.BufferedIOBase) -> property_value_t:
+def read_property_value(stream: IO[bytes]) -> property_value_t:
     """
     Read a property value from a stream.
 
@@ -1798,7 +1799,7 @@ def read_property_value(stream: io.BufferedIOBase) -> property_value_t:
 
 
 def write_property_value(
-        stream: io.BufferedIOBase,
+        stream: IO[bytes],
         value: property_value_t,
         force_real: bool = False,
         force_signed_int: bool = False,
@@ -1850,11 +1851,11 @@ def write_property_value(
             size = write_uint(stream, 15)
         size += write_uint(stream, value.ref)
     else:
-        raise Exception(f'Invalid property type: {type(value)} ({value})')
+        raise InvalidDataError(f'Invalid property type: {type(value)} ({value})')
     return size
 
 
-def read_interval(stream: io.BufferedIOBase) -> Tuple[Optional[int], Optional[int]]:
+def read_interval(stream: IO[bytes]) -> Tuple[Optional[int], Optional[int]]:
     """
     Read an interval from a stream.
     These are used for storing layer info.
@@ -1895,7 +1896,7 @@ def read_interval(stream: io.BufferedIOBase) -> Tuple[Optional[int], Optional[in
 
 
 def write_interval(
-        stream: io.BufferedIOBase,
+        stream: IO[bytes],
         min_bound: Optional[int] = None,
         max_bound: Optional[int] = None,
         ) -> int:
@@ -1962,7 +1963,7 @@ class OffsetEntry:
         self.offset = offset
 
     @staticmethod
-    def read(stream: io.BufferedIOBase) -> 'OffsetEntry':
+    def read(stream: IO[bytes]) -> 'OffsetEntry':
         """
         Read an offset entry from a stream.
 
@@ -1977,7 +1978,7 @@ class OffsetEntry:
         entry.offset = read_uint(stream)
         return entry
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write this offset entry to a stream.
 
@@ -2063,7 +2064,7 @@ class OffsetTable:
         self.xnames = xnames
 
     @staticmethod
-    def read(stream: io.BufferedIOBase) -> 'OffsetTable':
+    def read(stream: IO[bytes]) -> 'OffsetTable':
         """
         Read an offset table from a stream.
         See class docstring for format details.
@@ -2083,7 +2084,7 @@ class OffsetTable:
         table.xnames = OffsetEntry.read(stream)
         return table
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write this offset table to a stream.
         See class docstring for format details.
@@ -2107,7 +2108,7 @@ class OffsetTable:
                                          self.propstrings, self.layernames, self.xnames])
 
 
-def read_u32(stream: io.BufferedIOBase) -> int:
+def read_u32(stream: IO[bytes]) -> int:
     """
     Read a 32-bit unsigned integer (little endian) from a stream.
 
@@ -2121,7 +2122,7 @@ def read_u32(stream: io.BufferedIOBase) -> int:
     return struct.unpack('<I', b)[0]
 
 
-def write_u32(stream: io.BufferedIOBase, n: int) -> int:
+def write_u32(stream: IO[bytes], n: int) -> int:
     """
     Write a 32-bit unsigned integer (little endian) to a stream.
 
@@ -2174,7 +2175,7 @@ class Validation:
         self.checksum = checksum
 
     @staticmethod
-    def read(stream: io.BufferedIOBase) -> 'Validation':
+    def read(stream: IO[bytes]) -> 'Validation':
         """
         Read a validation entry from a stream.
         See class docstring for format details.
@@ -2199,7 +2200,7 @@ class Validation:
             raise InvalidDataError('Invalid validation type!')
         return Validation(checksum_type, checksum)
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write this validation entry to a stream.
         See class docstring for format details.
@@ -2228,7 +2229,7 @@ class Validation:
         return f'Validation(type: {self.checksum_type} sum: {self.checksum})'
 
 
-def write_magic_bytes(stream: io.BufferedIOBase) -> int:
+def write_magic_bytes(stream: IO[bytes]) -> int:
     """
     Write the magic byte sequence to a stream.
 
@@ -2241,7 +2242,7 @@ def write_magic_bytes(stream: io.BufferedIOBase) -> int:
     return stream.write(MAGIC_BYTES)
 
 
-def read_magic_bytes(stream: io.BufferedIOBase):
+def read_magic_bytes(stream: IO[bytes]):
     """
     Read the magic byte sequence from a stream.
     Raise an `InvalidDataError` if it was not found.

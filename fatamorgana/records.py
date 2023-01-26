@@ -10,7 +10,7 @@ Higher-level code (e.g. monitoring for combinations of records with
  parse, or code for dealing with nested records in a CBlock) should live
  in main.py instead.
 """
-from typing import List, Dict, Tuple, Union, Optional, Sequence, Any, TypeVar
+from typing import List, Dict, Tuple, Union, Optional, Sequence, Any, TypeVar, IO
 from abc import ABCMeta, abstractmethod
 import copy
 import math
@@ -159,7 +159,7 @@ class Record(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Record':
+    def read(stream: IO[bytes], record_id: int) -> 'Record':
         """
         Read a record of this type from a stream.
         This function does not merge with modal variables.
@@ -179,7 +179,7 @@ class Record(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         """
         Write this record to a stream as-is.
         This function does not merge or deduplicate with modal variables.
@@ -195,7 +195,7 @@ class Record(metaclass=ABCMeta):
         """
         pass
 
-    def dedup_write(self, stream: io.BufferedIOBase, modals: Modals) -> int:
+    def dedup_write(self, stream: IO[bytes], modals: Modals) -> int:
         """
         Run `.deduplicate_with_modals()` and then `.write()` to the stream.
 
@@ -256,7 +256,7 @@ class GeometryMixin(metaclass=ABCMeta):
 
 
 def read_refname(
-        stream: io.BufferedIOBase,
+        stream: IO[bytes],
         is_present: Union[bool, int],
         is_reference: Union[bool, int]
         ) -> Union[None, int, NString]:
@@ -281,7 +281,7 @@ def read_refname(
 
 
 def read_refstring(
-        stream: io.BufferedIOBase,
+        stream: IO[bytes],
         is_present: Union[bool, int],
         is_reference: Union[bool, int],
         ) -> Union[None, int, AString]:
@@ -316,14 +316,14 @@ class Pad(Record):
         pass
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Pad':
+    def read(stream: IO[bytes], record_id: int) -> 'Pad':
         if record_id != 0:
             raise InvalidDataError(f'Invalid record id for Pad {record_id}')
         record = Pad()
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         return write_uint(stream, 0)
 
 
@@ -355,14 +355,14 @@ class XYMode(Record):
         pass
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'XYMode':
+    def read(stream: IO[bytes], record_id: int) -> 'XYMode':
         if record_id not in (15, 16):
             raise InvalidDataError('Invalid record id for XYMode')
         record = XYMode(record_id == 16)
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         return write_uint(stream, 15 + self.relative)
 
 
@@ -417,7 +417,7 @@ class Start(Record):
         modals.reset()
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Start':
+    def read(stream: IO[bytes], record_id: int) -> 'Start':
         if record_id != 1:
             raise InvalidDataError(f'Invalid record id for Start: {record_id}')
         version = AString.read(stream)
@@ -432,7 +432,7 @@ class Start(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         size = write_uint(stream, 1)
         size += self.version.write(stream)
         size += write_real(stream, self.unit)
@@ -478,7 +478,7 @@ class End(Record):
 
     @staticmethod
     def read(
-            stream: io.BufferedIOBase,
+            stream: IO[bytes],
             record_id: int,
             has_offset_table: bool
             ) -> 'End':
@@ -494,7 +494,7 @@ class End(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         size = write_uint(stream, 2)
         if self.offset_table is not None:
             size += self.offset_table.write(stream)
@@ -550,7 +550,7 @@ class CBlock(Record):
         pass
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'CBlock':
+    def read(stream: IO[bytes], record_id: int) -> 'CBlock':
         if record_id != 34:
             raise InvalidDataError(f'Invalid record id for CBlock: {record_id}')
         compression_type = read_uint(stream)
@@ -560,7 +560,7 @@ class CBlock(Record):
         logger.debug(f'CBlock ending at 0x{stream.tell():x} was read successfully')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         size = write_uint(stream, 34)
         size += write_uint(stream, self.compression_type)
         size += write_uint(stream, self.decompressed_byte_count)
@@ -662,7 +662,7 @@ class CellName(Record):
         modals.reset()
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'CellName':
+    def read(stream: IO[bytes], record_id: int) -> 'CellName':
         if record_id not in (3, 4):
             raise InvalidDataError(f'Invalid record id for CellName {record_id}')
         nstring = NString.read(stream)
@@ -674,7 +674,7 @@ class CellName(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         record_id = 3 + (self.reference_number is not None)
         size = write_uint(stream, record_id)
         size += self.nstring.write(stream)
@@ -717,7 +717,7 @@ class PropName(Record):
         modals.reset()
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'PropName':
+    def read(stream: IO[bytes], record_id: int) -> 'PropName':
         if record_id not in (7, 8):
             raise InvalidDataError(f'Invalid record id for PropName {record_id}')
         nstring = NString.read(stream)
@@ -729,7 +729,7 @@ class PropName(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         record_id = 7 + (self.reference_number is not None)
         size = write_uint(stream, record_id)
         size += self.nstring.write(stream)
@@ -773,7 +773,7 @@ class TextString(Record):
         modals.reset()
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'TextString':
+    def read(stream: IO[bytes], record_id: int) -> 'TextString':
         if record_id not in (5, 6):
             raise InvalidDataError(f'Invalid record id for TextString: {record_id}')
         astring = AString.read(stream)
@@ -785,7 +785,7 @@ class TextString(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         record_id = 5 + (self.reference_number is not None)
         size = write_uint(stream, record_id)
         size += self.astring.write(stream)
@@ -829,7 +829,7 @@ class PropString(Record):
         modals.reset()
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'PropString':
+    def read(stream: IO[bytes], record_id: int) -> 'PropString':
         if record_id not in (9, 10):
             raise InvalidDataError(f'Invalid record id for PropString: {record_id}')
         astring = AString.read(stream)
@@ -841,7 +841,7 @@ class PropString(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         record_id = 9 + (self.reference_number is not None)
         size = write_uint(stream, record_id)
         size += self.astring.write(stream)
@@ -896,7 +896,7 @@ class LayerName(Record):
         modals.reset()
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'LayerName':
+    def read(stream: IO[bytes], record_id: int) -> 'LayerName':
         if record_id not in (11, 12):
             raise InvalidDataError(f'Invalid record id for LayerName: {record_id}')
         is_textlayer = (record_id == 12)
@@ -907,7 +907,7 @@ class LayerName(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         record_id = 11 + self.is_textlayer
         size = write_uint(stream, record_id)
         size += self.nstring.write(stream)
@@ -973,7 +973,7 @@ class Property(Record):
             dedup_field(self, 'is_standard', modals, 'property_is_standard')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Property':
+    def read(stream: IO[bytes], record_id: int) -> 'Property':
         if record_id not in (28, 29):
             raise InvalidDataError(f'Invalid record id for PropertyValue: {record_id}')
         if record_id == 29:
@@ -1003,7 +1003,7 @@ class Property(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         if self.is_standard is None and self.values is None and self.name is None:
             return write_uint(stream, 29)
         else:
@@ -1075,7 +1075,7 @@ class XName(Record):
         modals.reset()
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'XName':
+    def read(stream: IO[bytes], record_id: int) -> 'XName':
         if record_id not in (30, 31):
             raise InvalidDataError(f'Invalid record id for XName: {record_id}')
         attribute = read_uint(stream)
@@ -1088,7 +1088,7 @@ class XName(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         record_id = 30 + (self.reference_number is not None)
         size = write_uint(stream, record_id)
         size += write_uint(stream, self.attribute)
@@ -1133,7 +1133,7 @@ class XElement(Record):
         pass
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'XElement':
+    def read(stream: IO[bytes], record_id: int) -> 'XElement':
         if record_id != 32:
             raise InvalidDataError(f'Invalid record id for XElement: {record_id}')
         attribute = read_uint(stream)
@@ -1142,7 +1142,7 @@ class XElement(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         size = write_uint(stream, 32)
         size += write_uint(stream, self.attribute)
         size += write_bstring(stream, self.bstring)
@@ -1216,7 +1216,7 @@ class XGeometry(Record, GeometryMixin):
         dedup_field(self, 'datatype', modals, 'datatype')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'XGeometry':
+    def read(stream: IO[bytes], record_id: int) -> 'XGeometry':
         if record_id != 33:
             raise InvalidDataError(f'Invalid record id for XGeometry: {record_id}')
 
@@ -1241,7 +1241,7 @@ class XGeometry(Record, GeometryMixin):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         x = self.x is not None
         y = self.y is not None
         r = self.repetition is not None
@@ -1288,7 +1288,7 @@ class Cell(Record):
         modals.reset()
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Cell':
+    def read(stream: IO[bytes], record_id: int) -> 'Cell':
         name: Union[int, NString]
         if record_id == 13:
             name = read_uint(stream)
@@ -1300,7 +1300,7 @@ class Cell(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         size = 0
         if isinstance(self.name, int):
             size += write_uint(stream, 13)
@@ -1391,7 +1391,7 @@ class Placement(Record):
         dedup_field(self, 'name', modals, 'placement_cell')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Placement':
+    def read(stream: IO[bytes], record_id: int) -> 'Placement':
         if record_id not in (17, 18):
             raise InvalidDataError(f'Invalid record id for Placement: {record_id}')
 
@@ -1421,7 +1421,7 @@ class Placement(Record):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         c = self.name is not None
         n = c and isinstance(self.name, int)
         x = self.x is not None
@@ -1534,7 +1534,7 @@ class Text(Record, GeometryMixin):
         dedup_field(self, 'datatype', modals, 'text_datatype')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Text':
+    def read(stream: IO[bytes], record_id: int) -> 'Text':
         if record_id != 19:
             raise InvalidDataError(f'Invalid record id for Text: {record_id}')
 
@@ -1559,7 +1559,7 @@ class Text(Record, GeometryMixin):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         c = self.string is not None
         n = c and isinstance(self.string, int)
         x = self.x is not None
@@ -1609,14 +1609,14 @@ class Rectangle(Record, GeometryMixin):
         repetition (Optional[repetition_t]): Repetition, if any.
         properties (List[Property]): List of property records associate with this record.
     """
-    layer: Optional[int] = None
-    datatype: Optional[int] = None
-    width: Optional[int] = None
-    height: Optional[int] = None
-    x: Optional[int] = None
-    y: Optional[int] = None
-    repetition: Optional[repetition_t] = None
-    is_square: bool = False
+    layer: Optional[int]
+    datatype: Optional[int]
+    width: Optional[int]
+    height: Optional[int]
+    x: Optional[int]
+    y: Optional[int]
+    repetition: Optional[repetition_t]
+    is_square: bool
     properties: List['Property']
 
     def __init__(
@@ -1674,7 +1674,7 @@ class Rectangle(Record, GeometryMixin):
             dedup_field(self, 'height', modals, 'geometry_h')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Rectangle':
+    def read(stream: IO[bytes], record_id: int) -> 'Rectangle':
         if record_id != 20:
             raise InvalidDataError(f'Invalid record id for Rectangle: {record_id}')
 
@@ -1698,7 +1698,7 @@ class Rectangle(Record, GeometryMixin):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         s = self.is_square
         w = self.width is not None
         h = self.height is not None
@@ -1749,12 +1749,12 @@ class Polygon(Record, GeometryMixin):
             Default no repetition.
         properties (List[Property]): List of property records associate with this record.
     """
-    layer: Optional[int] = None
-    datatype: Optional[int] = None
-    x: Optional[int] = None
-    y: Optional[int] = None
-    repetition: Optional[repetition_t] = None
-    point_list: Optional[point_list_t] = None
+    layer: Optional[int]
+    datatype: Optional[int]
+    x: Optional[int]
+    y: Optional[int]
+    repetition: Optional[repetition_t]
+    point_list: Optional[point_list_t]
     properties: List['Property']
 
     def __init__(
@@ -1797,7 +1797,7 @@ class Polygon(Record, GeometryMixin):
         dedup_field(self, 'point_list', modals, 'polygon_point_list')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Polygon':
+    def read(stream: IO[bytes], record_id: int) -> 'Polygon':
         if record_id != 21:
             raise InvalidDataError(f'Invalid record id for Polygon: {record_id}')
 
@@ -1822,7 +1822,7 @@ class Polygon(Record, GeometryMixin):
         logger.debug('Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase, fast: bool = False) -> int:
+    def write(self, stream: IO[bytes], fast: bool = False) -> int:
         p = self.point_list is not None
         x = self.x is not None
         y = self.y is not None
@@ -1941,7 +1941,7 @@ class Path(Record, GeometryMixin):
         dedup_field(self, 'extension_end', modals, 'path_extension_end')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Path':
+    def read(stream: IO[bytes], record_id: int) -> 'Path':
         if record_id != 22:
             raise InvalidDataError(f'Invalid record id for Path: {record_id}')
 
@@ -1984,7 +1984,7 @@ class Path(Record, GeometryMixin):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase, fast: bool = False) -> int:
+    def write(self, stream: IO[bytes], fast: bool = False) -> int:
         e = self.extension_start is not None or self.extension_end is not None
         w = self.half_width is not None
         p = self.point_list is not None
@@ -2136,7 +2136,7 @@ class Trapezoid(Record, GeometryMixin):
         dedup_field(self, 'height', modals, 'geometry_h')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Trapezoid':
+    def read(stream: IO[bytes], record_id: int) -> 'Trapezoid':
         if record_id not in (23, 24, 25):
             raise InvalidDataError(f'Invalid record id for Trapezoid: {record_id}')
 
@@ -2164,7 +2164,7 @@ class Trapezoid(Record, GeometryMixin):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         v = self.is_vertical
         w = self.width is not None
         h = self.height is not None
@@ -2358,7 +2358,7 @@ class CTrapezoid(Record, GeometryMixin):
         self.check_valid()
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'CTrapezoid':
+    def read(stream: IO[bytes], record_id: int) -> 'CTrapezoid':
         if record_id != 26:
             raise InvalidDataError(f'Invalid record id for CTrapezoid: {record_id}')
 
@@ -2384,7 +2384,7 @@ class CTrapezoid(Record, GeometryMixin):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         t = self.ctrapezoid_type is not None
         w = self.width is not None
         h = self.height is not None
@@ -2508,7 +2508,7 @@ class Circle(Record, GeometryMixin):
         dedup_field(self, 'radius', modals, 'circle_radius')
 
     @staticmethod
-    def read(stream: io.BufferedIOBase, record_id: int) -> 'Circle':
+    def read(stream: IO[bytes], record_id: int) -> 'Circle':
         if record_id != 27:
             raise InvalidDataError(f'Invalid record id for Circle: {record_id}')
 
@@ -2533,7 +2533,7 @@ class Circle(Record, GeometryMixin):
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
-    def write(self, stream: io.BufferedIOBase) -> int:
+    def write(self, stream: IO[bytes]) -> int:
         s = self.radius is not None
         x = self.x is not None
         y = self.y is not None
