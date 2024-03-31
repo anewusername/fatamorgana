@@ -2,7 +2,7 @@
 This module contains all datatypes and parsing/writing functions for
  all abstractions below the 'record' or 'block' level.
 """
-from typing import List, Tuple, Type, Union, Optional, Any, Sequence, IO
+from typing import Type, Union, Any, Sequence, IO
 from fractions import Fraction
 from enum import Enum
 import math
@@ -132,7 +132,7 @@ def write_byte(stream: IO[bytes], n: int) -> int:
     return stream.write(bytes((n,)))
 
 
-def _py_read_bool_byte(stream: IO[bytes]) -> List[bool]:
+def _py_read_bool_byte(stream: IO[bytes]) -> list[bool]:
     """
     Read a single byte from the stream, and interpret its bits as
       a list of 8 booleans.
@@ -147,7 +147,7 @@ def _py_read_bool_byte(stream: IO[bytes]) -> List[bool]:
     bits = [bool((byte >> i) & 0x01) for i in reversed(range(8))]
     return bits
 
-def _py_write_bool_byte(stream: IO[bytes], bits: Tuple[Union[bool, int], ...]) -> int:
+def _py_write_bool_byte(stream: IO[bytes], bits: tuple[bool | int, ...]) -> int:
     """
     Pack 8 booleans into a byte, and write it to the stream.
 
@@ -184,7 +184,7 @@ if _USE_NUMPY:
         byte_arr = _read(stream, 1)
         return numpy.unpackbits(numpy.frombuffer(byte_arr, dtype=numpy.uint8))
 
-    def _np_write_bool_byte(stream: IO[bytes], bits: Tuple[Union[bool, int], ...]) -> int:
+    def _np_write_bool_byte(stream: IO[bytes], bits: tuple[Union[bool, int], ...]) -> int:
         """
         Pack 8 booleans into a byte, and write it to the stream.
 
@@ -457,7 +457,7 @@ def write_float64(stream: IO[bytes], f: float) -> int:
     return stream.write(b)
 
 
-def read_real(stream: IO[bytes], real_type: Optional[int] = None) -> real_t:
+def read_real(stream: IO[bytes], real_type: int | None = None) -> real_t:
     """
     Read a real number from the stream.
 
@@ -783,13 +783,12 @@ def write_astring(stream: IO[bytes], string: str) -> int:
 class ManhattanDelta:
     """
     Class representing an axis-aligned ("Manhattan") vector.
-
-    Attributes:
-        vertical (bool): `True` if aligned along y-axis
-        value (int): signed length of the vector
     """
     vertical: bool
+    """`True` if aligned along y-axis"""
+
     value: int
+    """signed length of the vector"""
 
     def __init__(self, x: int, y: int) -> None:
         """
@@ -810,7 +809,7 @@ class ManhattanDelta:
             self.vertical = True
             self.value = y
 
-    def as_list(self) -> List[int]:
+    def as_list(self) -> list[int]:
         """
         Return a list representation of this vector.
 
@@ -892,25 +891,26 @@ class ManhattanDelta:
 class OctangularDelta:
     """
     Class representing an axis-aligned or 45-degree ("Octangular") vector.
-
-    Attributes:
-        proj_mag (int): projection of the vector onto the x or y axis (non-zero)
-        octangle (int): bitfield:
-            bit 2: 1 if non-axis-aligned (non-Manhattan)
-            if Manhattan:
-                bit 1: 1 if direction is negative
-                bit 0: 1 if direction is y
-            if non-Manhattan:
-                bit 1: 1 if in lower half-plane
-                bit 0: 1 if x==-y
-
-            Resulting directions:
-                0: +x, 1: +y, 2: -x, 3: -y,
-                4: +x+y, 5: -x+y,
-                6: +x-y, 7: -x-y
     """
     proj_mag: int
+    """projection of the vector onto the x or y axis (non-zero)"""
+
     octangle: int
+    """
+    bitfield:
+        bit 2: 1 if non-axis-aligned (non-Manhattan)
+        if Manhattan:
+            bit 1: 1 if direction is negative
+            bit 0: 1 if direction is y
+        if non-Manhattan:
+            bit 1: 1 if in lower half-plane
+            bit 0: 1 if x==-y
+
+        Resulting directions:
+            0: +x, 1: +y, 2: -x, 3: -y,
+            4: +x+y, 5: -x+y,
+            6: +x-y, 7: -x-y
+    """
 
     def __init__(self, x: int, y: int) -> None:
         """
@@ -936,7 +936,7 @@ class OctangularDelta:
         else:
             raise InvalidDataError(f'Non-octangular delta! ({x}, {y})')
 
-    def as_list(self) -> List[int]:
+    def as_list(self) -> list[int]:
         """
         Return a list representation of this vector.
 
@@ -1028,13 +1028,12 @@ class OctangularDelta:
 class Delta:
     """
     Class representing an arbitrary vector
-
-    Attributes
-        x (int): x-displacement
-        y (int): y-displacement
     """
     x: int
+    """x-displacement"""
+
     y: int
+    """y-displacement"""
 
     def __init__(self, x: int, y: int) -> None:
         """
@@ -1047,7 +1046,7 @@ class Delta:
         self.x = x
         self.y = y
 
-    def as_list(self) -> List[int]:
+    def as_list(self) -> list[int]:
         """
         Return a list representation of this vector.
 
@@ -1168,32 +1167,35 @@ class ReuseRepetition:
 
 class GridRepetition:
     """
-    Class representing a repetition entry denoting a 1D or 2D array
-     of regularly-spaced elements. The spacings are stored as one or
-     two lattice vectors, and the extent of the grid is stored as the
-     number of elements along each lattice vector.
-
-    Attributes:
-        a_vector (Tuple[int, int]): `(xa, ya)` vector specifying a center-to-center
-                        displacement between adjacent elements in the grid.
-        b_vector (Optional[Tuple[int, int]]): `(xb, yb)`, a second displacement,
-                        present if a 2D grid is being specified.
-        a_count (int): number of elements (>=1) along the grid axis specified by
-                        `a_vector`.
-        b_count (Optional[int]): Number of elements (>=1) along the grid axis
-                        specified by `b_vector`, if `b_vector` is not `None`.
+    A repetition entry denoting a 1D or 2D array of regularly-spaced elements. The
+    spacings are stored as one or two lattice vectors, and the extent of the grid
+    is stored as the number of elements along each lattice vector.
     """
-    a_vector: List[int]
-    b_vector: Optional[List[int]] = None
+
+    a_vector: list[int]
+    """`(xa, ya)` vector specifying a center-to-center
+    displacement between adjacent elements in the grid.
+    """
+
+    b_vector: list[int] | None = None
+    """`(xb, yb)`, a second displacement,
+    present if a 2D grid is being specified.
+    """
+
     a_count: int
-    b_count: Optional[int] = None
+    """number of elements (>=1) along the grid axis specified by `a_vector`."""
+
+    b_count: int | None = None
+    """Number of elements (>=1) along the grid axis
+    specified by `b_vector`, if `b_vector` is not `None`.
+    """
 
     def __init__(
             self,
             a_vector: Sequence[int],
             a_count: int,
-            b_vector: Optional[Sequence[int]] = None,
-            b_count: Optional[int] = None):
+            b_vector: Sequence[int] | None = None,
+            b_count: int | None = None):
         """
         Args:
             a_vector: First lattice vector, of the form `[x, y]`.
@@ -1245,8 +1247,8 @@ class GridRepetition:
         Raises:
             InvalidDataError: if `repetition_type` is invalid.
         """
-        nb: Optional[int]
-        b_vector: Optional[List[int]]
+        nb: int | None
+        b_vector: list[int] | None
         if repetition_type == 1:
             na = read_uint(stream) + 2
             nb = read_uint(stream) + 2
@@ -1352,14 +1354,13 @@ class ArbitraryRepetition:
     """
     Class representing a repetition entry denoting a 1D or 2D array
      of arbitrarily-spaced elements.
-
-    Attributes:
-        x_displacements (List[int]): x-displacements between consecutive elements
-        y_displacements (List[int]): y-displacements between consecutive elements
     """
 
-    x_displacements: List[int]
-    y_displacements: List[int]
+    x_displacements: list[int]
+    """x-displacements between consecutive elements"""
+
+    y_displacements: list[int]
+    """y-displacements between consecutive elements"""
 
     def __init__(
             self,
@@ -1443,7 +1444,7 @@ class ArbitraryRepetition:
         Returns:
             Number of bytes written.
         """
-        def get_gcd(vals: List[int]) -> int:
+        def get_gcd(vals: list[int]) -> int:
             """
             Get the greatest common denominator of a list of ints.
             """
@@ -1506,7 +1507,7 @@ class ArbitraryRepetition:
 def read_point_list(
         stream: IO[bytes],
         implicit_closed: bool,
-        ) -> List[List[int]]:
+        ) -> Sequence[Sequence[int]]:
     """
     Read a point list from a stream.
 
@@ -1594,7 +1595,7 @@ def read_point_list(
 
 def write_point_list(
         stream: IO[bytes],
-        points: List[Sequence[int]],
+        points: list[Sequence[int]],
         fast: bool = False,
         implicit_closed: bool = True
         ) -> int:
@@ -1655,7 +1656,7 @@ def write_point_list(
         return size
 
     # Try writing a bunch of Manhattan or Octangular deltas
-    deltas: Union[List[ManhattanDelta], List[OctangularDelta], List[Delta]]
+    deltas: list[ManhattanDelta] | list[OctangularDelta] | list[Delta]
     list_type = None
     try:
         deltas = [ManhattanDelta(x, y) for x, y in points]
@@ -1717,13 +1718,12 @@ def write_point_list(
 class PropStringReference:
     """
     Reference to a property string.
-
-    Attributes:
-        ref (int): ID of the target
-        ref_type (Type): Type of the target: `bytes`, `NString`, or `AString`
     """
     ref: int
+    """ID of the target"""
+
     reference_type: Type
+    """Type of the target: `bytes`, `NString`, or `AString`"""
 
     def __init__(self, ref: int, ref_type: Type) -> None:
         """
@@ -1854,7 +1854,7 @@ def write_property_value(
     return size
 
 
-def read_interval(stream: IO[bytes]) -> Tuple[Optional[int], Optional[int]]:
+def read_interval(stream: IO[bytes]) -> tuple[int | None, int | None]:
     """
     Read an interval from a stream.
     These are used for storing layer info.
@@ -1896,8 +1896,8 @@ def read_interval(stream: IO[bytes]) -> Tuple[Optional[int], Optional[int]]:
 
 def write_interval(
         stream: IO[bytes],
-        min_bound: Optional[int] = None,
-        max_bound: Optional[int] = None,
+        min_bound: int | None = None,
+        max_bound: int | None = None,
         ) -> int:
     """
     Write an interval to a stream.
@@ -1931,23 +1931,24 @@ def write_interval(
 class OffsetEntry:
     """
     Entry for the file's offset table.
-
-    Attributes:
-        strict (bool): If `False`, the records pointed to by this
-            offset entry may also appear elsewhere in the file. If `True`, all
-            records of the type pointed to by this offset entry must be present
-            in a contiuous block at the specified offset [pad records also allowed].
-            Additionally:
-            - All references to strict-mode records must be
-                explicit (using reference_number).
-            - The offset may point to an encapsulating CBlock record, if the first
-                record in that CBlock is of the target record type. A strict modei
-                table cannot begin in the middle of a CBlock.
-        offset (int): offset from the start of the file; may be 0
-                for records that are not present.
     """
+
     strict: bool = False
+    """
+    If `False`, the records pointed to by this offset entry may also appear
+    elsewhere in the file. If `True`, all records of the type pointed to by
+    this offset entry must be present in a contiuous block at the specified
+    offset [pad records also allowed].
+    Additionally:
+        - All references to strict-mode records must be explicit (using
+          `reference_number`).
+        - The offset may point to an encapsulating CBlock record, if the first
+          record in that CBlock is of the target record type. A strict mode
+          table cannot begin in the middle of a CBlock.
+    """
+
     offset: int = 0
+    """offset from the start of the file; 0 for records that are not present."""
 
     def __init__(self, strict: bool = False, offset: int = 0) -> None:
         """
@@ -2006,14 +2007,6 @@ class OffsetTable:
     XName
 
     which are stored in the above order in the file's offset table.
-
-    Attributes:
-        cellnames (OffsetEntry): Offset for CellNames
-        textstrings (OffsetEntry): Offset for TextStrings
-        propnames (OffsetEntry): Offset for PropNames
-        propstrings (OffsetEntry): Offset for PropStrings
-        layernames (OffsetEntry): Offset for LayerNames
-        xnames (OffsetEntry): Offset for XNames
     """
     cellnames:   OffsetEntry
     textstrings: OffsetEntry
@@ -2024,12 +2017,12 @@ class OffsetTable:
 
     def __init__(
             self,
-            cellnames: Optional[OffsetEntry] = None,
-            textstrings: Optional[OffsetEntry] = None,
-            propnames: Optional[OffsetEntry] = None,
-            propstrings: Optional[OffsetEntry] = None,
-            layernames: Optional[OffsetEntry] = None,
-            xnames: Optional[OffsetEntry] = None,
+            cellnames: OffsetEntry | None = None,
+            textstrings: OffsetEntry | None = None,
+            propnames: OffsetEntry | None = None,
+            propstrings: OffsetEntry | None = None,
+            layernames: OffsetEntry | None = None,
+            xnames: OffsetEntry | None = None,
             ) -> None:
         """
         All parameters default to a non-strict entry with offset `0`.
@@ -2149,14 +2142,18 @@ class Validation:
     The checksum is calculated using the entire file, excluding the final 4 bytes
       (the value of the checksum itself).
 
-    Attributes:
-        checksum_type (int): `0` for no checksum, `1` for crc32, `2` for checksum32
-        checksum (Optional[int]): value of the checksum
     """
     checksum_type: int
-    checksum: Optional[int] = None
+    """
+    `0` for no checksum,
+    `1` for crc32,
+    `2` for checksum32,
+    """
 
-    def __init__(self, checksum_type: int, checksum: Optional[int] = None) -> None:
+    checksum: int | None = None
+    """value of the checksum"""
+
+    def __init__(self, checksum_type: int, checksum: int | None = None) -> None:
         """
         Args:
             checksum_type: 0,1,2 (No checksum, crc32, checksum32)

@@ -10,7 +10,7 @@ Higher-level code (e.g. monitoring for combinations of records with
  parse, or code for dealing with nested records in a CBlock) should live
  in main.py instead.
 """
-from typing import List, Dict, Tuple, Union, Optional, Sequence, Any, TypeVar, IO
+from typing import Union, Sequence, Any, TypeVar, IO
 from abc import ABCMeta, abstractmethod
 import copy
 import math
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 '''
 geometry_t = Union['Text', 'Rectangle', 'Polygon', 'Path', 'Trapezoid',
                    'CTrapezoid', 'Circle', 'XElement', 'XGeometry']
-pathextension_t = Tuple['PathExtensionScheme', Optional[int]]
+pathextension_t = tuple['PathExtensionScheme', int | None]
 point_list_t = Sequence[Sequence[int]]
 
 
@@ -49,32 +49,32 @@ class Modals:
     Modal variables, used to store data about previously-written or
      -read records.
     """
-    repetition: Optional[repetition_t] = None
+    repetition: repetition_t | None = None
     placement_x: int = 0
     placement_y: int = 0
-    placement_cell: Optional[NString] = None
-    layer: Optional[int] = None
-    datatype: Optional[int] = None
-    text_layer: Optional[int] = None
-    text_datatype: Optional[int] = None
+    placement_cell: NString | None = None
+    layer: int | None = None
+    datatype: int | None = None
+    text_layer: int | None = None
+    text_datatype: int | None = None
     text_x: int = 0
     text_y: int = 0
-    text_string: Union[AString, int, None] = None
+    text_string: AString | int | None = None
     geometry_x: int = 0
     geometry_y: int = 0
     xy_relative: bool = False
-    geometry_w: Optional[int] = None
-    geometry_h: Optional[int] = None
-    polygon_point_list: Optional[point_list_t] = None
-    path_half_width: Optional[int] = None
-    path_point_list: Optional[point_list_t] = None
-    path_extension_start: Optional[pathextension_t] = None
-    path_extension_end: Optional[pathextension_t] = None
-    ctrapezoid_type: Optional[int] = None
-    circle_radius: Optional[int] = None
-    property_value_list: Optional[Sequence[property_value_t]] = None
-    property_name: Union[int, NString, None] = None
-    property_is_standard: Optional[bool] = None
+    geometry_w: int | None = None
+    geometry_h: int | None = None
+    polygon_point_list: point_list_t | None = None
+    path_half_width: int | None = None
+    path_point_list: point_list_t | None = None
+    path_extension_start: pathextension_t | None = None
+    path_extension_end: pathextension_t | None = None
+    ctrapezoid_type: int | None = None
+    circle_radius: int | None = None
+    property_value_list: Sequence[property_value_t] | None = None
+    property_name: int | NString | None = None
+    property_is_standard: bool | None = None
 
     def __init__(self) -> None:
         self.reset()
@@ -116,17 +116,17 @@ class Modals:
 
 
 T = TypeVar('T')
-def verify_modal(var: Optional[T]) -> T:
+def verify_modal(var: T | None) -> T:
     if var is None:
         raise UnfilledModalError
     return var
 
 
-'''
-
-    Records
-
-'''
+#
+#
+#    Records
+#
+#
 
 class Record(metaclass=ABCMeta):
     """
@@ -231,10 +231,10 @@ class GeometryMixin(metaclass=ABCMeta):
     """
     Mixin defining common functions for geometry records
     """
-    x: Optional[int]
-    y: Optional[int]
-    layer: Optional[int]
-    datatype: Optional[int]
+    x: int | None
+    y: int | None
+    layer: int | None
+    datatype: int | None
 
     def get_x(self) -> int:
         return verify_modal(self.x)
@@ -242,7 +242,7 @@ class GeometryMixin(metaclass=ABCMeta):
     def get_y(self) -> int:
         return verify_modal(self.y)
 
-    def get_xy(self) -> Tuple[int, int]:
+    def get_xy(self) -> tuple[int, int]:
         return (self.get_x(), self.get_y())
 
     def get_layer(self) -> int:
@@ -251,15 +251,15 @@ class GeometryMixin(metaclass=ABCMeta):
     def get_datatype(self) -> int:
         return verify_modal(self.datatype)
 
-    def get_layer_tuple(self) -> Tuple[int, int]:
+    def get_layer_tuple(self) -> tuple[int, int]:
         return (self.get_layer(), self.get_datatype())
 
 
 def read_refname(
         stream: IO[bytes],
-        is_present: Union[bool, int],
-        is_reference: Union[bool, int]
-        ) -> Union[None, int, NString]:
+        is_present: bool | int,
+        is_reference: bool | int,
+        ) -> int | NString | None:
     """
     Helper function for reading a possibly-absent, possibly-referenced NString.
 
@@ -282,9 +282,9 @@ def read_refname(
 
 def read_refstring(
         stream: IO[bytes],
-        is_present: Union[bool, int],
-        is_reference: Union[bool, int],
-        ) -> Union[None, int, AString]:
+        is_present: bool | int,
+        is_reference: bool | int,
+        ) -> int | AString | None:
     """
     Helper function for reading a possibly-absent, possibly-referenced `AString`.
 
@@ -369,22 +369,21 @@ class XYMode(Record):
 class Start(Record):
     """
     Start Record (ID 1)
-
-    Attributes:
-        version (AString):
-        unit (real_t): positive real number, grid steps per micron
-        offset_table (Optional[OffsetTable]): If `None` then table must be
-                                            placed in the `End` record)
     """
     version: AString
+    """File format version string"""
+
     unit: real_t
-    offset_table: Optional[OffsetTable]
+    """positive real number, grid steps per micron"""
+
+    offset_table: OffsetTable | None
+    """If `None` then table must be placed in the `End` record"""
 
     def __init__(
             self,
             unit: real_t,
-            version: Union[AString, str] = "1.0",
-            offset_table: Optional[OffsetTable] = None,
+            version: AString | str = "1.0",
+            offset_table: OffsetTable | None = None,
             ) -> None:
         """
         Args
@@ -423,7 +422,7 @@ class Start(Record):
         version = AString.read(stream)
         unit = read_real(stream)
         has_offset_table = read_uint(stream) == 0
-        offset_table: Optional[OffsetTable]
+        offset_table: OffsetTable | None
         if has_offset_table:
             offset_table = OffsetTable.read(stream)
         else:
@@ -447,19 +446,17 @@ class End(Record):
     End record (ID 2)
 
     The end record is always padded to a total length of 256 bytes.
-
-    Attributes:
-        offset_table (Optional[OffsetTable]): `None` if offset table was
-                                  written into the `Start` record instead
-        validation (Validation): object containing checksum
     """
-    offset_table: Optional[OffsetTable]
+    offset_table: OffsetTable | None
+    """`None` if offset table was written into the `Start` record instead"""
+
     validation: Validation
+    """object containing checksum"""
 
     def __init__(
             self,
             validation: Validation,
-            offset_table: Optional[OffsetTable] = None,
+            offset_table: OffsetTable | None = None,
             ) -> None:
         """
         Args:
@@ -485,7 +482,7 @@ class End(Record):
         if record_id != 2:
             raise InvalidDataError(f'Invalid record id for End {record_id}')
         if has_offset_table:
-            offset_table: Optional[OffsetTable] = OffsetTable.read(stream)
+            offset_table: OffsetTable | None = OffsetTable.read(stream)
         else:
             offset_table = None
         _padding_string = read_bstring(stream)      # noqa
@@ -514,15 +511,15 @@ class End(Record):
 class CBlock(Record):
     """
     CBlock (Compressed Block) record (ID 34)
-
-    Attributes:
-        compression_type (int): `0` for zlib
-        decompressed_byte_count (int): size after decompressing
-        compressed_bytes (bytes): compressed data
     """
     compression_type: int
+    """ `0` for zlib"""
+
     decompressed_byte_count: int
+    """size after decompressing"""
+
     compressed_bytes: bytes
+    """compressed data"""
 
     def __init__(
             self,
@@ -571,7 +568,7 @@ class CBlock(Record):
     def from_decompressed(
             decompressed_bytes: bytes,
             compression_type: int = 0,
-            compression_args: Optional[Dict[str, Any]] = None,
+            compression_args: dict[str, Any] | None = None,
             ) -> 'CBlock':
         """
         Create a CBlock record from uncompressed data.
@@ -600,7 +597,7 @@ class CBlock(Record):
 
         return CBlock(compression_type, count, compressed_bytes)
 
-    def decompress(self, decompression_args: Optional[Dict[str, Any]] = None) -> bytes:
+    def decompress(self, decompression_args: dict[str, Any] | None = None) -> bytes:
         """
         Decompress the contents of this CBlock.
 
@@ -630,18 +627,17 @@ class CBlock(Record):
 class CellName(Record):
     """
     CellName record (ID 3, 4)
-
-    Attributes:
-        nstring (NString): name
-        reference_number (Optional[int]): `None` results in implicit assignment
     """
     nstring: NString
-    reference_number: Optional[int]
+    """name string"""
+
+    reference_number: int | None
+    """`None` results in implicit assignment"""
 
     def __init__(
             self,
-            nstring: Union[NString, str],
-            reference_number: Optional[int] = None,
+            nstring: str | NString,
+            reference_number: int | None = None,
             ) -> None:
         """
         Args:
@@ -667,7 +663,7 @@ class CellName(Record):
             raise InvalidDataError(f'Invalid record id for CellName {record_id}')
         nstring = NString.read(stream)
         if record_id == 4:
-            reference_number: Optional[int] = read_uint(stream)
+            reference_number: int | None = read_uint(stream)
         else:
             reference_number = None
         record = CellName(nstring, reference_number)
@@ -685,18 +681,17 @@ class CellName(Record):
 class PropName(Record):
     """
     PropName record (ID 7, 8)
-
-    Attributes:
-        nstring (NString): name
-        reference_number (Optional[int]): `None` results in implicit assignment
     """
     nstring: NString
-    reference_number: Optional[int] = None
+    """name string"""
+
+    reference_number: int | None = None
+    """`None` results in implicit assignment"""
 
     def __init__(
             self,
-            nstring: Union[NString, str],
-            reference_number: Optional[int] = None,
+            nstring: str | NString,
+            reference_number: int | None = None,
             ) -> None:
         """
         Args:
@@ -722,7 +717,7 @@ class PropName(Record):
             raise InvalidDataError(f'Invalid record id for PropName {record_id}')
         nstring = NString.read(stream)
         if record_id == 8:
-            reference_number: Optional[int] = read_uint(stream)
+            reference_number: int | None = read_uint(stream)
         else:
             reference_number = None
         record = PropName(nstring, reference_number)
@@ -741,18 +736,17 @@ class PropName(Record):
 class TextString(Record):
     """
     TextString record (ID 5, 6)
-
-    Attributes:
-        astring (AString): string data
-        reference_number (Optional[int]): `None` results in implicit assignment
     """
     astring: AString
-    reference_number: Optional[int] = None
+    """string contents"""
+
+    reference_number: int | None = None
+    """`None` results in implicit assignment"""
 
     def __init__(
             self,
-            string: Union[AString, str],
-            reference_number: Optional[int] = None,
+            string: AString | str,
+            reference_number: int | None = None,
             ) -> None:
         """
         Args:
@@ -778,7 +772,7 @@ class TextString(Record):
             raise InvalidDataError(f'Invalid record id for TextString: {record_id}')
         astring = AString.read(stream)
         if record_id == 6:
-            reference_number: Optional[int] = read_uint(stream)
+            reference_number: int | None = read_uint(stream)
         else:
             reference_number = None
         record = TextString(astring, reference_number)
@@ -797,18 +791,17 @@ class TextString(Record):
 class PropString(Record):
     """
     PropString record (ID 9, 10)
-
-    Attributes:
-        astring (AString): string data
-        reference_number (Optional[int]): `None` results in implicit assignment
     """
     astring: AString
-    reference_number: Optional[int]
+    """string contents"""
+
+    reference_number: int | None
+    """`None` results in implicit assignment"""
 
     def __init__(
             self,
-            string: Union[AString, str],
-            reference_number: Optional[int] = None,
+            string: AString | str,
+            reference_number: int | None = None,
             ) -> None:
         """
         Args:
@@ -834,7 +827,7 @@ class PropString(Record):
             raise InvalidDataError(f'Invalid record id for PropString: {record_id}')
         astring = AString.read(stream)
         if record_id == 10:
-            reference_number: Optional[int] = read_uint(stream)
+            reference_number: int | None = read_uint(stream)
         else:
             reference_number = None
         record = PropString(astring, reference_number)
@@ -853,32 +846,31 @@ class PropString(Record):
 class LayerName(Record):
     """
     LayerName record (ID 11, 12)
-
-    Attributes:
-        nstring (NString): name
-        layer_interval (Tuple[Optional[int], Optional[int]]): bounds on the interval
-        type_interval (Tuple[Optional[int], Optional[int]]): bounds on the interval
-        is_textlayer (bool): Is this a text layer?
     """
     nstring: NString
-    layer_interval: Tuple[Optional[int], Optional[int]]
-    type_interval: Tuple[Optional[int], Optional[int]]
+    """name string"""
+
+    layer_interval: tuple[int | None, int | None]
+    """bounds on the interval"""
+
+    type_interval: tuple[int | None, int | None]
+    """bounds on the interval"""
+
     is_textlayer: bool
+    """Is this a text layer?"""
 
     def __init__(
             self,
-            nstring: Union[NString, str],
-            layer_interval: Tuple[Optional[int], Optional[int]],
-            type_interval: Tuple[Optional[int], Optional[int]],
+            nstring: str | NString,
+            layer_interval: tuple[int | None, int | None],
+            type_interval: tuple[int | None, int | None],
             is_textlayer: bool,
             ) -> None:
         """
         Args:
             nstring: The layer name.
-            layer_interval: Tuple (int or None, int or None) giving bounds
-                     (or lack of thereof) on the layer number.
-            type_interval: Tuple (int or None, int or None) giving bounds
-                     (or lack of thereof) on the type number.
+            layer_interval: Tuple giving bounds (or lack of thereof) on the layer number.
+            type_interval: Tuple giving bounds (or lack of thereof) on the type number.
             is_textlayer: `True` if the layer is a text layer.
         """
         if isinstance(nstring, NString):
@@ -919,22 +911,18 @@ class LayerName(Record):
 class Property(Record):
     """
     LayerName record (ID 28, 29)
-
-    Attributes:
-        name (Union[NString, int, None]): `int` is an explicit reference,
-                                       `None` is a flag to use Modal)
-        values (Optional[List[property_value_t]]): List of property values.
-        is_standard (bool): Whether this is a standard property.
     """
-    name: Optional[Union[NString, int]]
-    values: Optional[List[property_value_t]]
-    is_standard: Optional[bool]
+    name: NString | int | None
+    """`int` is an explicit reference, `None` is a flag to use Modal"""
+    values: list[property_value_t] | None
+    is_standard: bool | None
+    """Whether this is a standard property."""
 
     def __init__(
             self,
-            name: Union[NString, str, int, None] = None,
-            values: Optional[List[property_value_t]] = None,
-            is_standard: Optional[bool] = None,
+            name: NString | str | int | None = None,
+            values: list[property_value_t] | None= None,
+            is_standard: bool | None = None,
             ) -> None:
         """
         Args:
@@ -952,10 +940,10 @@ class Property(Record):
         self.values = values
         self.is_standard = is_standard
 
-    def get_name(self) -> Union[NString, int]:
+    def get_name(self) -> NString | int:
         return verify_modal(self.name)  # type: ignore
 
-    def get_values(self) -> List[property_value_t]:
+    def get_values(self) -> list[property_value_t]:
         return verify_modal(self.values)
 
     def get_is_standard(self) -> bool:
@@ -992,8 +980,8 @@ class Property(Record):
                     value_count = u
                 else:
                     value_count = read_uint(stream)
-                values: Optional[List[property_value_t]] = [read_property_value(stream)
-                                                            for _ in range(value_count)]
+                values: list[property_value_t] | None = [read_property_value(stream)
+                                                         for _ in range(value_count)]
             else:
                 values = None
 #                if u != 0:
@@ -1041,21 +1029,21 @@ class Property(Record):
 class XName(Record):
     """
     XName record (ID 30, 31)
-
-    Attributes:
-        attribute (int): Attribute number
-        bstring (bytes): XName data
-        reference_number (Optional[int]): None means to use implicit numbering
     """
     attribute: int
+    """Attribute number"""
+
     bstring: bytes
-    reference_number: Optional[int]
+    """XName data"""
+
+    reference_number: int | None
+    """None means to use implicit numbering"""
 
     def __init__(
             self,
             attribute: int,
             bstring: bytes,
-            reference_number: Optional[int] = None,
+            reference_number: int | None = None,
             ) -> None:
         """
         Args:
@@ -1081,7 +1069,7 @@ class XName(Record):
         attribute = read_uint(stream)
         bstring = read_bstring(stream)
         if record_id == 31:
-            reference_number: Optional[int] = read_uint(stream)
+            reference_number: int | None = read_uint(stream)
         else:
             reference_number = None
         record = XName(attribute, bstring, reference_number)
@@ -1101,20 +1089,20 @@ class XName(Record):
 class XElement(Record):
     """
     XElement record (ID 32)
-
-    Attributes:
-        attribute (int): Attribute number.
-        bstring (bytes): XElement data.
     """
     attribute: int
+    """Attribute number"""
+
     bstring: bytes
-    properties: List['Property']
+    """XElement data"""
+
+    properties: list['Property']
 
     def __init__(
             self,
             attribute: int,
             bstring: bytes,
-            properties: Optional[List['Property']] = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         """
         Args:
@@ -1152,36 +1140,30 @@ class XElement(Record):
 class XGeometry(Record, GeometryMixin):
     """
     XGeometry record (ID 33)
-
-    Attributes:
-        attribute (int): Attribute number.
-        bstring (bytes): XGeometry data.
-        layer (Optional[int]): None means reuse modal
-        datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): None means reuse modal
-        y (Optional[int]): None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any
-        properties (List[Property]): List of property records associate with this record.
     """
     attribute: int
+    """Attribute number"""
+
     bstring: bytes
-    layer: Optional[int] = None
-    datatype: Optional[int] = None
-    x: Optional[int] = None
-    y: Optional[int] = None
-    repetition: Optional[repetition_t] = None
-    properties: List['Property']
+    """XGeometry data"""
+
+    layer: int | None = None
+    datatype: int | None = None
+    x: int | None = None
+    y: int | None = None
+    repetition: repetition_t | None = None
+    properties: list['Property']
 
     def __init__(
             self,
             attribute: int,
             bstring: bytes,
-            layer: Optional[int] = None,
-            datatype: Optional[int] = None,
-            x: Optional[int] = None,
-            y: Optional[int] = None,
-            repetition: Optional[repetition_t] = None,
-            properties: Optional[List['Property']] = None,
+            layer: int | None = None,
+            datatype: int | None = None,
+            x: int | None = None,
+            y: int | None = None,
+            repetition: repetition_t | None = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         """
         Args:
@@ -1224,7 +1206,7 @@ class XGeometry(Record, GeometryMixin):
         if z0 or z1 or z2:
             raise InvalidDataError('Malformed XGeometry header')
         attribute = read_uint(stream)
-        optional: Dict[str, Any] = {}
+        optional: dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -1268,13 +1250,11 @@ class XGeometry(Record, GeometryMixin):
 class Cell(Record):
     """
     Cell record (ID 13, 14)
-
-    Attributes:
-        name (Union[int, NString]): int specifies "CellName reference" number
     """
-    name: Union[int, NString]
+    name: int | NString
+    """int specifies "CellName reference" number"""
 
-    def __init__(self, name: Union[int, str, NString]) -> None:
+    def __init__(self, name: int | str | NString) -> None:
         """
         Args:
             name: `NString`, or an int specifying a `CellName` reference number.
@@ -1289,7 +1269,7 @@ class Cell(Record):
 
     @staticmethod
     def read(stream: IO[bytes], record_id: int) -> 'Cell':
-        name: Union[int, NString]
+        name: int | NString
         if record_id == 13:
             name = read_uint(stream)
         elif record_id == 14:
@@ -1314,37 +1294,34 @@ class Cell(Record):
 class Placement(Record):
     """
     Placement record (ID 17, 18)
-
-    Attributes:
-        name (Union[NString, int, None]): name, "CellName reference"
-                    number, or reuse modal
-        magnification (real_t): Magnification factor
-        angle (real_t): Rotation, degrees counterclockwise
-        x (Optional[int]): x-offset, None means reuse modal
-        y (Optional[int]): y-offset, None means reuse modal
-        repetition (repetition_t or None): Repetition, if any
-        flip (bool): Whether to perform reflection about the x-axis.
-        properties (List[Property]): List of property records associate with this record.
     """
-    name: Union[NString, int, None] = None
-    magnification: Optional[real_t] = None
-    angle: Optional[real_t] = None
-    x: Optional[int] = None
-    y: Optional[int] = None
-    repetition: Optional[repetition_t] = None
+    name: int | NString | None = None
+    """name, "CellName reference" number, or reuse modal"""
+
+    magnification: real_t | None = None
+    """magnification factor"""
+
+    angle: real_t | None = None
+    """Rotation, degrees counterclockwise"""
+
+    x: int | None = None
+    y: int | None = None
+    repetition: repetition_t | None = None
     flip: bool
-    properties: List['Property']
+    """Whether to perform reflection about the x-axis"""
+
+    properties: list['Property']
 
     def __init__(
             self,
             flip: bool,
-            name: Union[NString, str, int, None] = None,
-            magnification: Optional[real_t] = None,
-            angle: Optional[real_t] = None,
-            x: Optional[int] = None,
-            y: Optional[int] = None,
-            repetition: Optional[repetition_t] = None,
-            properties: Optional[List['Property']] = None,
+            name: NString | str | int | None = None,
+            magnification: real_t | None = None,
+            angle: real_t | None = None,
+            x: int | None = None,
+            y: int | None = None,
+            repetition: repetition_t | None = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         """
         Args:
@@ -1371,7 +1348,7 @@ class Placement(Record):
             self.name = NString(name)
         self.properties = [] if properties is None else properties
 
-    def get_name(self) -> Union[NString, int]:
+    def get_name(self) -> NString | int:
         return verify_modal(self.name)  # type: ignore
 
     def get_x(self) -> int:
@@ -1398,7 +1375,7 @@ class Placement(Record):
         #CNXYRAAF (17) or CNXYRMAF (18)
         c, n, x, y, r, ma0, ma1, flip = read_bool_byte(stream)
 
-        optional: Dict[str, Any] = {}
+        optional: dict[str, Any] = {}
         name = read_refname(stream, c, n)
         if record_id == 17:
             aa = (ma0 << 1) | ma1
@@ -1466,33 +1443,24 @@ class Placement(Record):
 class Text(Record, GeometryMixin):
     """
     Text record (ID 19)
-
-    Attributes:
-        string (Union[AString, int, None]): None means reuse modal
-        layer (Optiona[int]): None means reuse modal
-        datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset, None means reuse modal
-        y (Optional[int]): y-offset, None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any
-        properties (List[Property]): List of property records associate with this record.
     """
-    string: Optional[Union[AString, int]] = None
-    layer: Optional[int] = None
-    datatype: Optional[int] = None
-    x: Optional[int] = None
-    y: Optional[int] = None
-    repetition: Optional[repetition_t] = None
-    properties: List['Property']
+    string: AString | int | None = None
+    layer: int | None = None
+    datatype: int | None = None
+    x: int | None = None
+    y: int | None = None
+    repetition: repetition_t | None = None
+    properties: list['Property']
 
     def __init__(
             self,
-            string: Union[AString, str, int, None] = None,
-            layer: Optional[int] = None,
-            datatype: Optional[int] = None,
-            x: Optional[int] = None,
-            y: Optional[int] = None,
-            repetition: Optional[repetition_t] = None,
-            properties: Optional[List['Property']] = None,
+            string: AString | str | int | None = None,
+            layer: int | None = None,
+            datatype: int | None = None,
+            x: int | None = None,
+            y: int | None = None,
+            repetition: repetition_t | None = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         """
         Args:
@@ -1516,7 +1484,7 @@ class Text(Record, GeometryMixin):
             self.string = AString(string)
         self.properties = [] if properties is None else properties
 
-    def get_string(self) -> Union[AString, int]:
+    def get_string(self) -> AString | int:
         return verify_modal(self.string)          # type: ignore
 
     def merge_with_modals(self, modals: Modals) -> None:
@@ -1542,7 +1510,7 @@ class Text(Record, GeometryMixin):
         if z0:
             raise InvalidDataError('Malformed Text header')
 
-        optional: Dict[str, Any] = {}
+        optional: dict[str, Any] = {}
         string = read_refstring(stream, c, n)
         if l:
             optional['layer'] = read_uint(stream)
@@ -1593,43 +1561,43 @@ class Rectangle(Record, GeometryMixin):
     Rectangle record (ID 20)
 
     (x, y) denotes the lower-left (min-x, min-y) corner of the rectangle.
-
-    Attributes:
-        is_square (bool): `True` if this is a square.
-                        If `True`, `height` must be `None`.
-        width (Optional[int]): X-width. `None` means reuse modal.
-        height (Optional[int]): Y-height. Must be `None` if `is_square` is `True`.
-                        If `is_square` is `False`, `None` means reuse modal.
-        layer (Optional[int]): None means reuse modal
-        datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset of the rectangle's lower-left (min-x) point.
-            None means reuse modal.
-        y (Optional[int]): y-offset of the rectangle's lower-left (min-y) point.
-            None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any.
-        properties (List[Property]): List of property records associate with this record.
     """
-    layer: Optional[int]
-    datatype: Optional[int]
-    width: Optional[int]
-    height: Optional[int]
-    x: Optional[int]
-    y: Optional[int]
-    repetition: Optional[repetition_t]
+    layer: int | None
+    datatype: int | None
+    width: int | None
+    """X-width. `None` means reuse modal"""
+
+    height: int | None
+    """Y-height. Must be `None` if `is_square` is `True`.
+       If `is_square` is `False`, `None` means reuse modal
+    """
+
+    x: int | None
+    """x-offset of the rectangle's lower-left (min-x) point.
+       None means reuse modal.
+    """
+    y: int | None
+    """y-offset of the rectangle's lower-left (min-y) point.
+       None means reuse modal
+    """
+
+    repetition: repetition_t | None
     is_square: bool
-    properties: List['Property']
+    """If `True`, `height` must be `None`"""
+
+    properties: list['Property']
 
     def __init__(
             self,
             is_square: bool = False,
-            layer: Optional[int] = None,
-            datatype: Optional[int] = None,
-            width: Optional[int] = None,
-            height: Optional[int] = None,
-            x: Optional[int] = None,
-            y: Optional[int] = None,
-            repetition: Optional[repetition_t] = None,
-            properties: Optional[List['Property']] = None,
+            layer: int | None = None,
+            datatype: int | None = None,
+            width: int | None = None,
+            height: int | None = None,
+            x: int | None = None,
+            y: int | None = None,
+            repetition: repetition_t | None = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         self.is_square = is_square
         self.layer = layer
@@ -1679,7 +1647,7 @@ class Rectangle(Record, GeometryMixin):
             raise InvalidDataError(f'Invalid record id for Rectangle: {record_id}')
 
         is_square, w, h, x, y, r, d, l = read_bool_byte(stream)
-        optional: Dict[str, Any] = {}
+        optional: dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -1730,42 +1698,38 @@ class Rectangle(Record, GeometryMixin):
 class Polygon(Record, GeometryMixin):
     """
     Polygon record (ID 21)
-
-    Attributes:
-        point_list (Optional[point_list_t]): List of offsets from the
-            initial vertex (x, y) to the remaining vertices,
-            `[[dx0, dy0], [dx1, dy1], ...]`.
-            The list is an implicitly closed path, vertices are [int, int],
-            The initial vertex is located at (x, y) and is not represented
-              in `point_list`.
-            `None` means reuse modal.
-        layer (Optional[int]): Layer number. None means reuse modal
-        datatype (Optional[int]): Datatype number. None means reuse modal
-        x (Optional[int]): x-offset of the polygon's first point.
-            None means reuse modal
-        y (Optional[int]): y-offset of the polygon's first point.
-            None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any.
-            Default no repetition.
-        properties (List[Property]): List of property records associate with this record.
     """
-    layer: Optional[int]
-    datatype: Optional[int]
-    x: Optional[int]
-    y: Optional[int]
-    repetition: Optional[repetition_t]
-    point_list: Optional[point_list_t]
-    properties: List['Property']
+    layer: int | None
+    datatype: int | None
+    x: int | None
+    """x-offset of the polygon's first point.
+       None means reuse modal
+    """
+    y: int | None
+    """y-offset of the polygon's first point.
+       None means reuse modal
+    """
+    repetition: repetition_t | None
+    point_list: point_list_t | None
+    """
+    List of offsets from the initial vertex (x, y) to the remaining
+    vertices, `[[dx0, dy0], [dx1, dy1], ...]`.
+    The list is an implicitly closed path, vertices are [int, int].
+    The initial vertex is located at (x, y) and is not represented in `point_list`.
+    `None` means reuse modal.
+    """
+
+    properties: list['Property']
 
     def __init__(
             self,
-            point_list: Optional[point_list_t] = None,
-            layer: Optional[int] = None,
-            datatype: Optional[int] = None,
-            x: Optional[int] = None,
-            y: Optional[int] = None,
-            repetition: Optional[repetition_t] = None,
-            properties: Optional[List['Property']] = None,
+            point_list: point_list_t | None = None,
+            layer: int | None = None,
+            datatype: int | None = None,
+            x: int | None = None,
+            y: int | None = None,
+            repetition: repetition_t | None = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         self.layer = layer
         self.datatype = datatype
@@ -1805,7 +1769,7 @@ class Polygon(Record, GeometryMixin):
         if z0 or z1:
             raise InvalidDataError('Invalid polygon header')
 
-        optional: Dict[str, Any] = {}
+        optional: dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -1851,51 +1815,50 @@ class Polygon(Record, GeometryMixin):
 class Path(Record, GeometryMixin):
     """
     Polygon record (ID 22)
-
-    Attributes:
-        point_list (Optional[point_list_t]): List of offsets from the
-            initial vertex (x, y) to the remaining vertices,
-            `[[dx0, dy0], [dx1, dy1], ...]`.
-            The initial vertex is located at (x, y) and is not represented
-              in `point_list`.
-            Offsets are [int, int]; `None` means reuse modal.
-        half_width (Optional[int]): None means reuse modal
-        extension_start (Optional[Tuple]): None means reuse modal.
-            Tuple is of the form (`PathExtensionScheme`, Optional[int])
-            Second value is None unless using `PathExtensionScheme.Arbitrary`
-            Value determines extension past start point.
-        extension_end (Optional[Tuple]): Same form as `extension_end`.
-            Value determines extension past end point.
-        layer (Optional[int]): None means reuse modal
-        datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset, None means reuse modal
-        y (Optional[int]): y-offset, None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any
-        properties (List[Property]): List of property records associate with this record.
     """
-    layer: Optional[int] = None
-    datatype: Optional[int] = None
-    x: Optional[int] = None
-    y: Optional[int] = None
-    repetition: Optional[repetition_t] = None
-    point_list: Optional[point_list_t] = None
-    half_width: Optional[int] = None
-    extension_start: Optional[pathextension_t] = None
-    extension_end: Optional[pathextension_t] = None
-    properties: List['Property']
+    layer: int | None = None
+    datatype: int | None = None
+    x: int | None = None
+    y: int | None = None
+    repetition: repetition_t | None = None
+    point_list: point_list_t | None = None
+    """
+    List of offsets from the initial vertex (x, y) to the remaining vertices,
+    `[[dx0, dy0], [dx1, dy1], ...]`.
+    The initial vertex is located at (x, y) and is not represented in `point_list`.
+    Offsets are [int, int]; `None` means reuse modal.
+    """
+
+    half_width: int | None = None
+    """None means reuse modal"""
+
+    extension_start: pathextension_t | None = None
+    """
+    `None` means reuse modal.
+    Tuple is of the form (`PathExtensionScheme`, int | None)
+    Second value is None unless using `PathExtensionScheme.Arbitrary`
+    Value determines extension past start point.
+    """
+
+    extension_end: pathextension_t | None = None
+    """
+    Same form as `extension_end`. Value determines extension past end point.
+    """
+
+    properties: list['Property']
 
     def __init__(
             self,
-            point_list: Optional[point_list_t] = None,
-            half_width: Optional[int] = None,
-            extension_start: Optional[pathextension_t] = None,
-            extension_end: Optional[pathextension_t] = None,
-            layer: Optional[int] = None,
-            datatype: Optional[int] = None,
-            x: Optional[int] = None,
-            y: Optional[int] = None,
-            repetition: Optional[repetition_t] = None,
-            properties: Optional[List['Property']] = None,
+            point_list: point_list_t | None = None,
+            half_width: int | None = None,
+            extension_start: pathextension_t | None = None,
+            extension_end: pathextension_t | None = None,
+            layer: int | None = None,
+            datatype: int | None = None,
+            x: int | None = None,
+            y: int | None = None,
+            repetition: repetition_t | None = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         self.layer = layer
         self.datatype = datatype
@@ -1946,7 +1909,7 @@ class Path(Record, GeometryMixin):
             raise InvalidDataError(f'Invalid record id for Path: {record_id}')
 
         e, w, p, x, y, r, d, l = read_bool_byte(stream)
-        optional: Dict[str, Any] = {}
+        optional: dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -1958,7 +1921,7 @@ class Path(Record, GeometryMixin):
             scheme_end = scheme & 0b11
             scheme_start = (scheme >> 2) & 0b11
 
-            def get_pathext(ext_scheme: int) -> Optional[pathextension_t]:
+            def get_pathext(ext_scheme: int) -> pathextension_t | None:
                 if ext_scheme == 0:
                     return None
                 elif ext_scheme == 1:
@@ -2031,55 +1994,61 @@ class Trapezoid(Record, GeometryMixin):
 
     Trapezoid with at least two sides parallel to the x- or y-axis.
     (x, y) denotes the lower-left (min-x, min-y) corner of the trapezoid's bounding box.
-
-    Attributes:
-        delta_a (Optional[int]): If horizontal, signed x-distance from top left
-            vertex to bottom left vertex. If vertical, signed y-distance from
-            bottom left vertex to bottom right vertex.
-            None means reuse modal.
-        delta_b (Optional[int]): If horizontal, signed x-distance from bottom right
-            vertex to top right vertex. If vertical, signed y-distance from top
-            right vertex to top left vertex.
-            None means reuse modal.
-        is_vertical (bool): `True` if the left and right sides are aligned to
-            the y-axis. If the trapezoid is a rectangle, either `True` or `False`
-            can be used.
-        width (Optional[int]): Bounding box x-width, None means reuse modal.
-        height (Optional[int]): Bounding box y-height, None means reuse modal.
-        layer (Optional[int]): None means reuse modal
-        datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset to lower-left corner of the trapezoid's bounding box.
-            None means reuse modal
-        y (Optional[int]): y-offset to lower-left corner of the trapezoid's bounding box.
-            None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any
-        properties (List[Property]): List of property records associate with this record.
     """
-    layer: Optional[int] = None
-    datatype: Optional[int] = None
-    width: Optional[int] = None
-    height: Optional[int] = None
-    x: Optional[int] = None
-    y: Optional[int] = None
-    repetition: Optional[repetition_t] = None
+    layer: int | None = None
+    datatype: int | None = None
+    width: int | None = None
+    """Bounding box x-width, None means reuse modal."""
+
+    height: int | None = None
+    """Bounding box y-height, None means reuse modal."""
+
+    x: int | None = None
+    """x-offset to lower-left corner of the trapezoid's bounding box.
+       None means reuse modal
+    """
+
+    y: int | None = None
+    """y-offset to lower-left corner of the trapezoid's bounding box.
+       None means reuse modal
+    """
+
+    repetition: repetition_t | None = None
     delta_a: int = 0
+    """
+    If horizontal, signed x-distance from top left vertex to bottom left vertex.
+    If vertical, signed y-distance from bottom left vertex to bottom right vertex.
+    None means reuse modal.
+    """
+
     delta_b: int = 0
+    """
+    If horizontal, signed x-distance from bottom right vertex to top right vertex.
+    If vertical, signed y-distance from top right vertex to top left vertex.
+    None means reuse modal.
+    """
+
     is_vertical: bool
-    properties: List['Property']
+    """
+    `True` if the left and right sides are aligned to the y-axis.
+    If the trapezoid is a rectangle, either `True` or `False` can be used.
+    """
+
+    properties: list['Property']
 
     def __init__(
             self,
             is_vertical: bool,
             delta_a: int = 0,
             delta_b: int = 0,
-            layer: Optional[int] = None,
-            datatype: Optional[int] = None,
-            width: Optional[int] = None,
-            height: Optional[int] = None,
-            x: Optional[int] = None,
-            y: Optional[int] = None,
-            repetition: Optional[repetition_t] = None,
-            properties: Optional[List['Property']] = None,
+            layer: int | None = None,
+            datatype: int | None = None,
+            width: int | None = None,
+            height: int | None = None,
+            x: int | None = None,
+            y: int | None = None,
+            repetition: repetition_t | None = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         """
         Raises:
@@ -2141,7 +2110,7 @@ class Trapezoid(Record, GeometryMixin):
             raise InvalidDataError(f'Invalid record id for Trapezoid: {record_id}')
 
         is_vertical, w, h, x, y, r, d, l = read_bool_byte(stream)
-        optional: Dict[str, Any] = {}
+        optional: dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -2241,44 +2210,45 @@ class CTrapezoid(Record, GeometryMixin):
        w = h        w = 2h                    w = h
     set h = None  set w = None            set h = None
 
-
-   Attributes:
-        ctrapezoid_type (Optional[int]): See above for details.
-            None means reuse modal.
-        width (Optional[int]): Bounding box x-width.
-            None means unnecessary, or reuse modal if necessary.
-        height (Optional[int]): Bounding box y-height.
-            None means unnecessary, or reuse modal if necessary.
-        layer (Optional[int]): None means reuse modal
-        datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset of lower-left (min-x) point of bounding box.
-            None means reuse modal
-        y (Optional[int]): y-offset of lower-left (min-y) point of bounding box.
-            None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any
-        properties (List[Property]): List of property records associate with this record.
     """
-    ctrapezoid_type: Optional[int] = None
-    layer: Optional[int] = None
-    datatype: Optional[int] = None
-    width: Optional[int] = None
-    height: Optional[int] = None
-    x: Optional[int] = None
-    y: Optional[int] = None
-    repetition: Optional[repetition_t] = None
-    properties: List['Property']
+    ctrapezoid_type: int | None = None
+    """See class docstring for details. None means reuse modal."""
+
+    layer: int | None = None
+    datatype: int | None = None
+    width: int | None = None
+    """width: Bounding box x-width
+       None means unnecessary, or reuse modal if necessary.
+    """
+
+    height: int | None = None
+    """Bounding box y-height.
+       None means unnecessary, or reuse modal if necessary.
+    """
+
+    x: int | None = None
+    """x-offset of lower-left (min-x) point of bounding box.
+       None means reuse modal
+    """
+    y: int | None = None
+    """y-offset of lower-left (min-y) point of bounding box.
+       None means reuse modal
+    """
+
+    repetition: repetition_t | None = None
+    properties: list['Property']
 
     def __init__(
             self,
-            ctrapezoid_type: Optional[int] = None,
-            layer: Optional[int] = None,
-            datatype: Optional[int] = None,
-            width: Optional[int] = None,
-            height: Optional[int] = None,
-            x: Optional[int] = None,
-            y: Optional[int] = None,
-            repetition: Optional[repetition_t] = None,
-            properties: Optional[List['Property']] = None,
+            ctrapezoid_type: int | None = None,
+            layer: int | None = None,
+            datatype: int | None = None,
+            width: int | None = None,
+            height: int | None = None,
+            x: int | None = None,
+            y: int | None = None,
+            repetition: repetition_t | None = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         """
         Raises:
@@ -2363,7 +2333,7 @@ class CTrapezoid(Record, GeometryMixin):
             raise InvalidDataError(f'Invalid record id for CTrapezoid: {record_id}')
 
         t, w, h, x, y, r, d, l = read_bool_byte(stream)
-        optional: Dict[str, Any] = {}
+        optional: dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
@@ -2441,33 +2411,24 @@ class CTrapezoid(Record, GeometryMixin):
 class Circle(Record, GeometryMixin):
     """
     Circle record (ID 27)
-
-    Attributes:
-        radius (Optional[int]): None means reuse modal
-        layer (Optional[int]): None means reuse modal
-        datatype (Optional[int]): None means reuse modal
-        x (Optional[int]): x-offset, None means reuse modal
-        y (Optional[int]): y-offset, None means reuse modal
-        repetition (Optional[repetition_t]): Repetition, if any
-        properties (List[Property]): List of property records associate with this record.
     """
-    layer: Optional[int]
-    datatype: Optional[int]
-    x: Optional[int]
-    y: Optional[int]
-    repetition: Optional[repetition_t]
-    radius: Optional[int]
-    properties: List['Property']
+    layer: int | None
+    datatype: int | None
+    x: int | None
+    y: int | None
+    repetition: repetition_t | None
+    radius: int | None
+    properties: list['Property']
 
     def __init__(
             self,
-            radius: Optional[int] = None,
-            layer: Optional[int] = None,
-            datatype: Optional[int] = None,
-            x: Optional[int] = None,
-            y: Optional[int] = None,
-            repetition: Optional[repetition_t] = None,
-            properties: Optional[List['Property']] = None,
+            radius: int | None = None,
+            layer: int | None = None,
+            datatype: int | None = None,
+            x: int | None = None,
+            y: int | None = None,
+            repetition: repetition_t | None = None,
+            properties: list['Property'] | None = None,
             ) -> None:
         """
         Args:
@@ -2516,7 +2477,7 @@ class Circle(Record, GeometryMixin):
         if z0 or z1:
             raise InvalidDataError('Malformed circle header')
 
-        optional: Dict[str, Any] = {}
+        optional: dict[str, Any] = {}
         if l:
             optional['layer'] = read_uint(stream)
         if d:
