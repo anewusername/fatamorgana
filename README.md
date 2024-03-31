@@ -3,6 +3,8 @@
 **fatamorgana** is a Python package for reading and writing OASIS format layout files.
 
 **Homepage:** https://mpxd.net/code/jan/fatamorgana
+* [PyPI](https://pypi.org/project/fatamorgana)
+* [Github mirror](https://github.com/anewusername/fatamorgana)
 
 **Capabilities:**
 * This package is a work-in-progress and is largely untested -- it works for
@@ -20,7 +22,7 @@
 ## Installation
 
 **Dependencies:**
-* python 3.5 or newer
+* python >=3.10
 * (optional) numpy
 
 

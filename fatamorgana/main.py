@@ -3,7 +3,7 @@ This module contains data structures and functions for reading from and
  writing to whole OASIS layout files, and provides a few additional
  abstractions for the data contained inside them.
 """
-from typing import List, Dict, Union, Optional, Type, IO
+from typing import Type, IO
 import io
 import logging
 
@@ -27,20 +27,20 @@ class FileModals:
     """
     File-scoped modal variables
     """
-    cellname_implicit: Optional[bool] = None
-    propname_implicit: Optional[bool] = None
-    xname_implicit: Optional[bool] = None
-    textstring_implicit: Optional[bool] = None
-    propstring_implicit: Optional[bool] = None
+    cellname_implicit: bool | None = None
+    propname_implicit: bool | None = None
+    xname_implicit: bool | None = None
+    textstring_implicit: bool | None = None
+    propstring_implicit: bool | None = None
 
-    property_target: List[records.Property]
+    property_target: list[records.Property]
 
     within_cell: bool = False
     within_cblock: bool = False
     end_has_offset_table: bool = False
     started: bool = False
 
-    def __init__(self, property_target: List[records.Property]) -> None:
+    def __init__(self, property_target: list[records.Property]) -> None:
         self.property_target = property_target
 
 
@@ -53,46 +53,48 @@ class OasisLayout:
         record objects.
     Cells are stored using `Cell` objects (different from `records.Cell`
         record objects).
-
-    Attributes:
-        (File properties)
-        version (AString): Version string ('1.0')
-        unit (real_t): grid steps per micron
-        validation (Validation): checksum data
-
-        (Names)
-        cellnames (Dict[int, CellName]): Cell names
-        propnames (Dict[int, NString]): Property names
-        xnames (Dict[int, XName]): Custom names
-
-        (Strings)
-        textstrings (Dict[int, AString]): Text strings
-        propstrings (Dict[int, AString]): Property strings
-
-        (Data)
-        layers (List[records.LayerName]): Layer definitions
-        properties (List[records.Property]): Property values
-        cells (List[Cell]): Layout cells
     """
+    # File properties
     version: AString
+    """File format version string ('1.0')"""
+
     unit: real_t
+    """grid steps per micron"""
+
     validation: Validation
+    """checksum data"""
 
-    properties: List[records.Property]
-    cells: List['Cell']
+    # Data
+    properties: list[records.Property]
+    """Property values"""
 
-    cellnames: Dict[int, 'CellName']
-    propnames: Dict[int, NString]
-    xnames: Dict[int, 'XName']
+    cells: list['Cell']
+    """Layout cells"""
 
-    textstrings: Dict[int, AString]
-    propstrings: Dict[int, AString]
-    layers: List[records.LayerName]
+    layers: list[records.LayerName]
+    """Layer definitions"""
+
+    # Names
+    cellnames: dict[int, 'CellName']
+    """Cell names"""
+
+    propnames: dict[int, NString]
+    """Property names"""
+
+    xnames: dict[int, 'XName']
+    """Custom names"""
+
+    # String storage
+    textstrings: dict[int, AString]
+    """Text strings"""
+
+    propstrings: dict[int, AString]
+    """Property strings"""
 
     def __init__(
             self,
             unit: real_t,
-            validation: Optional[Validation] = None,
+            validation: Validation | None = None,
             ) -> None:
         """
         Args:
@@ -404,26 +406,21 @@ class OasisLayout:
 class Cell:
     """
     Representation of an OASIS cell.
-
-    Attributes:
-        name (Union[NString, int]): name or "CellName reference" number
-
-        properties (List[records.Property]): Properties of this cell
-        placements (List[records.Placement]): Placement record objects
-        geometry: (List[records.geometry_t]): Geometry record objectes
     """
-    name: Union[NString, int]
-    properties: List[records.Property]
-    placements: List[records.Placement]
-    geometry: List[records.geometry_t]
+    name: NString | int
+    """name or "CellName reference" number"""
+
+    properties: list[records.Property]
+    placements: list[records.Placement]
+    geometry: list[records.geometry_t]
 
     def __init__(
             self,
-            name: Union[NString, str, int],
+            name: NString | str | int,
             *,
-            properties: Optional[List[records.Property]] = None,
-            placements: Optional[List[records.Placement]] = None,
-            geometry: Optional[List[records.geometry_t]] = None,
+            properties: list[records.Property] | None = None,
+            placements: list[records.Placement] | None = None,
+            geometry: list[records.geometry_t] | None = None,
             ) -> None:
         self.name = name if isinstance(name, (NString, int)) else NString(name)
         self.properties = [] if properties is None else properties
@@ -464,12 +461,12 @@ class CellName:
      with the reference data stripped out.
     """
     nstring: NString
-    properties: List[records.Property]
+    properties: list[records.Property]
 
     def __init__(
             self,
-            nstring: Union[NString, str],
-            properties: Optional[List[records.Property]] = None,
+            nstring: NString | str,
+            properties: list[records.Property] | None = None,
             ) -> None:
         """
         Args:
@@ -531,7 +528,7 @@ class XName:
 
 
 # Mapping from record id to record class.
-_GEOMETRY: Dict[int, Type[records.geometry_t]] = {
+_GEOMETRY: dict[int, Type[records.geometry_t]] = {
     19: records.Text,
     20: records.Rectangle,
     21: records.Polygon,
