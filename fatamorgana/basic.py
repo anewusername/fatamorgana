@@ -1735,7 +1735,7 @@ class PropStringReference:
         self.ref_type = ref_type
 
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, type(self)) and self.ref == other.ref and self.reference_type == other.reference_type
+        return isinstance(other, type(self)) and self.ref == other.ref and self.reference_type is other.reference_type
 
     def __repr__(self) -> str:
         return f'[{self.ref_type} : {self.ref}]'
@@ -1843,11 +1843,11 @@ def write_property_value(
         size = write_uint(stream, 12)
         size += value.write(stream)
     elif isinstance(value, PropStringReference):
-        if value.ref_type == AString:
+        if value.ref_type is AString:
             size = write_uint(stream, 13)
-        elif value.ref_type == bytes:
+        elif value.ref_type is bytes:
             size = write_uint(stream, 14)
-        if value.ref_type == AString:
+        if value.ref_type is AString:
             size = write_uint(stream, 15)
         size += write_uint(stream, value.ref)
     else:
