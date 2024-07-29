@@ -47,8 +47,7 @@ point_list_t = Sequence[Sequence[int]]
 
 class Modals:
     """
-    Modal variables, used to store data about previously-written or
-     -read records.
+    Modal variables, used to store data about previously-written or -read records.
     """
     repetition: repetition_t | None = None
     placement_x: int = 0

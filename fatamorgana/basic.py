@@ -1728,8 +1728,9 @@ class PropStringReference:
 
     def __init__(self, ref: int, ref_type: type) -> None:
         """
-        :param ref: ID number of the target.
-        :param ref_type: Type of the target. One of bytes, NString, AString.
+        Args:
+            ref: ID number of the target.
+            ref_type: Type of the target. One of bytes, NString, AString.
         """
         self.ref = ref
         self.ref_type = ref_type
