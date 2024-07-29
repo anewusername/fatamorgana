@@ -968,26 +968,26 @@ class Property(Record):
             record = Property()
         else:
             byte = read_byte(stream)      # UUUUVCNS
-            u = 0x0f & (byte >> 4)
-            v = 0x01 & (byte >> 3)
-            c = 0x01 & (byte >> 2)
-            n = 0x01 & (byte >> 1)
-            s = 0x01 & (byte >> 0)
+            uu = 0x0f & (byte >> 4)
+            vv = 0x01 & (byte >> 3)
+            cc = 0x01 & (byte >> 2)
+            nn = 0x01 & (byte >> 1)
+            ss = 0x01 & (byte >> 0)
 
-            name = read_refname(stream, c, n)
-            if v == 0:
-                if u < 0x0f:
-                    value_count = u
+            name = read_refname(stream, cc, nn)
+            if vv == 0:
+                if uu < 0x0f:
+                    value_count = uu
                 else:
                     value_count = read_uint(stream)
                 values: list[property_value_t] | None = [read_property_value(stream)
                                                          for _ in range(value_count)]
             else:
                 values = None
-#                if u != 0:
+#                if uu != 0:
 #                    logger.warning('Malformed property record header; requested modal'
 #                                   ' values but had nonzero count. Ignoring count.')
-            record = Property(name, values, bool(s))
+            record = Property(name, values, bool(ss))
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
@@ -999,30 +999,27 @@ class Property(Record):
                 raise InvalidDataError('Property has value or name, but no is_standard flag!')
             if self.values is not None:
                 value_count = len(self.values)
-                v = 0
-                if value_count >= 0x0f:
-                    u = 0x0f
-                else:
-                    u = value_count
+                vv = 0
+                uu = 0x0f if value_count >= 0x0f else value_count
             else:
-                v = 1
-                u = 0
+                vv = 1
+                uu = 0
 
-            c = self.name is not None
-            n = c and isinstance(self.name, int)
-            s = self.is_standard
+            cc = self.name is not None
+            nn = cc and isinstance(self.name, int)
+            ss = self.is_standard
 
             size = write_uint(stream, 28)
-            size += write_byte(stream, (u << 4) | (v << 3) | (c << 2) | (n << 1) | s)
-            if c:
-                if n:
+            size += write_byte(stream, (uu << 4) | (vv << 3) | (cc << 2) | (nn << 1) | ss)
+            if cc:
+                if nn:
                     size += write_uint(stream, self.name)   # type: ignore
                 else:
                     size += self.name.write(stream)         # type: ignore
-            if not v:
-                if u == 0x0f:
+            if not vv:
+                if uu == 0x0f:
                     size += write_uint(stream, len(self.values))   # type: ignore
-                size += sum(write_property_value(stream, p) for p in self.values)   # type: ignore
+                size += sum(write_property_value(stream, pp) for pp in self.values)   # type: ignore
         return size
 
 
@@ -1202,21 +1199,21 @@ class XGeometry(Record, GeometryMixin):
         if record_id != 33:
             raise InvalidDataError(f'Invalid record id for XGeometry: {record_id}')
 
-        z0, z1, z2, x, y, r, d, l = read_bool_byte(stream)
+        z0, z1, z2, xx, yy, rr, dd, ll = read_bool_byte(stream)
         if z0 or z1 or z2:
             raise InvalidDataError('Malformed XGeometry header')
         attribute = read_uint(stream)
         optional: dict[str, Any] = {}
-        if l:
+        if ll:
             optional['layer'] = read_uint(stream)
-        if d:
+        if dd:
             optional['datatype'] = read_uint(stream)
         bstring = read_bstring(stream)
-        if x:
+        if xx:
             optional['x'] = read_sint(stream)
-        if y:
+        if yy:
             optional['y'] = read_sint(stream)
-        if r:
+        if rr:
             optional['repetition'] = read_repetition(stream)
 
         record = XGeometry(attribute, bstring, **optional)
@@ -1224,25 +1221,25 @@ class XGeometry(Record, GeometryMixin):
         return record
 
     def write(self, stream: IO[bytes]) -> int:
-        x = self.x is not None
-        y = self.y is not None
-        r = self.repetition is not None
-        d = self.datatype is not None
-        l = self.layer is not None
+        xx = self.x is not None
+        yy = self.y is not None
+        rr = self.repetition is not None
+        dd = self.datatype is not None
+        ll = self.layer is not None
 
         size = write_uint(stream, 33)
-        size += write_bool_byte(stream, (0, 0, 0, x, y, r, d, l))
+        size += write_bool_byte(stream, (0, 0, 0, xx, yy, rr, dd, ll))
         size += write_uint(stream, self.attribute)
-        if l:
+        if ll:
             size += write_uint(stream, self.layer)      # type: ignore
-        if d:
+        if dd:
             size += write_uint(stream, self.datatype)   # type: ignore
         size += write_bstring(stream, self.bstring)
-        if x:
+        if xx:
             size += write_sint(stream, self.x)          # type: ignore
-        if y:
+        if yy:
             size += write_sint(stream, self.y)          # type: ignore
-        if r:
+        if rr:
             size += self.repetition.write(stream)       # type: ignore
         return size
 
@@ -1373,25 +1370,25 @@ class Placement(Record):
             raise InvalidDataError(f'Invalid record id for Placement: {record_id}')
 
         #CNXYRAAF (17) or CNXYRMAF (18)
-        c, n, x, y, r, ma0, ma1, flip = read_bool_byte(stream)
+        cc, nn, xx, yy, rr, ma0, ma1, flip = read_bool_byte(stream)
 
         optional: dict[str, Any] = {}
-        name = read_refname(stream, c, n)
+        name = read_refname(stream, cc, nn)
         if record_id == 17:
             aa = (ma0 << 1) | ma1
             optional['angle'] = aa * 90
         elif record_id == 18:
-            m = ma0
-            a = ma1
-            if m:
+            mm = ma0
+            aa1 = ma1
+            if mm:
                 optional['magnification'] = read_real(stream)
-            if a:
+            if aa1:
                 optional['angle'] = read_real(stream)
-        if x:
+        if xx:
             optional['x'] = read_sint(stream)
-        if y:
+        if yy:
             optional['y'] = read_sint(stream)
-        if r:
+        if rr:
             optional['repetition'] = read_repetition(stream)
 
         record = Placement(flip, name, **optional)
@@ -1399,43 +1396,43 @@ class Placement(Record):
         return record
 
     def write(self, stream: IO[bytes]) -> int:
-        c = self.name is not None
-        n = c and isinstance(self.name, int)
-        x = self.x is not None
-        y = self.y is not None
-        r = self.repetition is not None
-        f = self.flip
+        cc = self.name is not None
+        nn = cc and isinstance(self.name, int)
+        xx = self.x is not None
+        yy = self.y is not None
+        rr = self.repetition is not None
+        ff = self.flip
 
         if (self.magnification == 1
                 and self.angle is not None
                 and abs(self.angle % 90.0) < 1e-14):
             aa = int((self.angle / 90) % 4.0)
-            bools = (c, n, x, y, r, aa & 0b10, aa & 0b01, f)
-            m = False
-            a = False
+            bools = (cc, nn, xx, yy, rr, aa & 0b10, aa & 0b01, ff)
+            mm = False
+            aq = False
             record_id = 17
         else:
-            m = self.magnification is not None
-            a = self.angle is not None
-            bools = (c, n, x, y, r, m, a, f)
+            mm = self.magnification is not None
+            aq = self.angle is not None
+            bools = (cc, nn, xx, yy, rr, mm, aq, ff)
             record_id = 18
 
         size = write_uint(stream, record_id)
         size += write_bool_byte(stream, bools)
-        if c:
-            if n:
+        if cc:
+            if nn:
                 size += write_uint(stream, self.name)       # type: ignore
             else:
                 size += self.name.write(stream)             # type: ignore
-        if m:
+        if mm:
             size += write_real(stream, self.magnification)  # type: ignore
-        if a:
+        if aa:
             size += write_real(stream, self.angle)          # type: ignore
-        if x:
+        if xx:
             size += write_sint(stream, self.x)              # type: ignore
-        if y:
+        if yy:
             size += write_sint(stream, self.y)              # type: ignore
-        if r:
+        if rr:
             size += self.repetition.write(stream)           # type: ignore
         return size
 
@@ -1506,21 +1503,21 @@ class Text(Record, GeometryMixin):
         if record_id != 19:
             raise InvalidDataError(f'Invalid record id for Text: {record_id}')
 
-        z0, c, n, x, y, r, d, l = read_bool_byte(stream)
+        z0, cc, nn, xx, yy, rr, dd, ll = read_bool_byte(stream)
         if z0:
             raise InvalidDataError('Malformed Text header')
 
         optional: dict[str, Any] = {}
-        string = read_refstring(stream, c, n)
-        if l:
+        string = read_refstring(stream, cc, nn)
+        if ll:
             optional['layer'] = read_uint(stream)
-        if d:
+        if dd:
             optional['datatype'] = read_uint(stream)
-        if x:
+        if xx:
             optional['x'] = read_sint(stream)
-        if y:
+        if yy:
             optional['y'] = read_sint(stream)
-        if r:
+        if rr:
             optional['repetition'] = read_repetition(stream)
 
         record = Text(string, **optional)
@@ -1528,30 +1525,30 @@ class Text(Record, GeometryMixin):
         return record
 
     def write(self, stream: IO[bytes]) -> int:
-        c = self.string is not None
-        n = c and isinstance(self.string, int)
-        x = self.x is not None
-        y = self.y is not None
-        r = self.repetition is not None
-        d = self.datatype is not None
-        l = self.layer is not None
+        cc = self.string is not None
+        nn = cc and isinstance(self.string, int)
+        xx = self.x is not None
+        yy = self.y is not None
+        rr = self.repetition is not None
+        dd = self.datatype is not None
+        ll = self.layer is not None
 
         size = write_uint(stream, 19)
-        size += write_bool_byte(stream, (0, c, n, x, y, r, d, l))
-        if c:
-            if n:
+        size += write_bool_byte(stream, (0, cc, nn, xx, yy, rr, dd, ll))
+        if cc:
+            if nn:
                 size += write_uint(stream, self.string)  # type: ignore
             else:
                 size += self.string.write(stream)        # type: ignore
-        if l:
+        if ll:
             size += write_uint(stream, self.layer)       # type: ignore
-        if d:
+        if dd:
             size += write_uint(stream, self.datatype)    # type: ignore
-        if x:
+        if xx:
             size += write_sint(stream, self.x)           # type: ignore
-        if y:
+        if yy:
             size += write_sint(stream, self.y)           # type: ignore
-        if r:
+        if rr:
             size += self.repetition.write(stream)        # type: ignore
         return size
 
@@ -1646,51 +1643,51 @@ class Rectangle(Record, GeometryMixin):
         if record_id != 20:
             raise InvalidDataError(f'Invalid record id for Rectangle: {record_id}')
 
-        is_square, w, h, x, y, r, d, l = read_bool_byte(stream)
+        is_square, ww, hh, xx, yy, rr, dd, ll = read_bool_byte(stream)
         optional: dict[str, Any] = {}
-        if l:
+        if ll:
             optional['layer'] = read_uint(stream)
-        if d:
+        if dd:
             optional['datatype'] = read_uint(stream)
-        if w:
+        if ww:
             optional['width'] = read_uint(stream)
-        if h:
+        if hh:
             optional['height'] = read_uint(stream)
-        if x:
+        if xx:
             optional['x'] = read_sint(stream)
-        if y:
+        if yy:
             optional['y'] = read_sint(stream)
-        if r:
+        if rr:
             optional['repetition'] = read_repetition(stream)
         record = Rectangle(is_square, **optional)
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: IO[bytes]) -> int:
-        s = self.is_square
-        w = self.width is not None
-        h = self.height is not None
-        x = self.x is not None
-        y = self.y is not None
-        r = self.repetition is not None
-        d = self.datatype is not None
-        l = self.layer is not None
+        ss = self.is_square
+        ww = self.width is not None
+        hh = self.height is not None
+        xx = self.x is not None
+        yy = self.y is not None
+        rr = self.repetition is not None
+        dd = self.datatype is not None
+        ll = self.layer is not None
 
         size = write_uint(stream, 20)
-        size += write_bool_byte(stream, (s, w, h, x, y, r, d, l))
-        if l:
+        size += write_bool_byte(stream, (ss, ww, hh, xx, yy, rr, dd, ll))
+        if ll:
             size += write_uint(stream, self.layer)      # type: ignore
-        if d:
+        if dd:
             size += write_uint(stream, self.datatype)   # type: ignore
-        if w:
+        if ww:
             size += write_uint(stream, self.width)      # type: ignore
-        if h:
+        if hh:
             size += write_uint(stream, self.height)     # type: ignore
-        if x:
+        if xx:
             size += write_sint(stream, self.x)          # type: ignore
-        if y:
+        if yy:
             size += write_sint(stream, self.y)          # type: ignore
-        if r:
+        if rr:
             size += self.repetition.write(stream)       # type: ignore
         return size
 
@@ -1765,49 +1762,49 @@ class Polygon(Record, GeometryMixin):
         if record_id != 21:
             raise InvalidDataError(f'Invalid record id for Polygon: {record_id}')
 
-        z0, z1, p, x, y, r, d, l = read_bool_byte(stream)
+        z0, z1, pp, xx, yy, rr, dd, ll = read_bool_byte(stream)
         if z0 or z1:
             raise InvalidDataError('Invalid polygon header')
 
         optional: dict[str, Any] = {}
-        if l:
+        if ll:
             optional['layer'] = read_uint(stream)
-        if d:
+        if dd:
             optional['datatype'] = read_uint(stream)
-        if p:
+        if pp:
             optional['point_list'] = read_point_list(stream, implicit_closed=True)
-        if x:
+        if xx:
             optional['x'] = read_sint(stream)
-        if y:
+        if yy:
             optional['y'] = read_sint(stream)
-        if r:
+        if rr:
             optional['repetition'] = read_repetition(stream)
         record = Polygon(**optional)
         logger.debug('Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: IO[bytes], fast: bool = False) -> int:
-        p = self.point_list is not None
-        x = self.x is not None
-        y = self.y is not None
-        r = self.repetition is not None
-        d = self.datatype is not None
-        l = self.layer is not None
+        pp = self.point_list is not None
+        xx = self.x is not None
+        yy = self.y is not None
+        rr = self.repetition is not None
+        dd = self.datatype is not None
+        ll = self.layer is not None
 
         size = write_uint(stream, 21)
-        size += write_bool_byte(stream, (0, 0, p, x, y, r, d, l))
-        if l:
+        size += write_bool_byte(stream, (0, 0, pp, xx, yy, rr, dd, ll))
+        if ll:
             size += write_uint(stream, self.layer)          # type: ignore
-        if d:
+        if dd:
             size += write_uint(stream, self.datatype)       # type: ignore
-        if p:
+        if pp:
             size += write_point_list(stream, self.point_list,   # type: ignore
                                      implicit_closed=True, fast=fast)
-        if x:
+        if xx:
             size += write_sint(stream, self.x)      # type: ignore
-        if y:
+        if yy:
             size += write_sint(stream, self.y)      # type: ignore
-        if r:
+        if rr:
             size += self.repetition.write(stream)   # type: ignore
         return size
 
@@ -1908,15 +1905,15 @@ class Path(Record, GeometryMixin):
         if record_id != 22:
             raise InvalidDataError(f'Invalid record id for Path: {record_id}')
 
-        e, w, p, x, y, r, d, l = read_bool_byte(stream)
+        ee, ww, pp, xx, yy, rr, dd, ll = read_bool_byte(stream)
         optional: dict[str, Any] = {}
-        if l:
+        if ll:
             optional['layer'] = read_uint(stream)
-        if d:
+        if dd:
             optional['datatype'] = read_uint(stream)
-        if w:
+        if ww:
             optional['half_width'] = read_uint(stream)
-        if e:
+        if ee:
             scheme = read_uint(stream)
             scheme_end = scheme & 0b11
             scheme_start = (scheme >> 2) & 0b11
@@ -1935,37 +1932,37 @@ class Path(Record, GeometryMixin):
 
             optional['extension_start'] = get_pathext(scheme_start)
             optional['extension_end'] = get_pathext(scheme_end)
-        if p:
+        if pp:
             optional['point_list'] = read_point_list(stream, implicit_closed=False)
-        if x:
+        if xx:
             optional['x'] = read_sint(stream)
-        if y:
+        if yy:
             optional['y'] = read_sint(stream)
-        if r:
+        if rr:
             optional['repetition'] = read_repetition(stream)
         record = Path(**optional)
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: IO[bytes], fast: bool = False) -> int:
-        e = self.extension_start is not None or self.extension_end is not None
-        w = self.half_width is not None
-        p = self.point_list is not None
-        x = self.x is not None
-        y = self.y is not None
-        r = self.repetition is not None
-        d = self.datatype is not None
-        l = self.layer is not None
+        ee = self.extension_start is not None or self.extension_end is not None
+        ww = self.half_width is not None
+        pp = self.point_list is not None
+        xx = self.x is not None
+        yy = self.y is not None
+        rr = self.repetition is not None
+        dd = self.datatype is not None
+        ll = self.layer is not None
 
         size = write_uint(stream, 21)
-        size += write_bool_byte(stream, (e, w, p, x, y, r, d, l))
-        if l:
+        size += write_bool_byte(stream, (ee, ww, pp, xx, yy, rr, dd, ll))
+        if ll:
             size += write_uint(stream, self.layer)       # type: ignore
-        if d:
+        if dd:
             size += write_uint(stream, self.datatype)    # type: ignore
-        if w:
+        if ww:
             size += write_uint(stream, self.half_width)  # type: ignore
-        if e:
+        if ee:
             scheme = 0
             if self.extension_start is not None:
                 scheme += self.extension_start[0].value << 2
@@ -1976,14 +1973,14 @@ class Path(Record, GeometryMixin):
                 size += write_sint(stream, self.extension_start[1])  # type: ignore
             if scheme & 0b0011 == 0b0011:
                 size += write_sint(stream, self.extension_end[1])    # type: ignore
-        if p:
+        if pp:
             size += write_point_list(stream, self.point_list,        # type: ignore
                                      implicit_closed=False, fast=fast)
-        if x:
+        if xx:
             size += write_sint(stream, self.x)      # type: ignore
-        if y:
+        if yy:
             size += write_sint(stream, self.y)      # type: ignore
-        if r:
+        if rr:
             size += self.repetition.write(stream)   # type: ignore
         return size
 
@@ -2109,39 +2106,39 @@ class Trapezoid(Record, GeometryMixin):
         if record_id not in (23, 24, 25):
             raise InvalidDataError(f'Invalid record id for Trapezoid: {record_id}')
 
-        is_vertical, w, h, x, y, r, d, l = read_bool_byte(stream)
+        is_vertical, ww, hh, xx, yy, rr, dd, ll = read_bool_byte(stream)
         optional: dict[str, Any] = {}
-        if l:
+        if ll:
             optional['layer'] = read_uint(stream)
-        if d:
+        if dd:
             optional['datatype'] = read_uint(stream)
-        if w:
+        if ww:
             optional['width'] = read_uint(stream)
-        if h:
+        if hh:
             optional['height'] = read_uint(stream)
         if record_id != 25:
             optional['delta_a'] = read_sint(stream)
         if record_id != 24:
             optional['delta_b'] = read_sint(stream)
-        if x:
+        if xx:
             optional['x'] = read_sint(stream)
-        if y:
+        if yy:
             optional['y'] = read_sint(stream)
-        if r:
+        if rr:
             optional['repetition'] = read_repetition(stream)
         record = Trapezoid(bool(is_vertical), **optional)
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: IO[bytes]) -> int:
-        v = self.is_vertical
-        w = self.width is not None
-        h = self.height is not None
-        x = self.x is not None
-        y = self.y is not None
-        r = self.repetition is not None
-        d = self.datatype is not None
-        l = self.layer is not None
+        vv = self.is_vertical
+        ww = self.width is not None
+        hh = self.height is not None
+        xx = self.x is not None
+        yy = self.y is not None
+        rr = self.repetition is not None
+        dd = self.datatype is not None
+        ll = self.layer is not None
 
         if self.delta_b == 0:
             record_id = 24
@@ -2150,24 +2147,24 @@ class Trapezoid(Record, GeometryMixin):
         else:
             record_id = 23
         size = write_uint(stream, record_id)
-        size += write_bool_byte(stream, (v, w, h, x, y, r, d, l))
-        if l:
+        size += write_bool_byte(stream, (vv, ww, hh, xx, yy, rr, dd, ll))
+        if ll:
             size += write_uint(stream, self.layer)      # type: ignore
-        if d:
+        if dd:
             size += write_uint(stream, self.datatype)   # type: ignore
-        if w:
+        if ww:
             size += write_uint(stream, self.width)      # type: ignore
-        if h:
+        if hh:
             size += write_uint(stream, self.height)     # type: ignore
         if record_id != 25:
             size += write_sint(stream, self.delta_a)    # type: ignore
         if record_id != 24:
             size += write_sint(stream, self.delta_b)    # type: ignore
-        if x:
+        if xx:
             size += write_sint(stream, self.x)          # type: ignore
-        if y:
+        if yy:
             size += write_sint(stream, self.y)          # type: ignore
-        if r:
+        if rr:
             size += self.repetition.write(stream)       # type: ignore
         return size
 
@@ -2332,55 +2329,55 @@ class CTrapezoid(Record, GeometryMixin):
         if record_id != 26:
             raise InvalidDataError(f'Invalid record id for CTrapezoid: {record_id}')
 
-        t, w, h, x, y, r, d, l = read_bool_byte(stream)
+        tt, ww, hh, xx, yy, rr, dd, ll = read_bool_byte(stream)
         optional: dict[str, Any] = {}
-        if l:
+        if ll:
             optional['layer'] = read_uint(stream)
-        if d:
+        if dd:
             optional['datatype'] = read_uint(stream)
-        if t:
+        if tt:
             optional['ctrapezoid_type'] = read_uint(stream)
-        if w:
+        if ww:
             optional['width'] = read_uint(stream)
-        if h:
+        if hh:
             optional['height'] = read_uint(stream)
-        if x:
+        if xx:
             optional['x'] = read_sint(stream)
-        if y:
+        if yy:
             optional['y'] = read_sint(stream)
-        if r:
+        if rr:
             optional['repetition'] = read_repetition(stream)
         record = CTrapezoid(**optional)
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: IO[bytes]) -> int:
-        t = self.ctrapezoid_type is not None
-        w = self.width is not None
-        h = self.height is not None
-        x = self.x is not None
-        y = self.y is not None
-        r = self.repetition is not None
-        d = self.datatype is not None
-        l = self.layer is not None
+        tt = self.ctrapezoid_type is not None
+        ww = self.width is not None
+        hh = self.height is not None
+        xx = self.x is not None
+        yy = self.y is not None
+        rr = self.repetition is not None
+        dd = self.datatype is not None
+        ll = self.layer is not None
 
         size = write_uint(stream, 26)
-        size += write_bool_byte(stream, (t, w, h, x, y, r, d, l))
-        if l:
+        size += write_bool_byte(stream, (tt, ww, hh, xx, yy, rr, dd, ll))
+        if ll:
             size += write_uint(stream, self.layer)      # type: ignore
-        if d:
+        if dd:
             size += write_uint(stream, self.datatype)   # type: ignore
-        if t:
+        if tt:
             size += write_uint(stream, self.ctrapezoid_type)  # type: ignore
-        if w:
+        if ww:
             size += write_uint(stream, self.width)      # type: ignore
-        if h:
+        if hh:
             size += write_uint(stream, self.height)     # type: ignore
-        if x:
+        if xx:
             size += write_sint(stream, self.x)          # type: ignore
-        if y:
+        if yy:
             size += write_sint(stream, self.y)          # type: ignore
-        if r:
+        if rr:
             size += self.repetition.write(stream)       # type: ignore
         return size
 
@@ -2473,48 +2470,48 @@ class Circle(Record, GeometryMixin):
         if record_id != 27:
             raise InvalidDataError(f'Invalid record id for Circle: {record_id}')
 
-        z0, z1, has_radius, x, y, r, d, l = read_bool_byte(stream)
+        z0, z1, has_radius, xx, yy, rr, dd, ll = read_bool_byte(stream)
         if z0 or z1:
             raise InvalidDataError('Malformed circle header')
 
         optional: dict[str, Any] = {}
-        if l:
+        if ll:
             optional['layer'] = read_uint(stream)
-        if d:
+        if dd:
             optional['datatype'] = read_uint(stream)
         if has_radius:
             optional['radius'] = read_uint(stream)
-        if x:
+        if xx:
             optional['x'] = read_sint(stream)
-        if y:
+        if yy:
             optional['y'] = read_sint(stream)
-        if r:
+        if rr:
             optional['repetition'] = read_repetition(stream)
         record = Circle(**optional)
         logger.debug(f'Record ending at 0x{stream.tell():x}:\n {record}')
         return record
 
     def write(self, stream: IO[bytes]) -> int:
-        s = self.radius is not None
-        x = self.x is not None
-        y = self.y is not None
-        r = self.repetition is not None
-        d = self.datatype is not None
-        l = self.layer is not None
+        ss = self.radius is not None
+        xx = self.x is not None
+        yy = self.y is not None
+        rr = self.repetition is not None
+        dd = self.datatype is not None
+        ll = self.layer is not None
 
         size = write_uint(stream, 27)
-        size += write_bool_byte(stream, (0, 0, s, x, y, r, d, l))
-        if l:
+        size += write_bool_byte(stream, (0, 0, ss, xx, yy, rr, dd, ll))
+        if ll:
             size += write_uint(stream, self.layer)      # type: ignore
-        if d:
+        if dd:
             size += write_uint(stream, self.datatype)   # type: ignore
-        if s:
+        if ss:
             size += write_uint(stream, self.radius)     # type: ignore
-        if x:
+        if xx:
             size += write_sint(stream, self.x)          # type: ignore
-        if y:
+        if yy:
             size += write_sint(stream, self.y)          # type: ignore
-        if r:
+        if rr:
             size += self.repetition.write(stream)       # type: ignore
         return size
 
