@@ -494,7 +494,7 @@ def test_file_3() -> None:
 
     buf.seek(0)
     with pytest.raises(InvalidRecordError):
-        layout = OasisLayout.read(buf)
+        _layout = OasisLayout.read(buf)
 
 
 def write_file_4(buf: IO[bytes]) -> IO[bytes]:
@@ -567,7 +567,7 @@ def test_file_6() -> None:
 
     buf.seek(0)
     with pytest.raises(InvalidDataError):
-        layout = OasisLayout.read(buf)
+        _layout = OasisLayout.read(buf)
 
 
 def write_file_7(buf: IO[bytes]) -> IO[bytes]:
@@ -598,7 +598,7 @@ def test_file_7() -> None:
 
     buf.seek(0)
     with pytest.raises(InvalidDataError):
-        layout = OasisLayout.read(buf)
+        _layout = OasisLayout.read(buf)
 
 
 def write_file_8(buf: IO[bytes]) -> IO[bytes]:
@@ -629,7 +629,7 @@ def test_file_8() -> None:
 
     buf.seek(0)
     with pytest.raises(InvalidDataError):
-        layout = OasisLayout.read(buf)
+        _layout = OasisLayout.read(buf)
 
 
 def write_file_9(buf: IO[bytes]) -> IO[bytes]:
@@ -732,4 +732,4 @@ def test_file_11() -> None:
 
     buf.seek(0)
     with pytest.raises(InvalidDataError):
-        layout = OasisLayout.read(buf)
+        _layout = OasisLayout.read(buf)

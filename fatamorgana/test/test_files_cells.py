@@ -113,7 +113,7 @@ def test_file_3() -> None:
 
     buf.seek(0)
     with pytest.raises(InvalidRecordError):
-        layout = OasisLayout.read(buf)
+        _layout = OasisLayout.read(buf)
 
 
 def write_file_4(buf: IO[bytes]) -> IO[bytes]:
@@ -226,7 +226,7 @@ def test_file_6() -> None:
     buf.seek(0)
 
     with pytest.raises(InvalidDataError):
-        layout = OasisLayout.read(buf)
+        _layout = OasisLayout.read(buf)
 
     #base_tests(layout)
     #assert len(layout.cellnames) == 2

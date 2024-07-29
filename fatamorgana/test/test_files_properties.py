@@ -1065,7 +1065,7 @@ def test_file_8() -> None:
 
     buf.seek(0)
     with pytest.raises(InvalidDataError):
-        layout = OasisLayout.read(buf)
+        _layout = OasisLayout.read(buf)
 
 
 def test_file_9() -> None:
@@ -1075,4 +1075,4 @@ def test_file_9() -> None:
 
     buf.seek(0)
     with pytest.raises(InvalidDataError):
-        layout = OasisLayout.read(buf)
+        _layout = OasisLayout.read(buf)
