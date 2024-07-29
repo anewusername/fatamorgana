@@ -2,7 +2,8 @@
 This module contains all datatypes and parsing/writing functions for
  all abstractions below the 'record' or 'block' level.
 """
-from typing import Type, Union, Any, Sequence, IO
+from typing import Any, IO, Union
+from collections.abc import Sequence
 from fractions import Fraction
 from enum import Enum
 import math
@@ -20,7 +21,7 @@ except ImportError:
 '''
     Type definitions
 '''
-real_t = Union[int, float, Fraction]
+real_t = int | float | Fraction
 repetition_t = Union['ReuseRepetition', 'GridRepetition', 'ArbitraryRepetition']
 property_value_t = Union[int, bytes, 'AString', 'NString', 'PropStringReference', float, Fraction]
 bytes_t = bytes
@@ -184,7 +185,7 @@ if _USE_NUMPY:
         byte_arr = _read(stream, 1)
         return numpy.unpackbits(numpy.frombuffer(byte_arr, dtype=numpy.uint8))
 
-    def _np_write_bool_byte(stream: IO[bytes], bits: tuple[Union[bool, int], ...]) -> int:
+    def _np_write_bool_byte(stream: IO[bytes], bits: tuple[bool | int, ...]) -> int:
         """
         Pack 8 booleans into a byte, and write it to the stream.
 
@@ -563,7 +564,7 @@ class NString:
     """
     _string: str
 
-    def __init__(self, string_or_bytes: Union[bytes, str]) -> None:
+    def __init__(self, string_or_bytes: bytes | str) -> None:
         """
         Args:
             string_or_bytes: Content of the `NString`.
@@ -677,7 +678,7 @@ class AString:
     """
     _string: str
 
-    def __init__(self, string_or_bytes: Union[bytes, str]) -> None:
+    def __init__(self, string_or_bytes: bytes | str) -> None:
         """
         Args:
             string_or_bytes: Content of the AString.
@@ -1722,10 +1723,10 @@ class PropStringReference:
     ref: int
     """ID of the target"""
 
-    reference_type: Type
+    reference_type: type
     """Type of the target: `bytes`, `NString`, or `AString`"""
 
-    def __init__(self, ref: int, ref_type: Type) -> None:
+    def __init__(self, ref: int, ref_type: type) -> None:
         """
         :param ref: ID number of the target.
         :param ref_type: Type of the target. One of bytes, NString, AString.
@@ -1767,7 +1768,7 @@ def read_property_value(stream: IO[bytes]) -> property_value_t:
     Raises:
         InvalidDataError: if an invalid type is read.
     """
-    ref_type: Type
+    ref_type: type
     prop_type = read_uint(stream)
     if 0 <= prop_type <= 7:
         return read_real(stream, prop_type)

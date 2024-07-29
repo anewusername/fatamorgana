@@ -3,7 +3,7 @@ This module contains data structures and functions for reading from and
  writing to whole OASIS layout files, and provides a few additional
  abstractions for the data contained inside them.
 """
-from typing import Type, IO
+from typing import IO
 import io
 import logging
 
@@ -528,7 +528,7 @@ class XName:
 
 
 # Mapping from record id to record class.
-_GEOMETRY: dict[int, Type[records.geometry_t]] = {
+_GEOMETRY: dict[int, type[records.geometry_t]] = {
     19: records.Text,
     20: records.Rectangle,
     21: records.Polygon,

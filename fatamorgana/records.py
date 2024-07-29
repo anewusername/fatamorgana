@@ -10,7 +10,8 @@ Higher-level code (e.g. monitoring for combinations of records with
  parse, or code for dealing with nested records in a CBlock) should live
  in main.py instead.
 """
-from typing import Union, Sequence, Any, TypeVar, IO
+from typing import Any, TypeVar, IO, Union
+from collections.abc import Sequence
 from abc import ABCMeta, abstractmethod
 import copy
 import math
