@@ -1376,7 +1376,7 @@ class Placement(Record):
         optional: dict[str, Any] = {}
         name = read_refname(stream, cc, nn)
         if record_id == 17:
-            aa = (ma0 << 1) | ma1
+            aa = int((ma0 << 1) | ma1)
             optional['angle'] = aa * 90
         elif record_id == 18:
             mm = ma0
