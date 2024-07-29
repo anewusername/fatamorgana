@@ -24,14 +24,25 @@
     help(fatamorgana.OasisLayout)
  ```
 """
-import pathlib
-
-from .main import OasisLayout, Cell, XName
+from .main import (
+    OasisLayout as OasisLayout,
+    Cell as Cell,
+    XName as XName,
+    )
 from .basic import (
-    NString, AString, Validation, OffsetTable, OffsetEntry,
-    EOFError, SignedError, InvalidDataError, InvalidRecordError,
-    UnfilledModalError,
-    ReuseRepetition, GridRepetition, ArbitraryRepetition
+    NString as NString,
+    AString as AString,
+    Validation as Validation,
+    OffsetTable as OffsetTable,
+    OffsetEntry as OffsetEntry,
+    EOFError as EOFError,
+    SignedError as SignedError,
+    InvalidDataError as InvalidDataError,
+    InvalidRecordError as InvalidRecordError,
+    UnfilledModalError as UnfilledModalError,
+    ReuseRepetition as ReuseRepetition,
+    GridRepetition as GridRepetition,
+    ArbitraryRepetition as ArbitraryRepetition,
     )
 
 
