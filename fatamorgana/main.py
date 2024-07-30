@@ -163,11 +163,10 @@ class OasisLayout:
         """
         try:
             record_id = read_uint(stream)
-        except EOFError as e:
+        except EOFError:
             if file_state.within_cblock:
                 return True
-            else:
-                raise e
+            raise
 
         logger.info(f'read_record of type {record_id} at position 0x{stream.tell():x}')
 
@@ -203,7 +202,7 @@ class OasisLayout:
             file_state.within_cell = False
         elif record_id in range(15, 28) or record_id in (32, 33):
             if not file_state.within_cell:
-                raise Exception('Geometry outside Cell')
+                raise InvalidRecordError('Geometry outside Cell')
         elif record_id in (13, 14):
             file_state.within_cell = True
         else:
