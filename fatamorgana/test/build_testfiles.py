@@ -4,6 +4,7 @@ Build files equivalent to the test cases used by KLayout.
 
 from typing import IO
 from collections.abc import Callable
+from pathlib import Path
 
 
 from . import (
@@ -16,8 +17,8 @@ from . import (
 
 
 def build_file(num: str, func: Callable[[IO[bytes]], IO[bytes]]) -> None:
-    with open('t' + num + '.oas', 'wb') as f:
-        func(f)
+    with Path('t' + num + '.oas').open('wb') as ff:
+        func(ff)
 
 
 def write_all_files() -> None:
