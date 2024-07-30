@@ -202,7 +202,7 @@ def test_file_1() -> None:
 
         if ii < 3:
             assert pp.y == 400 * (ii + 1), msg
-        elif 7 <= ii:
+        elif ii >= 7:
             assert pp.y == 0, msg
 
         if ii < 4 or ii == 5:
@@ -214,7 +214,7 @@ def test_file_1() -> None:
             assert pp.angle == 0, msg
         elif ii in (5, 6):
             assert pp.angle == 90, msg
-        elif 7 <= ii:
+        elif ii >= 7:
             assert pp.angle == 270, msg
 
         if ii < 7:

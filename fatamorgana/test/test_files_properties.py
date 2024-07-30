@@ -823,7 +823,7 @@ def test_file_4() -> None:
         assert pp.x == [-300, 0, 0, 300, 700, 700, 700, 2000, 4000, 6000, 8000, 10000, 12000][ii], msg
         assert pp.y == [400, 200, 400, 400, 400, 1400, 2400, 0, 0, 0, 0, 0, 0][ii], msg
 
-        if ii == 4 or 6 <= ii:
+        if ii == 4 or ii >= 6:
             assert pp.flip, msg
         else:
             assert not pp.flip, msg
@@ -892,7 +892,7 @@ def test_file_6() -> None:
         assert pp.x == [-300, 0, 0, 300, 700, 700, 700, 2000, 4000, 6000, 8000, 10000, 12000][ii], msg
         assert pp.y == [400, 400, 400, 400, 400, 1400, 2400, 0, 0, 0, 0, 0, 0][ii], msg
 
-        if ii == 4 or 6 <= ii:
+        if ii == 4 or ii >= 6:
             assert pp.flip, msg
         else:
             assert not pp.flip, msg

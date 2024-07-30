@@ -209,7 +209,7 @@ def test_file_1() -> None:
 
         if ii in (0, 4):
             assert gg.delta_a == -20, msg
-        elif 8 <= ii:
+        elif ii >= 8:
             assert gg.delta_a == 0, msg
         else:
             assert gg.delta_a == 20, msg
