@@ -1485,13 +1485,13 @@ class ArbitraryRepetition:
                 size = write_uint(stream, 10)
                 size += write_uint(stream, len(self.x_displacements) - 1)
                 size += sum(Delta(x, y).write(stream)
-                            for x, y in zip(self.x_displacements, self.y_displacements))
+                            for x, y in zip(self.x_displacements, self.y_displacements, strict=True))
             else:
                 size = write_uint(stream, 11)
                 size += write_uint(stream, len(self.x_displacements) - 1)
                 size += write_uint(stream, gcd)
                 size += sum(Delta(x // gcd, y // gcd).write(stream)
-                            for x, y in zip(self.x_displacements, self.y_displacements))
+                            for x, y in zip(self.x_displacements, self.y_displacements, strict=True))
         return size
 
     def __eq__(self, other: Any) -> bool:

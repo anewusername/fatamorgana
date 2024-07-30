@@ -2632,22 +2632,22 @@ def dedup_field(record, r_field: str, modals: Modals, m_field: str) -> None:
     Args:
         InvalidDataError: if both fields are `None`
     """
-    r = getattr(record, r_field)
-    m = getattr(modals, m_field)
-    if r is not None:
+    rr = getattr(record, r_field)
+    mm = getattr(modals, m_field)
+    if rr is not None:
         if m_field in ('polygon_point_list', 'path_point_list'):
             if _USE_NUMPY:
-                equal = numpy.array_equal(m, r)
+                equal = numpy.array_equal(mm, rr)
             else:
-                equal = (m is not None) and all(tuple(mm) == tuple(rr) for mm, rr in zip(m, r))
+                equal = (mm is not None) and all(tuple(mmm) == tuple(rrr) for mmm, rrr in zip(mm, rr, strict=True))
         else:
-            equal = (m is not None) and m == r
+            equal = (mm is not None) and mm == rr
 
         if equal:
             setattr(record, r_field, None)
         else:
-            setattr(modals, m_field, r)
-    elif m is None:
+            setattr(modals, m_field, rr)
+    elif mm is None:
         raise InvalidDataError('Unfillable field')
 
 

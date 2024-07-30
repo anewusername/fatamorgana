@@ -61,7 +61,7 @@ def write_file_1(buf: IO[bytes]) -> IO[bytes]:
            + [0b11, 0b10]
            )
 
-    for t, (x, x_en) in enumerate(zip(wh, wh_en)):
+    for t, (x, x_en) in enumerate(zip(wh, wh_en, strict=True)):
         write_uint(buf, 26)           # CTRAPEZOID record
         write_byte(buf, 0b1000_1011 | (x_en << 5))    # TWHX_YRDL
         write_uint(buf, 1)            # layer
