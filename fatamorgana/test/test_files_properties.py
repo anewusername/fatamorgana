@@ -1,4 +1,4 @@
-# type: ignore
+# mypy: disable-error-code="union-attr, index, arg-type"
 from typing import IO
 from io import BytesIO
 
@@ -28,7 +28,7 @@ def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
     """
     include_repetitions = variant in (2, 5)
 
-    def var_byte(buf, byte):
+    def var_byte(buf: IO[bytes], byte: int) -> None:
         if include_repetitions:
             byte |= 0b0100
         write_byte(buf, byte)

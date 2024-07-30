@@ -1,4 +1,3 @@
-# type: ignore
 from typing import IO
 from io import BytesIO
 import struct

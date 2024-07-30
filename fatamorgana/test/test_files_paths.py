@@ -1,4 +1,4 @@
-# type: ignore
+# mypy: disable-error-code="union-attr"
 from typing import IO
 from io import BytesIO
 
@@ -182,7 +182,7 @@ def test_file_1() -> None:
         else:
             assert gg.half_width == 12, msg
 
-        assert len(gg.point_list) == 3, msg
+        assert len(gg.point_list) == 3, msg         # type: ignore
         assert_equal(gg.point_list, [[150, 0], [0, 50], [-50, 0]], err_msg=msg)
 
         if ii >= 4:

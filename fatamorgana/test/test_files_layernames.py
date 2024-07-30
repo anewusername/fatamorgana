@@ -1,5 +1,5 @@
-# type: ignore
-from typing import Sequence, IO
+from typing import IO
+from collections.abc import Sequence
 
 from io import BytesIO
 
@@ -27,7 +27,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert not layout.cellnames
 
     assert len(layout.cells) == 1
-    assert layout.cells[0].name.string == 'A'
+    assert layout.cells[0].name.string == 'A'           # type: ignore
     assert not layout.cells[0].properties
 
 

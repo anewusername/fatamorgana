@@ -1,4 +1,4 @@
-# type: ignore
+# mypy: disable-error-code="union-attr"
 from typing import IO
 from io import BytesIO
 

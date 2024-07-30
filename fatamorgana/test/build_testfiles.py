@@ -2,7 +2,8 @@
 Build files equivalent to the test cases used by KLayout.
 """
 
-from typing import Callable, IO
+from typing import IO
+from collections.abc import Callable
 
 
 from . import (

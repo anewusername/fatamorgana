@@ -1,4 +1,4 @@
-# type: ignore
+# mypy: disable-error-code="union-attr, arg-type"
 from typing import IO
 from io import BytesIO
 
@@ -445,7 +445,7 @@ def test_file_3() -> None:
     for ii, gg in enumerate(geometry):
         msg = f'Fail on polygon {ii}'
         assert len(gg.properties) == 1, msg
-        assert gg.properties[0].name == 0, msg
+        assert gg.properties[0].name == 0, msg                  # type: ignore
         assert len(gg.properties[0].values) == 1, msg
-        assert gg.properties[0].values[0] * 5 == 1, msg
+        assert gg.properties[0].values[0] * 5 == 1, msg         # type: ignore
 

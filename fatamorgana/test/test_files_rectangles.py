@@ -1,4 +1,4 @@
-# type: ignore
+# mypy: disable-error-code="union-attr"
 from typing import IO
 from io import BytesIO
 
@@ -267,7 +267,7 @@ def test_file_2() -> None:
         prop = gg.properties[0]
 
         assert prop.name == 0, msg
-        assert len(prop.values) == 1, msg
-        assert prop.values[0].numerator == 1, msg
-        assert prop.values[0].denominator == 5, msg
+        assert len(prop.values) == 1, msg               # type: ignore
+        assert prop.values[0].numerator == 1, msg       # type: ignore
+        assert prop.values[0].denominator == 5, msg     # type: ignore
 

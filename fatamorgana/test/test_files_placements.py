@@ -1,5 +1,5 @@
-# type: ignore
-from typing import Tuple, IO, cast, List
+# mypy: disable-error-code="union-attr"
+from typing import IO, cast
 from io import BytesIO
 
 from numpy.testing import assert_equal
@@ -22,7 +22,7 @@ def base_tests(layout: OasisLayout) -> None:
     assert not layout.layers
 
 
-def write_rectangle(buf: IO[bytes], pos: Tuple[int, int] = (300, -400)) -> None:
+def write_rectangle(buf: IO[bytes], pos: tuple[int, int] = (300, -400)) -> None:
     write_uint(buf, 20)           # RECTANGLE record
     write_byte(buf, 0b0111_1011)  # SWHX_YRDL
     write_uint(buf, 1)            # layer
@@ -174,7 +174,7 @@ def test_file_1() -> None:
     assert not layout.cells[1].properties
     assert not layout.cells[1].geometry
 
-    geometry = cast(List[Rectangle], layout.cells[0].geometry)
+    geometry = cast(list[Rectangle], layout.cells[0].geometry)
     assert len(geometry) == 1
     assert geometry[0].layer == 1
     assert geometry[0].datatype == 2
@@ -843,7 +843,7 @@ def test_file_8() -> None:
     assert not layout.cells[2].properties
     assert not layout.cells[2].placements
 
-    geometry = cast(List[Rectangle], layout.cells[2].geometry)
+    geometry = cast(list[Rectangle], layout.cells[2].geometry)
     assert len(geometry) == 1
     assert geometry[0].layer == 1
     assert geometry[0].datatype == 2
