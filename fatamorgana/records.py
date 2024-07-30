@@ -274,10 +274,9 @@ def read_refname(
     """
     if not is_present:
         return None
-    elif is_reference:
+    if is_reference:
         return read_uint(stream)
-    else:
-        return NString.read(stream)
+    return NString.read(stream)
 
 
 def read_refstring(
@@ -299,10 +298,9 @@ def read_refstring(
     """
     if not is_present:
         return None
-    elif is_reference:
+    if is_reference:
         return read_uint(stream)
-    else:
-        return AString.read(stream)
+    return AString.read(stream)
 
 
 class Pad(Record):
@@ -994,32 +992,33 @@ class Property(Record):
     def write(self, stream: IO[bytes]) -> int:
         if self.is_standard is None and self.values is None and self.name is None:
             return write_uint(stream, 29)
+
+        if self.is_standard is None:
+            raise InvalidDataError('Property has value or name, but no is_standard flag!')
+
+        if self.values is not None:
+            value_count = len(self.values)
+            vv = 0
+            uu = 0x0f if value_count >= 0x0f else value_count
         else:
-            if self.is_standard is None:
-                raise InvalidDataError('Property has value or name, but no is_standard flag!')
-            if self.values is not None:
-                value_count = len(self.values)
-                vv = 0
-                uu = 0x0f if value_count >= 0x0f else value_count
+            vv = 1
+            uu = 0
+
+        cc = self.name is not None
+        nn = cc and isinstance(self.name, int)
+        ss = self.is_standard
+
+        size = write_uint(stream, 28)
+        size += write_byte(stream, (uu << 4) | (vv << 3) | (cc << 2) | (nn << 1) | ss)
+        if cc:
+            if nn:
+                size += write_uint(stream, self.name)   # type: ignore
             else:
-                vv = 1
-                uu = 0
-
-            cc = self.name is not None
-            nn = cc and isinstance(self.name, int)
-            ss = self.is_standard
-
-            size = write_uint(stream, 28)
-            size += write_byte(stream, (uu << 4) | (vv << 3) | (cc << 2) | (nn << 1) | ss)
-            if cc:
-                if nn:
-                    size += write_uint(stream, self.name)   # type: ignore
-                else:
-                    size += self.name.write(stream)         # type: ignore
-            if not vv:
-                if uu == 0x0f:
-                    size += write_uint(stream, len(self.values))   # type: ignore
-                size += sum(write_property_value(stream, pp) for pp in self.values)   # type: ignore
+                size += self.name.write(stream)         # type: ignore
+        if not vv:
+            if uu == 0x0f:
+                size += write_uint(stream, len(self.values))   # type: ignore
+            size += sum(write_property_value(stream, pp) for pp in self.values)   # type: ignore
         return size
 
 
@@ -1736,9 +1735,8 @@ class Polygon(Record, GeometryMixin):
         self.point_list = point_list
         self.properties = [] if properties is None else properties
 
-        if point_list is not None:
-            if len(point_list) < 3:
-                warn('Polygon with < 3 points')
+        if point_list is not None and len(point_list) < 3:
+            warn('Polygon with < 3 points', stacklevel=2)
 
     def get_point_list(self) -> point_list_t:
         return verify_modal(self.point_list)
@@ -1921,14 +1919,13 @@ class Path(Record, GeometryMixin):
             def get_pathext(ext_scheme: int) -> pathextension_t | None:
                 if ext_scheme == 0:
                     return None
-                elif ext_scheme == 1:
+                if ext_scheme == 1:
                     return PathExtensionScheme.Flush, None
-                elif ext_scheme == 2:
+                if ext_scheme == 2:
                     return PathExtensionScheme.HalfWidth, None
-                elif ext_scheme == 3:
+                if ext_scheme == 3:
                     return PathExtensionScheme.Arbitrary, read_sint(stream)
-                else:
-                    raise InvalidDataError(f'Invalid ext_scheme: {ext_scheme}')
+                raise InvalidDataError(f'Invalid ext_scheme: {ext_scheme}')
 
             optional['extension_start'] = get_pathext(scheme_start)
             optional['extension_end'] = get_pathext(scheme_end)
@@ -2066,9 +2063,8 @@ class Trapezoid(Record, GeometryMixin):
         if self.is_vertical:
             if height is not None and delta_b - delta_a > height:
                 raise InvalidDataError(f'Trapezoid: h < delta_b - delta_a ({height} < {delta_b} - {delta_a})')
-        else:
-            if width is not None and delta_b - delta_a > width:
-                raise InvalidDataError(f'Trapezoid: w < delta_b - delta_a ({width} < {delta_b} - {delta_a})')
+        elif width is not None and delta_b - delta_a > width:
+            raise InvalidDataError(f'Trapezoid: w < delta_b - delta_a ({width} < {delta_b} - {delta_a})')
 
     def get_is_vertical(self) -> bool:
         return verify_modal(self.is_vertical)
@@ -2392,7 +2388,7 @@ class CTrapezoid(Record, GeometryMixin):
             raise InvalidDataError(f'CTrapezoid has spurious height entry: {height}')
 
         if width is not None and height is not None:
-            if ctrapezoid_type in range(0, 4) and width < height:
+            if ctrapezoid_type in range(0, 4) and width < height:           # noqa: PIE808
                 raise InvalidDataError(f'CTrapezoid has width < height ({width} < {height})')
             if ctrapezoid_type in range(4, 8) and width < 2 * height:
                 raise InvalidDataError(f'CTrapezoid has width < 2*height ({width} < 2 * {height})')
@@ -2401,7 +2397,7 @@ class CTrapezoid(Record, GeometryMixin):
             if ctrapezoid_type in range(12, 16) and 2 * width > height:
                 raise InvalidDataError(f'CTrapezoid has 2*width > height ({width} > 2 * {height})')
 
-        if ctrapezoid_type is not None and ctrapezoid_type not in range(0, 26):
+        if ctrapezoid_type is not None and ctrapezoid_type not in range(0, 26):   # noqa: PIE808
             raise InvalidDataError(f'CTrapezoid has invalid type: {ctrapezoid_type}')
 
 
@@ -2532,8 +2528,7 @@ def adjust_repetition(record, modals: Modals) -> None:
         if isinstance(record.repetition, ReuseRepetition):
             if modals.repetition is None:
                 raise InvalidDataError('Unfillable repetition')
-            else:
-                record.repetition = copy.copy(modals.repetition)
+            record.repetition = copy.copy(modals.repetition)
         else:
             modals.repetition = copy.copy(record.repetition)
 
@@ -2679,20 +2674,18 @@ def dedup_coordinates(record, modals: Modals, mx_field: str, my_field: str) -> N
         if modals.xy_relative:
             record.x -= mx
             setattr(modals, mx_field, record.x)
+        elif record.x == mx:
+            record.x = None
         else:
-            if record.x == mx:
-                record.x = None
-            else:
-                setattr(modals, mx_field, record.x)
+            setattr(modals, mx_field, record.x)
 
     if record.y is not None:
         my = getattr(modals, my_field)
         if modals.xy_relative:
             record.y -= my
             setattr(modals, my_field, record.y)
+        elif record.y == my:
+            record.y = None
         else:
-            if record.y == my:
-                record.y = None
-            else:
-                setattr(modals, my_field, record.y)
+            setattr(modals, my_field, record.y)
 

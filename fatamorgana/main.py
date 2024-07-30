@@ -193,8 +193,7 @@ class OasisLayout:
         if record_id == 1:
             if file_state.started:
                 raise InvalidRecordError('Duplicate Start record')
-            else:
-                file_state.started = True
+            file_state.started = True
         if record_id == 2 and file_state.within_cblock:
             raise InvalidRecordError('End within CBlock')
 

@@ -135,13 +135,12 @@ def test_file_1() -> None:
                 assert gg.width == [250, None][is_ctrapz], msg
             elif ct_type in range(22, 24) or ct_type == 25:
                 assert gg.height == [100, None][is_ctrapz], msg
+            elif ct_type < 8 or 16 <= ct_type < 25 or ct_type >= 26:
+                assert gg.width == 250, msg
+                assert gg.height == 100, msg
             else:
-                if ct_type < 8 or 16 <= ct_type < 25 or 26 <= ct_type:
-                    assert gg.width == 250, msg
-                    assert gg.height == 100, msg
-                else:
-                    assert gg.width == 100, msg
-                    assert gg.height == 250, msg
+                assert gg.width == 100, msg
+                assert gg.height == 250, msg
         elif ii < 3 and ii % 2:
             assert gg.ctrapezoid_type == 24, msg
         elif ii == 55:

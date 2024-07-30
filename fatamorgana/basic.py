@@ -950,7 +950,7 @@ class OctangularDelta:
             sign = self.octangle & 0x02 > 0
             xy[axis] = self.proj_mag * (1 - 2 * sign)
             return xy
-        else:
+        else:       # noqa: RET505
             yn = (self.octangle & 0x02) > 0
             xyn = (self.octangle & 0x01) > 0
             ys = 1 - 2 * yn
@@ -1097,10 +1097,9 @@ class Delta:
         """
         if self.x == 0 or self.y == 0 or abs(self.x) == abs(self.y):
             return write_uint(stream, OctangularDelta(self.x, self.y).as_uint() << 1)
-        else:
-            size = write_uint(stream, (encode_sint(self.x) << 1) | 0x01)
-            size += write_uint(stream, encode_sint(self.y))
-            return size
+        size = write_uint(stream, (encode_sint(self.x) << 1) | 0x01)
+        size += write_uint(stream, encode_sint(self.y))
+        return size
 
     def __eq__(self, other: Any) -> bool:
         return hasattr(other, 'as_list') and self.as_list() == other.as_list()
@@ -1125,12 +1124,11 @@ def read_repetition(stream: IO[bytes]) -> repetition_t:
     rtype = read_uint(stream)
     if rtype == 0:
         return ReuseRepetition.read(stream, rtype)
-    elif rtype in (1, 2, 3, 8, 9):
+    if rtype in (1, 2, 3, 8, 9):
         return GridRepetition.read(stream, rtype)
-    elif rtype in (4, 5, 6, 7, 10, 11):
+    if rtype in (4, 5, 6, 7, 10, 11):
         return ArbitraryRepetition.read(stream, rtype)
-    else:
-        raise InvalidDataError(f'Unexpected repetition type: {rtype}')
+    raise InvalidDataError(f'Unexpected repetition type: {rtype}')
 
 
 def write_repetition(stream: IO[bytes], repetition: repetition_t) -> int:
@@ -1311,7 +1309,7 @@ class GridRepetition:
                 size = write_uint(stream, 9)
                 size += write_uint(stream, self.a_count - 2)
                 size += Delta(*self.a_vector).write(stream)
-        else:
+        else:   # noqa: PLR5501
             if self.a_vector[1] == 0 and self.b_vector[0] == 0:
                 size = write_uint(stream, 1)
                 size += write_uint(stream, self.a_count - 2)
@@ -1637,11 +1635,10 @@ def write_point_list(
                 h_first = False
                 v_first = False
                 break
-        else:
-            if point[1] != previous[1] or point[0] == previous[0]:
-                h_first = False
-                v_first = False
-                break
+        elif point[1] != previous[1] or point[0] == previous[0]:
+            h_first = False
+            v_first = False
+            break
         previous = point
 
     # If one of h_first or v_first, write a bunch of 1-deltas
@@ -1650,7 +1647,7 @@ def write_point_list(
         size += write_uint(stream, len(points))
         size += sum(write_sint(stream, x + y) for x, y in points)
         return size
-    elif v_first:
+    if v_first:
         size = write_uint(stream, 1)
         size += write_uint(stream, len(points))
         size += sum(write_sint(stream, x + y) for x, y in points)
@@ -1773,30 +1770,29 @@ def read_property_value(stream: IO[bytes]) -> property_value_t:
     prop_type = read_uint(stream)
     if 0 <= prop_type <= 7:
         return read_real(stream, prop_type)
-    elif prop_type == 8:
+    if prop_type == 8:
         return read_uint(stream)
-    elif prop_type == 9:
+    if prop_type == 9:
         return read_sint(stream)
-    elif prop_type == 10:
+    if prop_type == 10:
         return AString.read(stream)
-    elif prop_type == 11:
+    if prop_type == 11:
         return read_bstring(stream)
-    elif prop_type == 12:
+    if prop_type == 12:
         return NString.read(stream)
-    elif prop_type == 13:
+    if prop_type == 13:
         ref_type = AString
         ref = read_uint(stream)
         return PropStringReference(ref, ref_type)
-    elif prop_type == 14:
+    if prop_type == 14:
         ref_type = bytes
         ref = read_uint(stream)
         return PropStringReference(ref, ref_type)
-    elif prop_type == 15:
+    if prop_type == 15:
         ref_type = NString
         ref = read_uint(stream)
         return PropStringReference(ref, ref_type)
-    else:
-        raise InvalidDataError(f'Invalid property type: {prop_type}')
+    raise InvalidDataError(f'Invalid property type: {prop_type}')
 
 
 def write_property_value(
@@ -1883,17 +1879,16 @@ def read_interval(stream: IO[bytes]) -> tuple[int | None, int | None]:
     interval_type = read_uint(stream)
     if interval_type == 0:
         return None, None
-    elif interval_type == 1:
+    if interval_type == 1:
         return None, read_uint(stream)
-    elif interval_type == 2:
+    if interval_type == 2:
         return read_uint(stream), None
-    elif interval_type == 3:
+    if interval_type == 3:
         v = read_uint(stream)
         return v, v
-    elif interval_type == 4:
+    if interval_type == 4:
         return read_uint(stream), read_uint(stream)
-    else:
-        raise InvalidDataError(f'Unrecognized interval type: {interval_type}')
+    raise InvalidDataError(f'Unrecognized interval type: {interval_type}')
 
 
 def write_interval(
@@ -1916,18 +1911,15 @@ def write_interval(
     if min_bound is None:
         if max_bound is None:
             return write_uint(stream, 0)
-        else:
-            return write_uint(stream, 1) + write_uint(stream, max_bound)
-    else:
-        if max_bound is None:
-            return write_uint(stream, 2) + write_uint(stream, min_bound)
-        elif min_bound == max_bound:
-            return write_uint(stream, 3) + write_uint(stream, min_bound)
-        else:
-            size = write_uint(stream, 4)
-            size += write_uint(stream, min_bound)
-            size += write_uint(stream, max_bound)
-            return size
+        return write_uint(stream, 1) + write_uint(stream, max_bound)
+    if max_bound is None:
+        return write_uint(stream, 2) + write_uint(stream, min_bound)
+    if min_bound == max_bound:
+        return write_uint(stream, 3) + write_uint(stream, min_bound)
+    size = write_uint(stream, 4)
+    size += write_uint(stream, min_bound)
+    size += write_uint(stream, max_bound)
+    return size
 
 
 class OffsetEntry:
@@ -2190,9 +2182,7 @@ class Validation:
         checksum_type = read_uint(stream)
         if checksum_type == 0:
             checksum = None
-        elif checksum_type == 1:
-            checksum = read_u32(stream)
-        elif checksum_type == 2:
+        elif checksum_type in (1, 2):
             checksum = read_u32(stream)
         else:
             raise InvalidDataError('Invalid validation type!')
@@ -2214,14 +2204,13 @@ class Validation:
         """
         if self.checksum_type == 0:
             return write_uint(stream, 0)
-        elif self.checksum is None:
+        if self.checksum is None:
             raise InvalidDataError(f'Checksum is empty but type is {self.checksum_type}')
-        elif self.checksum_type == 1:
+        if self.checksum_type == 1:
             return write_uint(stream, 1) + write_u32(stream, self.checksum)
-        elif self.checksum_type == 2:
+        if self.checksum_type == 2:
             return write_uint(stream, 2) + write_u32(stream, self.checksum)
-        else:
-            raise InvalidDataError(f'Unrecognized checksum type: {self.checksum_type}')
+        raise InvalidDataError(f'Unrecognized checksum type: {self.checksum_type}')
 
     def __repr__(self) -> str:
         return f'Validation(type: {self.checksum_type} sum: {self.checksum})'
