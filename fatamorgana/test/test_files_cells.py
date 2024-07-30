@@ -24,9 +24,9 @@ def base_tests(layout: OasisLayout) -> None:
 
 
 def write_file_1(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     Single cell with explicit name 'XYZ'
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 14)          # CELL record (explicit)
@@ -49,9 +49,9 @@ def test_file_1() -> None:
 
 
 def write_file_2(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     Two cellnames ('XYZ', 'ABC') and two cells with name references.
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 3)           # CELLNAME record (implicit id 0)
@@ -86,9 +86,9 @@ def test_file_2() -> None:
 
 
 def write_file_3(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     Invalid file, contains a mix of explicit and implicit cellnames
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 4)           # CELLNAME record (explicit id)
@@ -117,9 +117,9 @@ def test_file_3() -> None:
 
 
 def write_file_4(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     Two cells referencing two names with explicit ids (unsorted)
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 4)           # CELLNAME record (explicit id)
@@ -156,9 +156,9 @@ def test_file_4() -> None:
 
 
 def write_file_5(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     Reference to non-existent cell name.
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 4)           # CELLNAME record (explicit id)
@@ -197,9 +197,9 @@ def test_file_5() -> None:
 
 
 def write_file_6(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     Cellname with invalid n-string.
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 4)           # CELLNAME record (explicit id)
@@ -238,9 +238,9 @@ def test_file_6() -> None:
 
 
 def write_file_7(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     Unused cellname.
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 4)           # CELLNAME record (explicit id)

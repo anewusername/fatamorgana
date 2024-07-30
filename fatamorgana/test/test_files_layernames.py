@@ -207,8 +207,8 @@ def elem_test_text(geometry: Sequence) -> None:
 
 
 def write_file_1(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
     write_names_geom(buf)
 
@@ -237,8 +237,8 @@ def test_file_1() -> None:
 
 
 def write_file_2(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
     write_names_text(buf)
 
@@ -267,8 +267,8 @@ def test_file_2() -> None:
 
 
 def write_file_3(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
     write_names_text(buf, prefix=b'T')
     write_names_geom(buf, short=True)
@@ -283,8 +283,8 @@ def write_file_3(buf: IO[bytes]) -> IO[bytes]:
 
 
 def write_file_4(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 14)          # CELL record (explicit)

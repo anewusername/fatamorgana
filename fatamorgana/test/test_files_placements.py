@@ -34,8 +34,8 @@ def write_rectangle(buf: IO[bytes], pos: Tuple[int, int] = (300, -400)) -> None:
 
 
 def write_file_1(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 14)            # CELL record (explicit)
@@ -250,8 +250,8 @@ def test_file_1() -> None:
 
 
 def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     assert variant in (2, 3, 5, 7), 'Error in test definition!'
 
     buf.write(HEADER)
@@ -516,8 +516,8 @@ def common_tests(layout: OasisLayout, variant: int) -> None:
 
 
 def write_file_4(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 3)            # CELLNAME record (implicit id 0)
@@ -595,8 +595,8 @@ def write_file_4(buf: IO[bytes]) -> IO[bytes]:
 
 
 def write_file_6(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 14)            # CELL record (explicit)
@@ -748,8 +748,8 @@ def test_file_6() -> None:
 
 
 def write_file_8(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 14)            # CELL record (explicit)

@@ -100,9 +100,9 @@ def common_tests(layout: OasisLayout) -> None:
 
 
 def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
-    '''
+    """
     Single cell with explicit name 'XYZ'
-    '''
+    """
     assert variant in (1, 2, 5, 12), 'Error in test!!'
 
     buf.write(HEADER)
@@ -461,10 +461,10 @@ def test_file_12() -> None:
 
 
 def write_file_3(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File with one textstring with explicit id, and one with an implicit id.
     Should fail.
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 6)           # TEXTSTRING record (explicit id)
@@ -498,11 +498,11 @@ def test_file_3() -> None:
 
 
 def write_file_4(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File with a TEXT record that references a non-existent TEXTSTRING
 
     TODO add an optional check for valid references
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 5)           # TEXTSTRING record (implicit id 0)
@@ -538,9 +538,9 @@ def test_file_4() -> None:
 
 
 def write_file_6(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File with TEXT record that uses an un-filled modal for the repetition
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 5)           # TEXTSTRING record (implicit id 0)
@@ -571,9 +571,9 @@ def test_file_6() -> None:
 
 
 def write_file_7(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File with TEXT record that uses an un-filled modal for the layer
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 5)           # TEXTSTRING record (implicit id 0)
@@ -602,9 +602,9 @@ def test_file_7() -> None:
 
 
 def write_file_8(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File with TEXT record that uses an un-filled modal for the datatype
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 5)           # TEXTSTRING record (implicit id 0)
@@ -633,9 +633,9 @@ def test_file_8() -> None:
 
 
 def write_file_9(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File with TEXT record that uses a default modal for the x coordinate
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 5)           # TEXTSTRING record (implicit id 0)
@@ -669,9 +669,9 @@ def test_file_9() -> None:
 
 
 def write_file_10(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File with TEXT record that uses a default modal for the y coordinate
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 5)           # TEXTSTRING record (implicit id 0)
@@ -705,9 +705,9 @@ def test_file_10() -> None:
 
 
 def write_file_11(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File with TEXT record that uses an un-filled modal for the text string
-    '''
+    """
     buf.write(HEADER)
 
     write_uint(buf, 5)           # TEXTSTRING record (implicit id 0)

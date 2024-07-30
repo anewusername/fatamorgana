@@ -75,8 +75,8 @@ def base_tests(layout: OasisLayout) -> None:
 
 
 def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     assert variant in (1, 2), 'Error in test!!'
 
     buf.write(HEADER)

@@ -107,8 +107,8 @@ def common_tests(layout: OasisLayout) -> None:
 
 
 def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     assert variant in (1, 3), 'Error in test!!'
 
     buf.write(HEADER)
@@ -376,8 +376,8 @@ def test_file_1() -> None:
 
 
 def write_file_2(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 14)          # CELL record (explicit)

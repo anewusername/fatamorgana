@@ -23,11 +23,11 @@ def base_tests(layout: OasisLayout) -> None:
 
 
 def write_file_1(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File contains one PAD record.
     1000 units/micron
     Offset table inside START.
-    '''
+    """
     buf.write(MAGIC_BYTES)
 
     write_uint(buf, 1)           # START record
@@ -56,11 +56,11 @@ def test_file_1() -> None:
 
 
 def write_file_2(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File contains no records.
     1/2 unit/micron
     Offset table inside START.
-    '''
+    """
     buf.write(MAGIC_BYTES)
 
     write_uint(buf, 1)           # START record
@@ -87,11 +87,11 @@ def test_file_2() -> None:
 
 
 def write_file_3(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File contains no records.
     10/4 unit/micron
     Offset table inside START.
-    '''
+    """
     buf.write(MAGIC_BYTES)
 
     write_uint(buf, 1)           # START record
@@ -119,11 +119,11 @@ def test_file_3() -> None:
 
 
 def write_file_4(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File contains no records.
     12.5 unit/micron (float32)
     Offset table inside START.
-    '''
+    """
     buf.write(MAGIC_BYTES)
 
     write_uint(buf, 1)           # START record
@@ -150,11 +150,11 @@ def test_file_4() -> None:
 
 
 def write_file_5(buf: IO[bytes]) -> IO[bytes]:
-    '''
+    """
     File contains no records.
     12.5 unit/micron (float64)
     Offset table inside START.
-    '''
+    """
     buf.write(MAGIC_BYTES)
 
     write_uint(buf, 1)           # START record

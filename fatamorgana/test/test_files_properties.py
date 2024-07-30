@@ -24,8 +24,8 @@ def base_tests(layout: OasisLayout) -> None:
 
 
 def write_file_common(buf: IO[bytes], variant: int) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     include_repetitions = variant in (2, 5)
 
     def var_byte(buf, byte):
@@ -355,8 +355,8 @@ def test_file_5() -> None:
 
 
 def write_file_3(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 10)     # PROPSTRING (explicit id)
@@ -580,8 +580,8 @@ def test_file_3() -> None:
 
 
 def write_file_4_6(buf: IO[bytes], variant: int) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 10)     # PROPSTRING (explicit id)
@@ -786,8 +786,8 @@ def write_file_4_6(buf: IO[bytes], variant: int) -> IO[bytes]:
 
 
 def test_file_4() -> None:
-    '''
-    '''
+    """
+    """
     buf = write_file_4_6(BytesIO(), 4)
 
     buf.seek(0)
@@ -855,8 +855,8 @@ def test_file_4() -> None:
 
 
 def test_file_6() -> None:
-    '''
-    '''
+    """
+    """
     buf = write_file_4_6(BytesIO(), 6)
 
     buf.seek(0)
@@ -928,8 +928,8 @@ def test_file_6() -> None:
 
 
 def write_file_7_8_9(buf: IO[bytes], variant: int) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 28)               # PROPERTY record
@@ -1059,8 +1059,8 @@ def test_file_7() -> None:
 
 
 def test_file_8() -> None:
-    '''
-    '''
+    """
+    """
     buf = write_file_7_8_9(BytesIO(), 8)
 
     buf.seek(0)
@@ -1069,8 +1069,8 @@ def test_file_8() -> None:
 
 
 def test_file_9() -> None:
-    '''
-    '''
+    """
+    """
     buf = write_file_7_8_9(BytesIO(), 9)
 
     buf.seek(0)

@@ -27,8 +27,8 @@ def base_tests(layout: OasisLayout) -> None:
 
 
 def write_file_1(buf: IO[bytes]) -> IO[bytes]:
-    '''
-    '''
+    """
+    """
     buf.write(HEADER)
 
     write_uint(buf, 14)          # CELL record (explicit)

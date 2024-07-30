@@ -1,6 +1,6 @@
-'''
+"""
 Build files equivalent to the test cases used by KLayout.
-'''
+"""
 
 from typing import Callable, IO
 
