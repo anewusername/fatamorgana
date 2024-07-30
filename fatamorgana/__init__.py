@@ -47,5 +47,5 @@ from .basic import (
 
 
 __author__ = 'Jan Petykiewicz'
-__version__ = '0.12'
+__version__ = '0.13'
 version = __version__
