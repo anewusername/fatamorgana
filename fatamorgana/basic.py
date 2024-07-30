@@ -1221,7 +1221,7 @@ class GridRepetition:
             if b_count < 2:
                 b_count = None
                 b_vector = None
-                warnings.warn('Removed b_count and b_vector since b_count == 1')
+                warnings.warn('Removed b_count and b_vector since b_count == 1', stacklevel=2)
 
         if a_count < 2:
             raise InvalidDataError(f'Repetition has too-small a_count: {a_count}')
