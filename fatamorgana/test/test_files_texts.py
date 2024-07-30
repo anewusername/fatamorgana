@@ -30,8 +30,8 @@ def common_tests(layout: OasisLayout) -> None:
 
     geometry = layout.cells[0].geometry
 
-    geometry[0].layer == 1
-    geometry[0].datatype == 2
+    assert geometry[0].layer == 1
+    assert geometry[0].datatype == 2
     for ii, gg in enumerate(geometry[1:]):
         assert gg.layer == 2, f'textstring #{ii + 1}'
         assert gg.datatype == 1, f'textstring #{ii + 1}'
