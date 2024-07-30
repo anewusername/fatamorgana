@@ -15,7 +15,7 @@
   numpy to speed up reading/writing.
 
  Dependencies:
-    - Python 3.8 or later
+    - Python 3.11 or later
     - numpy (optional, faster but no additional functionality)
 
  To get started, try:
