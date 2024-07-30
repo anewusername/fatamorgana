@@ -421,7 +421,7 @@ class Cell:
             placements: list[records.Placement] | None = None,
             geometry: list[records.geometry_t] | None = None,
             ) -> None:
-        self.name = name if isinstance(name, (NString, int)) else NString(name)
+        self.name = name if isinstance(name, NString | int) else NString(name)
         self.properties = [] if properties is None else properties
         self.placements = [] if placements is None else placements
         self.geometry = [] if geometry is None else geometry

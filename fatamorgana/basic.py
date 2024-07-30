@@ -344,7 +344,7 @@ def read_bstring(stream: IO[bytes]) -> bytes:
     return _read(stream, length)
 
 
-def write_bstring(stream: IO[bytes], bstring: bytes):
+def write_bstring(stream: IO[bytes], bstring: bytes) -> int:
     """
     Write a binary string to the stream.
     See `read_bstring()` for format details.
@@ -1194,7 +1194,8 @@ class GridRepetition:
             a_vector: Sequence[int],
             a_count: int,
             b_vector: Sequence[int] | None = None,
-            b_count: int | None = None):
+            b_count: int | None = None,
+            ) -> None:
         """
         Args:
             a_vector: First lattice vector, of the form `[x, y]`.
@@ -1828,7 +1829,7 @@ def write_property_value(
         else:
             size = write_uint(stream, 8)
             size += write_uint(stream, value)
-    elif isinstance(value, (Fraction, float, int)):
+    elif isinstance(value, Fraction | float | int):
         size = write_real(stream, value, force_float32)
     elif isinstance(value, AString):
         size = write_uint(stream, 10)
@@ -2229,7 +2230,7 @@ def write_magic_bytes(stream: IO[bytes]) -> int:
     return stream.write(MAGIC_BYTES)
 
 
-def read_magic_bytes(stream: IO[bytes]):
+def read_magic_bytes(stream: IO[bytes]) -> None:
     """
     Read the magic byte sequence from a stream.
     Raise an `InvalidDataError` if it was not found.
