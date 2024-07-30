@@ -1342,7 +1342,7 @@ class GridRepetition:
             return True
         if self.b_vector is None or other.b_vector is None:
             return False
-        if any(self.b_vector[ii] != other.b_vector[ii] for ii in range(2)):
+        if any(self.b_vector[ii] != other.b_vector[ii] for ii in range(2)):     # noqa: SIM103
             return False
         return True
 
@@ -1580,7 +1580,7 @@ def read_point_list(
         assert (dx == 0) or (dy == 0)
         close_points = [[-dx, -dy]]
     elif list_type == 3:
-        assert (dx == 0) or (dy == 0) or (dx == dy) or (dx == -dy)
+        assert 0 in (dx, dy) or dx in (dy, -dy)
         close_points = [[-dx, -dy]]
     else:
         close_points = [[-dx, -dy]]
